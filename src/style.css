@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #006284;
+  --color-secondary: #58b2dc;
+  --color-accent: #f75c2f;
+
+  --color-nalika-bg: #152036;
+  --color-nalika-surface: #1b2a47;
+  --color-nalika-text: #dee2e6;
+  --color-nalika-text-muted: #a7acb1;
+  --color-nalika-border: #2a3f5c;
+  --color-nalika-header: #20355a;
+}
