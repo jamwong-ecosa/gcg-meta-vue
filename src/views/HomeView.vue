@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 p-2 md:p-8">
+  <div class="mx-auto max-w-7xl space-y-6 p-2 md:p-8">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Welcome to GCG</h1>
     <p class="text-gray-600 dark:text-nalika-text-muted">
       This is body text using Tailwind gray utilities.
