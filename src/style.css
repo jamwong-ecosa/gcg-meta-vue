@@ -3,6 +3,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --font-display: 'Roboto Mono', 'Noto Sans TC', monospace;
+
   --color-primary: #006284;
   --color-secondary: #58b2dc;
   --color-accent: #f75c2f;

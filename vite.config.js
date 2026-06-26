@@ -12,13 +12,14 @@ export default defineConfig({
     },
   },
   plugins: [
-    vue(),
-    tailwindcss(),
     AutoImport({
       imports: ['vue', 'vue-router'],
       dirs: ['./src/utils'],
       eslintrc: { enabled: true },
+      vueTemplate: true,
     }),
     Components({ dts: true }),
+    vue(),
+    tailwindcss(),
   ],
 })

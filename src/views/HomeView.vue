@@ -13,9 +13,7 @@
         class="overflow-hidden rounded-lg bg-white not-dark:shadow not-dark:shadow-gray-400/10 dark:bg-nalika-surface"
       >
         <div :class="['flex h-9 items-center justify-between px-4', tierBarClass(row.tier)]">
-          <span
-            class="text-sm font-bold tracking-widest text-gray-700 uppercase dark:text-gray-200"
-          >
+          <span class="text-sm font-bold text-gray-700 uppercase dark:text-gray-200">
             {{ row.tier }}
           </span>
           <span class="text-sm font-bold text-gray-700 dark:text-gray-200">
@@ -38,7 +36,7 @@
           </span>
         </div>
 
-        <div class="grid grid-cols-3 gap-2 px-4 pb-2">
+        <div class="grid grid-cols-4 gap-2 px-4 pb-2">
           <div>
             <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
               Decks
@@ -59,7 +57,7 @@
               {{ row.wins }}
             </span>
           </div>
-          <div>
+          <div class="col-start-4">
             <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
               Top4
             </span>
@@ -122,94 +120,74 @@
     >
       <table class="w-full text-left text-sm">
         <thead>
-          <tr class="bg-blue-50 dark:bg-nalika-header">
-            <th class="px-4 py-3 font-semibold text-gray-900 dark:text-nalika-text">Archetype</th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              Decks
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              Wins
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              Top4
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              Use%
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              Win/Ev
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              Win/Dk
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              T4/Dk
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              Score
-            </th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
-              Tier
-            </th>
+          <tr class="bg-blue-50 text-gray-900 dark:bg-nalika-header dark:text-nalika-text">
+            <th class="px-4 py-3 font-semibold">Archetype</th>
+            <th class="px-4 py-3 text-right font-semibold">Decks</th>
+            <th class="px-4 py-3 text-right font-semibold">Wins</th>
+            <th class="px-4 py-3 text-right font-semibold">Top4</th>
+            <th class="px-4 py-3 text-right font-semibold">Use%</th>
+            <th class="px-4 py-3 text-right font-semibold">Win/Ev</th>
+            <th class="px-4 py-3 text-right font-semibold">Win/Dk</th>
+            <th class="px-4 py-3 text-right font-semibold">T4/Dk</th>
+            <th class="px-4 py-3 text-right font-semibold">Score</th>
+            <th class="px-4 py-3 text-right font-semibold">Tier</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="row in rows"
             :key="row.archetype"
-            class="odd:bg-gray-100/5 even:bg-gray-100/45 dark:even:bg-white/3"
+            class="text-gray-500 odd:bg-gray-100/5 even:bg-gray-100/45 hover:bg-blue-50/30 dark:text-nalika-text-muted dark:even:bg-white/3 dark:hover:bg-white/10"
           >
             <td class="px-4 py-3">
               <span class="inline-flex items-center gap-0.5">
                 <span
                   v-for="dot in row.colorDots"
                   :key="dot.name"
-                  class="inline-block h-2 w-2 rounded-full"
+                  class="mr-px inline-block h-2 w-2 rounded-full"
                   :style="{ background: dot.hex }"
                 />
-                <span class="text-gray-900 dark:text-nalika-text">{{ row.colors }}</span>
+                <span class="ml-1 text-gray-900 dark:text-nalika-text">{{ row.colors }}</span>
               </span>
-              <span class="ml-1 text-xs text-gray-500 dark:text-nalika-text-muted">
-                （{{ row.archetype }}）
-              </span>
+              <span class="text-xs">（{{ row.archetype }}）</span>
             </td>
             <td class="px-4 py-3 text-right">
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+              <span class="font-mono tabular-nums">
                 {{ row.decks }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+              <span class="font-mono tabular-nums">
                 {{ row.wins }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+              <span class="font-mono tabular-nums">
                 {{ row.top4 }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+              <span class="font-mono tabular-nums">
                 {{ row.usePct }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+              <span class="font-mono tabular-nums">
                 {{ row.winPerEv }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+              <span class="font-mono tabular-nums">
                 {{ row.winPerDk }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+              <span class="font-mono tabular-nums">
                 {{ row.t4PerDk }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+              <span class="font-mono tabular-nums">
                 {{ row.score }}
               </span>
             </td>

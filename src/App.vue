@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-nalika-bg dark:text-nalika-text-muted">
+  <div class="min-h-screen bg-white font-display dark:bg-nalika-bg dark:text-nalika-text-muted">
     <nav
       class="sticky top-0 z-999 flex w-full items-center gap-4 border-b border-gray-500/10 bg-white px-4 py-2 dark:bg-nalika-surface"
     >
