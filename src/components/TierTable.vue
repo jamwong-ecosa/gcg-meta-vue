@@ -6,7 +6,7 @@
       <thead>
         <tr class="bg-blue-800 text-stone-100 dark:bg-nalika-header dark:text-nalika-text">
           <th class="px-4 py-3 font-semibold">Archetype</th>
-          <th class="px-4 py-3 text-right font-semibold">Decks</th>
+          <th class="w-18 px-4 py-3 text-right font-semibold">Decks</th>
           <th class="px-4 py-3 text-right font-semibold">Wins</th>
           <th class="px-4 py-3 text-right font-semibold">Top4</th>
           <th class="px-4 py-3 text-right font-semibold">Use%</th>
@@ -35,31 +35,31 @@
             </span>
             <span class="text-xs">（{{ row.archetype }}）</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="font-mono tabular-nums">{{ row.decks }}</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="font-mono tabular-nums">{{ row.wins }}</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="font-mono tabular-nums">{{ row.top4 }}</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="font-mono tabular-nums">{{ row.usePct }}</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="font-mono tabular-nums">{{ row.winPerEv }}</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="font-mono tabular-nums">{{ row.winPerDk }}</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="font-mono tabular-nums">{{ row.t4PerDk }}</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="font-mono tabular-nums">{{ row.score }}</span>
           </td>
-          <td class="px-4 py-3 text-right">
+          <td class="w-18 px-4 py-3 text-right">
             <span class="rounded px-1.5 py-0.5 text-xs font-bold" :class="tierPillClass(row.tier)">
               {{ row.tier }}
             </span>
