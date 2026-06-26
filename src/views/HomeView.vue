@@ -4,14 +4,126 @@
     <p class="text-gray-600 dark:text-nalika-text-muted">
       This is body text using Tailwind gray utilities.
     </p>
+
+    <!-- Mobile cards -->
+    <div class="space-y-3 md:hidden">
+      <div
+        v-for="row in rows"
+        :key="row.archetype"
+        class="overflow-hidden rounded-lg bg-white not-dark:shadow not-dark:shadow-gray-400/10 dark:bg-nalika-surface"
+      >
+        <div :class="['flex h-9 items-center justify-between px-4', tierBarClass(row.tier)]">
+          <span
+            class="text-sm font-bold tracking-widest text-gray-700 uppercase dark:text-gray-200"
+          >
+            {{ row.tier }}
+          </span>
+          <span class="text-sm font-bold text-gray-700 dark:text-gray-200">
+            {{ row.score }}
+          </span>
+        </div>
+
+        <div class="px-4 pt-3 pb-2">
+          <span class="inline-flex items-center gap-0.5">
+            <span
+              v-for="dot in row.colorDots"
+              :key="dot.name"
+              class="inline-block h-2 w-2 rounded-full"
+              :style="{ background: dot.hex }"
+            />
+            <span class="font-bold text-gray-800 dark:text-nalika-text">{{ row.colors }}</span>
+          </span>
+          <span class="mt-0.5 block text-xs text-gray-500 dark:text-nalika-text-muted">
+            （{{ row.archetype }}）
+          </span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 px-4 pb-2">
+          <div>
+            <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
+              Decks
+            </span>
+            <span
+              class="font-mono text-sm font-bold text-gray-700 tabular-nums dark:text-nalika-text-muted"
+            >
+              {{ row.decks }}
+            </span>
+          </div>
+          <div>
+            <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
+              Wins
+            </span>
+            <span
+              class="font-mono text-sm font-bold text-gray-700 tabular-nums dark:text-nalika-text-muted"
+            >
+              {{ row.wins }}
+            </span>
+          </div>
+          <div>
+            <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
+              Top4
+            </span>
+            <span
+              class="font-mono text-sm font-bold text-gray-700 tabular-nums dark:text-nalika-text-muted"
+            >
+              {{ row.top4 }}
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2 px-4 pb-4">
+          <div>
+            <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
+              Use%
+            </span>
+            <span
+              class="font-mono text-xs font-bold text-gray-700 tabular-nums dark:text-nalika-text-muted"
+            >
+              {{ row.usePct }}
+            </span>
+          </div>
+          <div>
+            <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
+              Win/Ev
+            </span>
+            <span
+              class="font-mono text-xs font-bold text-gray-700 tabular-nums dark:text-nalika-text-muted"
+            >
+              {{ row.winPerEv }}
+            </span>
+          </div>
+          <div>
+            <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
+              Win/Dk
+            </span>
+            <span
+              class="font-mono text-xs font-bold text-gray-700 tabular-nums dark:text-nalika-text-muted"
+            >
+              {{ row.winPerDk }}
+            </span>
+          </div>
+          <div>
+            <span class="block text-[0.6rem] font-semibold tracking-widest text-gray-400 uppercase">
+              T4/Dk
+            </span>
+            <span
+              class="font-mono text-xs font-bold text-gray-700 tabular-nums dark:text-nalika-text-muted"
+            >
+              {{ row.t4PerDk }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop table -->
     <div
-      class="overflow-hidden rounded-lg bg-white not-dark:shadow-xs not-dark:shadow-gray-400/15 dark:bg-nalika-surface"
+      class="hidden overflow-hidden rounded-lg bg-white not-dark:shadow-xs not-dark:shadow-gray-400/15 md:block dark:bg-nalika-surface"
     >
       <table class="w-full text-left text-sm">
-        <thead class="hidden md:table-header-group">
+        <thead>
           <tr class="bg-blue-50 dark:bg-nalika-header">
             <th class="px-4 py-3 font-semibold text-gray-900 dark:text-nalika-text">Archetype</th>
-            <th class="px-4 py-3 font-semibold text-gray-900 dark:text-nalika-text">Colors</th>
             <th class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-nalika-text">
               Decks
             </th>
@@ -45,93 +157,69 @@
           <tr
             v-for="row in rows"
             :key="row.archetype"
-            class="mb-3 flex flex-col rounded-lg border border-gray-200 bg-white p-4 md:mb-0 md:table-row md:border-0 md:bg-transparent md:p-0 odd:md:bg-gray-100/5 even:md:bg-gray-100/45 dark:border-nalika-border dark:bg-nalika-surface dark:even:md:bg-white/3"
+            class="odd:bg-gray-100/5 even:bg-gray-100/45 dark:even:bg-white/3"
           >
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Archetype</span>
-              <span class="text-gray-900 dark:text-nalika-text">{{ row.archetype }}</span>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center gap-0.5">
+                <span
+                  v-for="dot in row.colorDots"
+                  :key="dot.name"
+                  class="inline-block h-2 w-2 rounded-full"
+                  :style="{ background: dot.hex }"
+                />
+                <span class="text-gray-900 dark:text-nalika-text">{{ row.colors }}</span>
+              </span>
+              <span class="ml-1 text-xs text-gray-500 dark:text-nalika-text-muted">
+                （{{ row.archetype }}）
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Colors</span>
-              <span class="rounded px-1.5 py-0.5 text-xs font-medium" :class="row.colorClass">{{
-                row.colors
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+                {{ row.decks }}
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Decks</span>
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">{{
-                row.decks
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+                {{ row.wins }}
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Wins</span>
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">{{
-                row.wins
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+                {{ row.top4 }}
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Top4</span>
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">{{
-                row.top4
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+                {{ row.usePct }}
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Use%</span>
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">{{
-                row.usePct
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+                {{ row.winPerEv }}
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Win/Ev</span>
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">{{
-                row.winPerEv
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+                {{ row.winPerDk }}
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Win/Dk</span>
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">{{
-                row.winPerDk
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+                {{ row.t4PerDk }}
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">T4/Dk</span>
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">{{
-                row.t4PerDk
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">
+                {{ row.score }}
+              </span>
             </td>
-            <td
-              class="flex items-center justify-between border-b border-gray-100 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right dark:border-nalika-border/50"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Score</span>
-              <span class="font-mono text-gray-600 tabular-nums dark:text-nalika-text-muted">{{
-                row.score
-              }}</span>
-            </td>
-            <td
-              class="flex items-center justify-between border-b-0 py-2 md:table-cell md:border-0 md:px-4 md:py-3 md:text-right"
-            >
-              <span class="text-xs font-semibold text-gray-500 md:hidden">Tier</span>
-              <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="row.tierClass">{{
-                row.tier
-              }}</span>
+            <td class="px-4 py-3 text-right">
+              <span
+                class="rounded px-1.5 py-0.5 text-xs font-bold"
+                :class="tierPillClass(row.tier)"
+              >
+                {{ row.tier }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -141,11 +229,47 @@
 </template>
 
 <script setup>
+function tierBarClass(tier) {
+  const map = {
+    T1: 'bg-red-300 dark:bg-red-700',
+    'T1.5': 'bg-orange-300 dark:bg-orange-700',
+    T2: 'bg-amber-400 dark:bg-amber-700',
+    'T2.5': 'bg-green-300 dark:bg-green-700',
+    T3: 'bg-blue-300 dark:bg-blue-900',
+    '--': 'bg-gray-300 dark:bg-gray-700',
+  }
+  return map[tier] || tw`bg-gray-300 dark:bg-gray-700`
+}
+
+function tierPillClass(tier) {
+  const map = {
+    T1: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+    'T1.5': 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
+    T2: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+    'T2.5': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
+    T3: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+    '--': 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+  }
+  return map[tier] || 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+}
+
+const colorMap = {
+  Blue: '#2b6cb0',
+  Red: '#e53e3e',
+  Green: '#38a169',
+  Purple: '#805ad5',
+  White: '#cbd5e0',
+}
+
+function parseColors(str) {
+  return str.split('+').map(name => ({ name, hex: colorMap[name] }))
+}
+
 const rows = [
   {
     archetype: 'ガンダム / バルバトス（第1形態）',
     colors: 'Blue+Purple',
-    colorClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+    colorDots: parseColors('Blue+Purple'),
     decks: 327,
     wins: 44,
     top4: 147,
@@ -155,12 +279,11 @@ const rows = [
     t4PerDk: '45.0%',
     score: 224,
     tier: 'T1',
-    tierClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
   },
   {
     archetype: 'GQuuuuuuX（Ω起動時） / ジャスティス',
     colors: 'Red+White',
-    colorClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+    colorDots: parseColors('Red+White'),
     decks: 146,
     wins: 23,
     top4: 64,
@@ -170,12 +293,11 @@ const rows = [
     t4PerDk: '43.8%',
     score: 153,
     tier: 'T1.5',
-    tierClass: 'bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-400',
   },
   {
     archetype: 'ガンダム / グシオンリベイク',
     colors: 'Blue+Purple',
-    colorClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+    colorDots: parseColors('Blue+Purple'),
     decks: 47,
     wins: 11,
     top4: 28,
@@ -185,12 +307,11 @@ const rows = [
     t4PerDk: '59.6%',
     score: 136,
     tier: 'T1.5',
-    tierClass: 'bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-400',
   },
   {
     archetype: 'ウイングゼロ / ジャスティス',
     colors: 'Green+White',
-    colorClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
+    colorDots: parseColors('Green+White'),
     decks: 35,
     wins: 6,
     top4: 16,
@@ -200,12 +321,11 @@ const rows = [
     t4PerDk: '45.7%',
     score: 98,
     tier: 'T2',
-    tierClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
   },
   {
     archetype: 'ネオ・ジオング / エールストライク',
     colors: 'Red+White',
-    colorClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+    colorDots: parseColors('Red+White'),
     decks: 28,
     wins: 5,
     top4: 13,
@@ -215,12 +335,11 @@ const rows = [
     t4PerDk: '46.4%',
     score: 95,
     tier: 'T2',
-    tierClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
   },
   {
     archetype: 'バルバトスルプス / ジャスティス',
     colors: 'Purple+White',
-    colorClass: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400',
+    colorDots: parseColors('Purple+White'),
     decks: 24,
     wins: 5,
     top4: 10,
@@ -230,12 +349,11 @@ const rows = [
     t4PerDk: '41.7%',
     score: 95,
     tier: 'T2',
-    tierClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
   },
   {
     archetype: 'ガンダム / ジオング',
     colors: 'Blue+Green',
-    colorClass: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400',
+    colorDots: parseColors('Blue+Green'),
     decks: 111,
     wins: 9,
     top4: 49,
@@ -245,12 +363,11 @@ const rows = [
     t4PerDk: '44.1%',
     score: 94,
     tier: 'T2',
-    tierClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
   },
   {
     archetype: 'ネオ・ジオング / ジャスティス',
     colors: 'Red+White',
-    colorClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+    colorDots: parseColors('Red+White'),
     decks: 72,
     wins: 7,
     top4: 34,
@@ -260,12 +377,11 @@ const rows = [
     t4PerDk: '47.2%',
     score: 92,
     tier: 'T2',
-    tierClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
   },
   {
     archetype: 'ジ・O / エールストライク',
     colors: 'Blue+White',
-    colorClass: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',
+    colorDots: parseColors('Blue+White'),
     decks: 38,
     wins: 5,
     top4: 18,
@@ -275,12 +391,11 @@ const rows = [
     t4PerDk: '47.4%',
     score: 90,
     tier: 'T2',
-    tierClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
   },
   {
     archetype: 'ウイングゼロ / ウイング',
     colors: 'Green+White',
-    colorClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
+    colorDots: parseColors('Green+White'),
     decks: 19,
     wins: 3,
     top4: 10,
@@ -290,12 +405,11 @@ const rows = [
     t4PerDk: '52.6%',
     score: 89,
     tier: 'T2',
-    tierClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
   },
   {
     archetype: 'ウイングゼロ / エールストライク',
     colors: 'Green+White',
-    colorClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
+    colorDots: parseColors('Green+White'),
     decks: 120,
     wins: 8,
     top4: 46,
@@ -305,12 +419,11 @@ const rows = [
     t4PerDk: '38.3%',
     score: 83,
     tier: 'T2.5',
-    tierClass: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
   },
   {
     archetype: 'デスティニー / エールストライク',
     colors: 'Purple+White',
-    colorClass: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400',
+    colorDots: parseColors('Purple+White'),
     decks: 49,
     wins: 3,
     top4: 28,
@@ -320,12 +433,11 @@ const rows = [
     t4PerDk: '57.1%',
     score: 81,
     tier: 'T2.5',
-    tierClass: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
   },
   {
     archetype: 'ガンダム / バルバトスルプス',
     colors: 'Blue+Purple',
-    colorClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+    colorDots: parseColors('Blue+Purple'),
     decks: 67,
     wins: 5,
     top4: 29,
@@ -335,12 +447,11 @@ const rows = [
     t4PerDk: '43.3%',
     score: 78,
     tier: 'T2.5',
-    tierClass: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
   },
   {
     archetype: 'バルバトスルプス / グシオンリベイク',
     colors: 'Purple+White',
-    colorClass: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400',
+    colorDots: parseColors('Purple+White'),
     decks: 17,
     wins: 2,
     top4: 8,
@@ -350,12 +461,11 @@ const rows = [
     t4PerDk: '47.1%',
     score: 77,
     tier: 'T2.5',
-    tierClass: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
   },
   {
     archetype: 'ガンダム / バンシィ・ノルン',
     colors: 'Blue+White',
-    colorClass: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',
+    colorDots: parseColors('Blue+White'),
     decks: 27,
     wins: 3,
     top4: 11,
@@ -365,12 +475,11 @@ const rows = [
     t4PerDk: '40.7%',
     score: 75,
     tier: 'T2.5',
-    tierClass: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
   },
   {
     archetype: 'Vガンダム / バンシィ・ノルン',
     colors: 'Blue+White',
-    colorClass: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',
+    colorDots: parseColors('Blue+White'),
     decks: 38,
     wins: 4,
     top4: 14,
@@ -380,12 +489,11 @@ const rows = [
     t4PerDk: '36.8%',
     score: 74,
     tier: 'T2.5',
-    tierClass: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
   },
   {
     archetype: 'プロヴィデンス / ジャスティス',
     colors: 'Red+White',
-    colorClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+    colorDots: parseColors('Red+White'),
     decks: 31,
     wins: 3,
     top4: 9,
@@ -395,12 +503,11 @@ const rows = [
     t4PerDk: '29.0%',
     score: 64,
     tier: 'T3',
-    tierClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
   },
   {
     archetype: 'ガンダム / ザクⅡ（シャア）',
     colors: 'Blue+Green',
-    colorClass: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400',
+    colorDots: parseColors('Blue+Green'),
     decks: 25,
     wins: 1,
     top4: 10,
@@ -410,12 +517,11 @@ const rows = [
     t4PerDk: '40.0%',
     score: 58,
     tier: 'T3',
-    tierClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
   },
   {
     archetype: 'ユニコーン（Dモード） / ユニコーン（覚醒）',
     colors: 'Blue+White',
-    colorClass: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',
+    colorDots: parseColors('Blue+White'),
     decks: 35,
     wins: 1,
     top4: 13,
@@ -425,12 +531,11 @@ const rows = [
     t4PerDk: '37.1%',
     score: 53,
     tier: 'T3',
-    tierClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
   },
   {
     archetype: 'プロヴィデンス / エールストライク',
     colors: 'Red+White',
-    colorClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+    colorDots: parseColors('Red+White'),
     decks: 22,
     wins: 0,
     top4: 6,
@@ -440,7 +545,6 @@ const rows = [
     t4PerDk: '27.3%',
     score: 0,
     tier: '--',
-    tierClass: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
   },
 ]
 </script>

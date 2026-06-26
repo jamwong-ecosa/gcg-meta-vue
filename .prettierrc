@@ -3,6 +3,8 @@
   "printWidth": 100,
   "semi": false,
   "singleQuote": true,
+  "htmlWhitespaceSensitivity": "ignore",
+  "tailwindFunctions": ["tw"],
   "plugins": ["prettier-plugin-tailwindcss"],
   "tailwindStylesheet": "./src/style.css"
 }
