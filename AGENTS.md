@@ -35,6 +35,7 @@ source ~/.nvm/nvm.sh && nvm use 24
 - Tailwind classes auto-sorted by `prettier-plugin-tailwindcss`
 - Match existing conventions in neighboring files
 - Prefer Tailwind utility classes over custom CSS classes; only create a custom class when a pattern cannot be expressed with utilities alone
+- Whenever Tailwind classes appear outside a `class` attribute (e.g. `exact-active-class`, `active-class`, transition props), wrap them with `tw`` tagged template literal (auto-imported from `src/utils/tw.js`)
 
 ## Dark mode
 

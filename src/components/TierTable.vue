@@ -1,11 +1,11 @@
 <template>
   <div
-    class="hidden overflow-hidden rounded-lg bg-white not-dark:shadow-xs not-dark:shadow-gray-400/15 md:block dark:bg-nalika-surface"
+    class="hidden rounded-lg bg-white not-dark:shadow-xs not-dark:shadow-gray-400/15 md:block dark:bg-nalika-surface"
   >
     <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="bg-blue-800 text-stone-100 dark:bg-nalika-header dark:text-nalika-text">
-          <th class="px-4 py-3 font-semibold">Archetype</th>
+      <thead class="sticky top-[60px] z-10">
+        <tr class="bg-ruri text-stone-100 dark:bg-nalika-header dark:text-nalika-text">
+          <th class="rounded-tl-lg px-4 py-3 font-semibold">Archetype</th>
           <th class="w-18 px-4 py-3 text-right font-semibold">Decks</th>
           <th class="px-4 py-3 text-right font-semibold">Wins</th>
           <th class="px-4 py-3 text-right font-semibold">Top4</th>
@@ -14,7 +14,7 @@
           <th class="px-4 py-3 text-right font-semibold">Win/Dk</th>
           <th class="px-4 py-3 text-right font-semibold">T4/Dk</th>
           <th class="px-4 py-3 text-right font-semibold">Score</th>
-          <th class="px-4 py-3 text-right font-semibold">Tier</th>
+          <th class="rounded-tr-lg px-4 py-3 text-right font-semibold">Tier</th>
         </tr>
       </thead>
       <tbody>

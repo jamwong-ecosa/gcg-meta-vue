@@ -27,7 +27,6 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 
 const props = defineProps({
@@ -37,7 +36,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const dropdownRef = ref(null)
+const dropdownRef = useTemplateRef('dropdownRef')
 const open = ref(false)
 
 onClickOutside(dropdownRef, () => { open.value = false })
