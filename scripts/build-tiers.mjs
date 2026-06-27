@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import * as ss from 'simple-statistics'
 
 const WINNER = '優勝'
@@ -12,6 +12,7 @@ const COLOR_HEX = {
   Black: '#1a202c',
   Yellow: '#d69e2e',
 }
+const TYPE_ORDER = { unit: 0, pilot: 1, command: 2, base: 3 }
 
 function loadJSON(path) {
   return JSON.parse(readFileSync(path, 'utf8'))
@@ -20,6 +21,7 @@ function loadJSON(path) {
 function createCardLookups(cardsRaw) {
   const cardMap = {}
   const nameToColor = {}
+  const cardToGroup = {}
 
   for (const card of cardsRaw) {
     const key = card.cardNo
@@ -28,16 +30,29 @@ function createCardLookups(cardsRaw) {
         name: card.name,
         color: card.color,
         type: card.type,
+        cost: card.cost,
+        level: card.level,
+        ap: card.ap,
+        hp: card.hp,
+        features: card.features,
         rarity: card.rarity,
+        effect: card.effect,
       }
     }
     if (!nameToColor[card.name]) nameToColor[card.name] = card.color
+    cardToGroup[card.cardNo] =
+      card.effect === '-'
+        ? `${card.level}|${card.cost}|${card.ap}|${card.hp}|-`
+        : `${card.color}|${card.level}|${card.cost}|${card.ap}|${card.hp}|${card.effect || '-'}`
   }
 
   const lookup = (cardId) =>
-    cardMap[cardId] ?? { name: '?', color: '?', type: '?', rarity: '?' }
+    cardMap[cardId] ?? {
+      name: '?', color: '?', type: '?', cost: '?', level: '?',
+      ap: '?', hp: '?', features: '?', rarity: '?', effect: '?',
+    }
 
-  return { lookup, nameToColor }
+  return { lookup, nameToColor, cardToGroup }
 }
 
 function getDeckColors(deck, lookup) {
@@ -257,14 +272,122 @@ function colorDots(colors) {
   }))
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
+// ─── Card-level analysis ─────────────────────────────────────────────────────
+
+function countWinnerCards(winnerGroup) {
+  const counts = {}
+  if (!winnerGroup) return counts
+  for (const deck of winnerGroup.decks) {
+    const seen = new Set()
+    for (const card of deck) {
+      if (!seen.has(card.cardId)) {
+        counts[card.cardId] = (counts[card.cardId] || 0) + 1
+        seen.add(card.cardId)
+      }
+    }
+  }
+  return counts
+}
+
+function aggregateCards(groupDecks) {
+  const cardStats = {}
+  for (const deck of groupDecks) {
+    const seen = new Set()
+    for (const card of deck) {
+      if (!cardStats[card.cardId]) {
+        cardStats[card.cardId] = { totalQty: 0, decksIncluded: 0 }
+      }
+      cardStats[card.cardId].totalQty += card.quantity
+      if (!seen.has(card.cardId)) {
+        cardStats[card.cardId].decksIncluded++
+        seen.add(card.cardId)
+      }
+    }
+  }
+  return cardStats
+}
+
+function calculateTechScore(wins, decks, totalArchetypeDecks) {
+  const inclusionRate = decks / totalArchetypeDecks
+  if (inclusionRate > 0.40 || inclusionRate < 0.01) return 0
+  if (wins < 2) return 0
+  const score = (wins / decks) * (1 - inclusionRate)
+  return Math.round(score * 1000) / 1000
+}
+
+function selectTopCards(allCards) {
+  const perType = {}
+  for (const card of allCards) {
+    if (!perType[card.type]) perType[card.type] = []
+    perType[card.type].push(card)
+  }
+  const typePickOrder = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
+  const selectedIds = new Set()
+  const selected = []
+  for (const type of typePickOrder) {
+    const sliceSize = type === 'UNIT' ? 4 : 2
+    for (const card of (perType[type] || []).slice(0, sliceSize)) {
+      selected.push(card)
+      selectedIds.add(card.cardId)
+    }
+  }
+  for (const card of allCards) {
+    if (!typePickOrder.includes(card.type)) continue
+    if (card.type !== 'UNIT') {
+      const typeCount = selected.filter((tc) => tc.type === card.type).length
+      if (typeCount >= 4) continue
+    }
+    if (selectedIds.has(card.cardId)) continue
+    if (selected.length >= 30) break
+    selected.push(card)
+    selectedIds.add(card.cardId)
+  }
+  return selected
+}
+
+function computeFeatureBadges(topCards) {
+  const featureCounts = {}
+  for (const card of topCards) {
+    if (!['UNIT', 'PILOT', 'COMMAND', 'BASE'].includes(card.type)) continue
+    if (card.features) {
+      for (const feature of card.features
+        .split(' ')
+        .map((s) => s.trim())
+        .filter(Boolean)) {
+        if (feature === '-') continue
+        featureCounts[feature] = (featureCounts[feature] || 0) + 1
+      }
+    }
+  }
+  return Object.entries(featureCounts).sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+  )
+}
+
+function serializeDeckCards(deck, lookup) {
+  const cardQty = deck.reduce((acc, card) => {
+    acc[card.cardId] = (acc[card.cardId] || 0) + (card.quantity || 1)
+    return acc
+  }, {})
+  const sorted = Object.entries(cardQty).sort(([aId], [bId]) => {
+    const typeA = TYPE_ORDER[lookup(aId).type.toLowerCase()] ?? 99
+    const typeB = TYPE_ORDER[lookup(bId).type.toLowerCase()] ?? 99
+    return typeA !== typeB ? typeA - typeB : aId.localeCompare(bId)
+  })
+  return sorted.map(([id, qty]) => `${id}:${qty}`).join('|')
+}
+
+// ─── Main ────────────────────────────────────────────────────────────────────
 
 const tournaments = loadJSON('data/tournaments-all.json')
 const cardsRaw = loadJSON('data/cards.json')
 
 const { lookup, nameToColor } = createCardLookups(cardsRaw)
 
+mkdirSync('src/data/archetypes', { recursive: true })
+
 const tierData = []
+const manifest = []
 
 for (const series of tournaments) {
   console.log(`Processing: ${series.label}`)
@@ -275,9 +398,72 @@ for (const series of tournaments) {
   const { comboArchetypes, winnerComboArchetypes, top4ComboArchetypes } =
     buildArchetypeMaps(allPlayers, winners, top4Players, lookup, true)
 
-  const archetypes = Object.entries(comboArchetypes).map(([combo, group]) => {
+  // --- Card-level analysis per archetype ---
+
+  const archetypeDetails = Object.entries(comboArchetypes).map(([combo, group]) => {
     const winnerGroup = winnerComboArchetypes[combo]
     const top4Group = top4ComboArchetypes[combo]
+    const groupDecks = group.decks
+    const count = groupDecks.length
+
+    const winnerCounts = countWinnerCards(winnerGroup)
+    const cardAgg = aggregateCards(groupDecks)
+
+    const allCards = Object.entries(cardAgg).map(([cardId, cardData]) => {
+      const info = lookup(cardId)
+      return {
+        cardId,
+        name: info.name,
+        color: info.color,
+        type: info.type,
+        cost: info.cost,
+        level: info.level,
+        ap: info.ap,
+        hp: info.hp,
+        features: info.features,
+        rarity: info.rarity,
+        decksIncluded: cardData.decksIncluded,
+        inclusionRate: +(cardData.decksIncluded / count).toFixed(4),
+        winnerDeckCount: winnerCounts[cardId] || 0,
+        avgQty: Math.round(cardData.totalQty / cardData.decksIncluded),
+        inWinner: false,
+        techScore: calculateTechScore(
+          winnerCounts[cardId] || 0,
+          cardData.decksIncluded,
+          count,
+        ),
+      }
+    })
+
+    const topTechCards = allCards
+      .filter(c => c.techScore > 0)
+      .sort((a, b) => b.techScore - a.techScore)
+      .slice(0, 3)
+    for (const card of topTechCards) {
+      card.inWinner = true
+    }
+
+    const rarityScore = (rarity) =>
+      rarity?.startsWith('LR') ? 100 : rarity?.startsWith('R') ? 50 : 0
+    allCards.sort(
+      (a, b) =>
+        b.inclusionRate - a.inclusionRate ||
+        rarityScore(b.rarity) - rarityScore(a.rarity) ||
+        (TYPE_ORDER[a.type.toLowerCase()] ?? 9) -
+          (TYPE_ORDER[b.type.toLowerCase()] ?? 9) ||
+        a.cardId.localeCompare(b.cardId) ||
+        a.color.localeCompare(b.color),
+    )
+
+    const topCards = selectTopCards(allCards)
+    const topCardIds = new Set(topCards.map((c) => c.cardId))
+    const filteredCards = allCards.filter((c) => !topCardIds.has(c.cardId))
+    const featureBadges = computeFeatureBadges(topCards)
+
+    const deckCardIds = groupDecks.map((deck) =>
+      serializeDeckCards(deck, lookup),
+    )
+
     const sigMatch = combo.match(/\((.+)\)/)
     const sigStr = sigMatch ? sigMatch[1] : null
     const sigCards = sigStr
@@ -289,28 +475,64 @@ for (const series of tournaments) {
 
     return {
       combo,
-      deckCount: group.decks.length,
+      sigCards,
+      cardCount: allCards.length,
+      deckCount: count,
+      percent: +((count / totalAll) * 100).toFixed(1),
       winnerDeckCount: winnerGroup ? winnerGroup.decks.length : 0,
       top4: top4Group ? top4Group.decks.length : 0,
-      sigCards,
+      cards: topCards,
+      filteredCards,
+      featureBadges,
+      deckUrls: group.deckUrls,
+      deckWinnerFlags: group.deckWinnerFlags,
+      deckCardIds,
     }
   })
+
+  // --- Threshold archetypes (same minSize filter as tiers) ---
 
   const minSize = Math.max(
     Math.ceil(totalAll * 0.01),
     Math.min(12, Math.ceil(totalAll * 0.05)),
   )
 
-  const main = archetypes
+  const mainDetails = archetypeDetails
     .filter((a) => a.deckCount >= minSize)
     .sort((a, b) => b.deckCount - a.deckCount)
+
+  // --- Write per-archetype files for lazy loading ---
+
+  const seriesDir = `src/data/archetypes/${series.value}`
+  mkdirSync(seriesDir, { recursive: true })
+
+  mainDetails.forEach((arch, idx) => {
+    const file = `${seriesDir}/${idx}.json`
+    writeFileSync(file, JSON.stringify(arch, null, 2))
+  })
+
+  manifest.push({
+    value: series.value,
+    label: series.label,
+    archetypes: mainDetails.map((a) => ({
+      combo: a.combo,
+      sigCards: a.sigCards,
+      cardCount: a.cardCount,
+      deckCount: a.deckCount,
+      percent: a.percent,
+      winnerDeckCount: a.winnerDeckCount,
+      top4: a.top4,
+    })),
+  })
+
+  // --- Build tier rows ---
 
   const seriesProcessed = {
     value: series.value,
     label: series.label,
     totalEvents: totalWinners,
     totalDecks: totalAll,
-    archetypes: main,
+    archetypes: mainDetails,
   }
 
   seriesProcessed.tierThresholds = computeTierThresholds(seriesProcessed)
@@ -370,4 +592,7 @@ for (const series of tournaments) {
 }
 
 writeFileSync('src/data/tiers.json', JSON.stringify(tierData, null, 2))
-console.log(`\nSaved src/data/tiers.json (${tierData.length} series, ${tierData.reduce((s, t) => s + t.rows.length, 0)} archetype rows)`)
+console.log(`Saved src/data/tiers.json (${tierData.length} series, ${tierData.reduce((s, t) => s + t.rows.length, 0)} archetype rows)`)
+
+writeFileSync('src/data/archetypes/index.json', JSON.stringify(manifest, null, 2))
+console.log(`Saved src/data/archetypes/index.json (${manifest.length} series, ${manifest.reduce((s, t) => s + t.archetypes.length, 0)} archetypes)`)

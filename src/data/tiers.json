@@ -18,15 +18,38 @@
             "hex": "#805ad5"
           }
         ],
-        "decks": 529,
-        "wins": 68,
-        "top4": 238,
-        "usePct": "26.1%",
-        "winPerEv": "31.2%",
-        "winPerDk": "12.9%",
-        "t4PerDk": "45.0%",
-        "score": 262,
+        "decks": 409,
+        "wins": 52,
+        "top4": 187,
+        "usePct": "20.2%",
+        "winPerEv": "23.9%",
+        "winPerDk": "12.7%",
+        "t4PerDk": "45.7%",
+        "score": 217,
         "tier": "T1"
+      },
+      {
+        "archetype": "Red+White（GQuuuuuuX（オメガ・サイコミュ起動時） / ジャスティスガンダム）",
+        "colors": "Red+White",
+        "colorDots": [
+          {
+            "name": "Red",
+            "hex": "#e53e3e"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 181,
+        "wins": 28,
+        "top4": 89,
+        "usePct": "8.9%",
+        "winPerEv": "12.8%",
+        "winPerDk": "15.5%",
+        "t4PerDk": "49.2%",
+        "score": 157,
+        "tier": "T1.5"
       },
       {
         "archetype": "Blue+Purple（ガンダム / ガンダム・グシオンリベイク）",
@@ -41,37 +64,14 @@
             "hex": "#805ad5"
           }
         ],
-        "decks": 21,
-        "wins": 6,
-        "top4": 15,
-        "usePct": "1.0%",
-        "winPerEv": "2.8%",
-        "winPerDk": "28.6%",
-        "t4PerDk": "71.4%",
-        "score": 125,
-        "tier": "T1.5"
-      },
-      {
-        "archetype": "Red+White（GFreD / エールストライクガンダム）",
-        "colors": "Red+White",
-        "colorDots": [
-          {
-            "name": "Red",
-            "hex": "#e53e3e"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 75,
-        "wins": 12,
-        "top4": 43,
-        "usePct": "3.7%",
-        "winPerEv": "5.5%",
-        "winPerDk": "16.0%",
-        "t4PerDk": "57.3%",
-        "score": 120,
+        "decks": 57,
+        "wins": 15,
+        "top4": 32,
+        "usePct": "2.8%",
+        "winPerEv": "6.9%",
+        "winPerDk": "26.3%",
+        "t4PerDk": "56.1%",
+        "score": 143,
         "tier": "T1.5"
       },
       {
@@ -87,14 +87,14 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 35,
-        "wins": 7,
-        "top4": 20,
-        "usePct": "1.7%",
-        "winPerEv": "3.2%",
-        "winPerDk": "20.0%",
-        "t4PerDk": "57.1%",
-        "score": 109,
+        "decks": 86,
+        "wins": 11,
+        "top4": 41,
+        "usePct": "4.2%",
+        "winPerEv": "5.0%",
+        "winPerDk": "12.8%",
+        "t4PerDk": "47.7%",
+        "score": 104,
         "tier": "T2"
       },
       {
@@ -110,18 +110,18 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 53,
-        "wins": 9,
-        "top4": 26,
-        "usePct": "2.6%",
-        "winPerEv": "4.1%",
-        "winPerDk": "17.0%",
-        "t4PerDk": "49.1%",
-        "score": 105,
+        "decks": 33,
+        "wins": 6,
+        "top4": 17,
+        "usePct": "1.6%",
+        "winPerEv": "2.8%",
+        "winPerDk": "18.2%",
+        "t4PerDk": "51.5%",
+        "score": 100,
         "tier": "T2"
       },
       {
-        "archetype": "Blue+Green（ガンダム / ザクⅡ（シャア・アズナブル機））",
+        "archetype": "Blue+Green（ガンダム / ジオング）",
         "colors": "Blue+Green",
         "colorDots": [
           {
@@ -133,38 +133,84 @@
             "hex": "#38a169"
           }
         ],
-        "decks": 164,
-        "wins": 12,
-        "top4": 73,
-        "usePct": "8.1%",
-        "winPerEv": "5.5%",
-        "winPerDk": "7.3%",
-        "t4PerDk": "44.5%",
-        "score": 95,
+        "decks": 138,
+        "wins": 11,
+        "top4": 62,
+        "usePct": "6.8%",
+        "winPerEv": "5.0%",
+        "winPerDk": "8.0%",
+        "t4PerDk": "44.9%",
+        "score": 94,
         "tier": "T2"
       },
       {
-        "archetype": "Red+White（GQuuuuuuX（オメガ・サイコミュ起動時） / ジャスティスガンダム）",
-        "colors": "Red+White",
+        "archetype": "Green+White（ウイングガンダムゼロ / ジャスティスガンダム）",
+        "colors": "Green+White",
         "colorDots": [
           {
-            "name": "Red",
-            "hex": "#e53e3e"
+            "name": "Green",
+            "hex": "#38a169"
           },
           {
             "name": "White",
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 44,
-        "wins": 7,
-        "top4": 17,
-        "usePct": "2.2%",
-        "winPerEv": "3.2%",
-        "winPerDk": "15.9%",
-        "t4PerDk": "38.6%",
-        "score": 89,
-        "tier": "T2.5"
+        "decks": 39,
+        "wins": 6,
+        "top4": 19,
+        "usePct": "1.9%",
+        "winPerEv": "2.8%",
+        "winPerDk": "15.4%",
+        "t4PerDk": "48.7%",
+        "score": 94,
+        "tier": "T2"
+      },
+      {
+        "archetype": "Green+White（ウイングガンダムゼロ / ウイングガンダム）",
+        "colors": "Green+White",
+        "colorDots": [
+          {
+            "name": "Green",
+            "hex": "#38a169"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 23,
+        "wins": 4,
+        "top4": 12,
+        "usePct": "1.1%",
+        "winPerEv": "1.8%",
+        "winPerDk": "17.4%",
+        "t4PerDk": "52.2%",
+        "score": 92,
+        "tier": "T2"
+      },
+      {
+        "archetype": "Purple+White（ガンダム・バルバトスルプス / ジャスティスガンダム）",
+        "colors": "Purple+White",
+        "colorDots": [
+          {
+            "name": "Purple",
+            "hex": "#805ad5"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 31,
+        "wins": 6,
+        "top4": 12,
+        "usePct": "1.5%",
+        "winPerEv": "2.8%",
+        "winPerDk": "19.4%",
+        "t4PerDk": "38.7%",
+        "score": 91,
+        "tier": "T2"
       },
       {
         "archetype": "Blue+White（ジ・O / エールストライクガンダム）",
@@ -179,60 +225,37 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 40,
-        "wins": 5,
-        "top4": 19,
-        "usePct": "2.0%",
-        "winPerEv": "2.3%",
-        "winPerDk": "12.5%",
-        "t4PerDk": "47.5%",
-        "score": 85,
-        "tier": "T2.5"
+        "decks": 46,
+        "wins": 6,
+        "top4": 22,
+        "usePct": "2.3%",
+        "winPerEv": "2.8%",
+        "winPerDk": "13.0%",
+        "t4PerDk": "47.8%",
+        "score": 90,
+        "tier": "T2"
       },
       {
-        "archetype": "Red+White（GFreD / ジャスティスガンダム）",
-        "colors": "Red+White",
+        "archetype": "Blue+Purple（ガンダム / ガンダム・バルバトスルプス）",
+        "colors": "Blue+Purple",
         "colorDots": [
           {
-            "name": "Red",
-            "hex": "#e53e3e"
+            "name": "Blue",
+            "hex": "#2b6cb0"
           },
           {
-            "name": "White",
-            "hex": "#cbd5e0"
+            "name": "Purple",
+            "hex": "#805ad5"
           }
         ],
-        "decks": 60,
+        "decks": 80,
         "wins": 7,
-        "top4": 24,
-        "usePct": "3.0%",
+        "top4": 33,
+        "usePct": "4.0%",
         "winPerEv": "3.2%",
-        "winPerDk": "11.7%",
-        "t4PerDk": "40.0%",
-        "score": 84,
-        "tier": "T2.5"
-      },
-      {
-        "archetype": "Green+White（ウイングガンダム / エールストライクガンダム）",
-        "colors": "Green+White",
-        "colorDots": [
-          {
-            "name": "Green",
-            "hex": "#38a169"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 82,
-        "wins": 8,
-        "top4": 31,
-        "usePct": "4.1%",
-        "winPerEv": "3.7%",
-        "winPerDk": "9.8%",
-        "t4PerDk": "37.8%",
-        "score": 81,
+        "winPerDk": "8.8%",
+        "t4PerDk": "41.3%",
+        "score": 80,
         "tier": "T2.5"
       },
       {
@@ -248,37 +271,14 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 110,
-        "wins": 8,
-        "top4": 45,
-        "usePct": "5.4%",
-        "winPerEv": "3.7%",
-        "winPerDk": "7.3%",
-        "t4PerDk": "40.9%",
-        "score": 80,
-        "tier": "T2.5"
-      },
-      {
-        "archetype": "Blue+White（ガンダム / エールストライクガンダム）",
-        "colors": "Blue+White",
-        "colorDots": [
-          {
-            "name": "Blue",
-            "hex": "#2b6cb0"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 32,
-        "wins": 4,
-        "top4": 14,
-        "usePct": "1.6%",
-        "winPerEv": "1.8%",
-        "winPerDk": "12.5%",
-        "t4PerDk": "43.8%",
-        "score": 80,
+        "decks": 145,
+        "wins": 9,
+        "top4": 56,
+        "usePct": "7.2%",
+        "winPerEv": "4.1%",
+        "winPerDk": "6.2%",
+        "t4PerDk": "38.6%",
+        "score": 79,
         "tier": "T2.5"
       },
       {
@@ -294,13 +294,13 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 32,
-        "wins": 2,
-        "top4": 18,
-        "usePct": "1.6%",
-        "winPerEv": "0.9%",
-        "winPerDk": "6.3%",
-        "t4PerDk": "56.3%",
+        "decks": 58,
+        "wins": 3,
+        "top4": 31,
+        "usePct": "2.9%",
+        "winPerEv": "1.4%",
+        "winPerDk": "5.2%",
+        "t4PerDk": "53.4%",
         "score": 74,
         "tier": "T2.5"
       },
@@ -324,31 +324,8 @@
         "winPerEv": "2.3%",
         "winPerDk": "10.4%",
         "t4PerDk": "35.4%",
-        "score": 72,
+        "score": 73,
         "tier": "T2.5"
-      },
-      {
-        "archetype": "Red+White（GQuuuuuuX（オメガ・サイコミュ起動時） / エールストライクガンダム）",
-        "colors": "Red+White",
-        "colorDots": [
-          {
-            "name": "Red",
-            "hex": "#e53e3e"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 30,
-        "wins": 2,
-        "top4": 13,
-        "usePct": "1.5%",
-        "winPerEv": "0.9%",
-        "winPerDk": "6.7%",
-        "t4PerDk": "43.3%",
-        "score": 65,
-        "tier": "T3"
       },
       {
         "archetype": "Blue+White（ガンダム / ユニコーンガンダム2号機 バンシィ・ノルン（デストロイモード））",
@@ -363,14 +340,83 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 43,
+        "decks": 32,
         "wins": 3,
-        "top4": 15,
-        "usePct": "2.1%",
+        "top4": 12,
+        "usePct": "1.6%",
         "winPerEv": "1.4%",
-        "winPerDk": "7.0%",
-        "t4PerDk": "34.9%",
-        "score": 61,
+        "winPerDk": "9.4%",
+        "t4PerDk": "37.5%",
+        "score": 68,
+        "tier": "T3"
+      },
+      {
+        "archetype": "Purple+White（ガンダム・バルバトスルプス / ガンダム・グシオンリベイク）",
+        "colors": "Purple+White",
+        "colorDots": [
+          {
+            "name": "Purple",
+            "hex": "#805ad5"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 22,
+        "wins": 2,
+        "top4": 9,
+        "usePct": "1.1%",
+        "winPerEv": "0.9%",
+        "winPerDk": "9.1%",
+        "t4PerDk": "40.9%",
+        "score": 68,
+        "tier": "T3"
+      },
+      {
+        "archetype": "Blue+Green（ガンダム / ザクⅡ（シャア・アズナブル機））",
+        "colors": "Blue+Green",
+        "colorDots": [
+          {
+            "name": "Blue",
+            "hex": "#2b6cb0"
+          },
+          {
+            "name": "Green",
+            "hex": "#38a169"
+          }
+        ],
+        "decks": 31,
+        "wins": 2,
+        "top4": 13,
+        "usePct": "1.5%",
+        "winPerEv": "0.9%",
+        "winPerDk": "6.5%",
+        "t4PerDk": "41.9%",
+        "score": 64,
+        "tier": "T3"
+      },
+      {
+        "archetype": "Red+White（プロヴィデンスガンダム / ジャスティスガンダム）",
+        "colors": "Red+White",
+        "colorDots": [
+          {
+            "name": "Red",
+            "hex": "#e53e3e"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 35,
+        "wins": 3,
+        "top4": 11,
+        "usePct": "1.7%",
+        "winPerEv": "1.4%",
+        "winPerDk": "8.6%",
+        "t4PerDk": "31.4%",
+        "score": 62,
         "tier": "T3"
       },
       {
@@ -386,41 +432,18 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 60,
-        "wins": 3,
-        "top4": 22,
-        "usePct": "3.0%",
-        "winPerEv": "1.4%",
-        "winPerDk": "5.0%",
-        "t4PerDk": "36.7%",
-        "score": 59,
-        "tier": "T3"
-      },
-      {
-        "archetype": "Purple+White（インパルスガンダム / エールストライクガンダム）",
-        "colors": "Purple+White",
-        "colorDots": [
-          {
-            "name": "Purple",
-            "hex": "#805ad5"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 26,
-        "wins": 1,
+        "decks": 29,
+        "wins": 2,
         "top4": 11,
-        "usePct": "1.3%",
-        "winPerEv": "0.5%",
-        "winPerDk": "3.8%",
-        "t4PerDk": "42.3%",
-        "score": 58,
+        "usePct": "1.4%",
+        "winPerEv": "0.9%",
+        "winPerDk": "6.9%",
+        "t4PerDk": "37.9%",
+        "score": 62,
         "tier": "T3"
       },
       {
-        "archetype": "Blue+White（ガンダム / ユニコーンガンダム（覚醒））",
+        "archetype": "Blue+White（ユニコーンガンダム（デストロイモード） / ユニコーンガンダム（覚醒））",
         "colors": "Blue+White",
         "colorDots": [
           {
@@ -432,38 +455,15 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 39,
-        "wins": 1,
-        "top4": 16,
-        "usePct": "1.9%",
-        "winPerEv": "0.5%",
-        "winPerDk": "2.6%",
-        "t4PerDk": "41.0%",
-        "score": 54,
+        "decks": 51,
+        "wins": 2,
+        "top4": 20,
+        "usePct": "2.5%",
+        "winPerEv": "0.9%",
+        "winPerDk": "3.9%",
+        "t4PerDk": "39.2%",
+        "score": 57,
         "tier": "T3"
-      },
-      {
-        "archetype": "Blue+Red（ガンダム / クシャトリヤ）",
-        "colors": "Blue+Red",
-        "colorDots": [
-          {
-            "name": "Blue",
-            "hex": "#2b6cb0"
-          },
-          {
-            "name": "Red",
-            "hex": "#e53e3e"
-          }
-        ],
-        "decks": 24,
-        "wins": 0,
-        "top4": 7,
-        "usePct": "1.2%",
-        "winPerEv": "0.0%",
-        "winPerDk": "0.0%",
-        "t4PerDk": "29.2%",
-        "score": 0,
-        "tier": "--"
       }
     ]
   },
@@ -486,15 +486,61 @@
             "hex": "#805ad5"
           }
         ],
-        "decks": 651,
-        "wins": 90,
-        "top4": 307,
-        "usePct": "27.4%",
-        "winPerEv": "35.0%",
-        "winPerDk": "13.8%",
-        "t4PerDk": "47.2%",
-        "score": 291,
+        "decks": 447,
+        "wins": 62,
+        "top4": 209,
+        "usePct": "18.8%",
+        "winPerEv": "24.1%",
+        "winPerDk": "13.9%",
+        "t4PerDk": "46.8%",
+        "score": 223,
         "tier": "T1"
+      },
+      {
+        "archetype": "Blue+Purple（ガンダム / ガンダム・バルバトスルプス）",
+        "colors": "Blue+Purple",
+        "colorDots": [
+          {
+            "name": "Blue",
+            "hex": "#2b6cb0"
+          },
+          {
+            "name": "Purple",
+            "hex": "#805ad5"
+          }
+        ],
+        "decks": 128,
+        "wins": 18,
+        "top4": 69,
+        "usePct": "5.4%",
+        "winPerEv": "7.0%",
+        "winPerDk": "14.1%",
+        "t4PerDk": "53.9%",
+        "score": 124,
+        "tier": "T1.5"
+      },
+      {
+        "archetype": "Red+White（GQuuuuuuX（オメガ・サイコミュ起動時） / ジャスティスガンダム）",
+        "colors": "Red+White",
+        "colorDots": [
+          {
+            "name": "Red",
+            "hex": "#e53e3e"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 138,
+        "wins": 19,
+        "top4": 65,
+        "usePct": "5.8%",
+        "winPerEv": "7.4%",
+        "winPerDk": "13.8%",
+        "t4PerDk": "47.1%",
+        "score": 120,
+        "tier": "T1.5"
       },
       {
         "archetype": "Green+White（ウイングガンダムゼロ / エールストライクガンダム）",
@@ -509,38 +555,38 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 127,
-        "wins": 20,
-        "top4": 66,
-        "usePct": "5.3%",
-        "winPerEv": "7.8%",
-        "winPerDk": "15.7%",
-        "t4PerDk": "52.0%",
-        "score": 130,
+        "decks": 164,
+        "wins": 18,
+        "top4": 81,
+        "usePct": "6.9%",
+        "winPerEv": "7.0%",
+        "winPerDk": "11.0%",
+        "t4PerDk": "49.4%",
+        "score": 115,
         "tier": "T1.5"
       },
       {
-        "archetype": "Red+White（GFreD / ジャスティスガンダム）",
-        "colors": "Red+White",
+        "archetype": "Blue+Green（ガンダム / ジオング）",
+        "colors": "Blue+Green",
         "colorDots": [
           {
-            "name": "Red",
-            "hex": "#e53e3e"
+            "name": "Blue",
+            "hex": "#2b6cb0"
           },
           {
-            "name": "White",
-            "hex": "#cbd5e0"
+            "name": "Green",
+            "hex": "#38a169"
           }
         ],
-        "decks": 47,
-        "wins": 11,
-        "top4": 24,
-        "usePct": "2.0%",
-        "winPerEv": "4.3%",
-        "winPerDk": "23.4%",
-        "t4PerDk": "51.1%",
-        "score": 118,
-        "tier": "T1.5"
+        "decks": 264,
+        "wins": 18,
+        "top4": 107,
+        "usePct": "11.1%",
+        "winPerEv": "7.0%",
+        "winPerDk": "6.8%",
+        "t4PerDk": "40.5%",
+        "score": 101,
+        "tier": "T2"
       },
       {
         "archetype": "Purple+White（デスティニーガンダム / エールストライクガンダム）",
@@ -555,37 +601,14 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 40,
-        "wins": 9,
-        "top4": 20,
-        "usePct": "1.7%",
-        "winPerEv": "3.5%",
-        "winPerDk": "22.5%",
-        "t4PerDk": "50.0%",
-        "score": 110,
-        "tier": "T1.5"
-      },
-      {
-        "archetype": "Blue+Green（ガンダム / ザクⅡ（シャア・アズナブル機））",
-        "colors": "Blue+Green",
-        "colorDots": [
-          {
-            "name": "Blue",
-            "hex": "#2b6cb0"
-          },
-          {
-            "name": "Green",
-            "hex": "#38a169"
-          }
-        ],
-        "decks": 288,
-        "wins": 17,
-        "top4": 115,
-        "usePct": "12.1%",
-        "winPerEv": "6.6%",
-        "winPerDk": "5.9%",
-        "t4PerDk": "39.9%",
-        "score": 97,
+        "decks": 79,
+        "wins": 11,
+        "top4": 32,
+        "usePct": "3.3%",
+        "winPerEv": "4.3%",
+        "winPerDk": "13.9%",
+        "t4PerDk": "40.5%",
+        "score": 94,
         "tier": "T2"
       },
       {
@@ -601,14 +624,14 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 43,
-        "wins": 6,
-        "top4": 21,
-        "usePct": "1.8%",
-        "winPerEv": "2.3%",
-        "winPerDk": "14.0%",
-        "t4PerDk": "48.8%",
-        "score": 89,
+        "decks": 46,
+        "wins": 7,
+        "top4": 23,
+        "usePct": "1.9%",
+        "winPerEv": "2.7%",
+        "winPerDk": "15.2%",
+        "t4PerDk": "50.0%",
+        "score": 94,
         "tier": "T2"
       },
       {
@@ -624,60 +647,83 @@
             "hex": "#805ad5"
           }
         ],
-        "decks": 28,
-        "wins": 5,
-        "top4": 12,
-        "usePct": "1.2%",
-        "winPerEv": "1.9%",
-        "winPerDk": "17.9%",
-        "t4PerDk": "42.9%",
-        "score": 87,
+        "decks": 105,
+        "wins": 12,
+        "top4": 43,
+        "usePct": "4.4%",
+        "winPerEv": "4.7%",
+        "winPerDk": "11.4%",
+        "t4PerDk": "41.0%",
+        "score": 93,
         "tier": "T2"
       },
       {
-        "archetype": "Red+White（ネオ・ジオング / エールストライクガンダム）",
-        "colors": "Red+White",
+        "archetype": "Green+White（ウイングガンダムゼロ / ジャスティスガンダム）",
+        "colors": "Green+White",
         "colorDots": [
           {
-            "name": "Red",
-            "hex": "#e53e3e"
+            "name": "Green",
+            "hex": "#38a169"
           },
           {
             "name": "White",
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 49,
-        "wins": 5,
-        "top4": 25,
-        "usePct": "2.1%",
-        "winPerEv": "1.9%",
-        "winPerDk": "10.2%",
-        "t4PerDk": "51.0%",
-        "score": 83,
-        "tier": "T2"
-      },
-      {
-        "archetype": "Red+White（GFreD / エールストライクガンダム）",
-        "colors": "Red+White",
-        "colorDots": [
-          {
-            "name": "Red",
-            "hex": "#e53e3e"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 72,
+        "decks": 32,
         "wins": 6,
-        "top4": 34,
-        "usePct": "3.0%",
+        "top4": 14,
+        "usePct": "1.3%",
         "winPerEv": "2.3%",
-        "winPerDk": "8.3%",
-        "t4PerDk": "47.2%",
-        "score": 79,
+        "winPerDk": "18.8%",
+        "t4PerDk": "43.8%",
+        "score": 91,
+        "tier": "T2"
+      },
+      {
+        "archetype": "Red+White（ネオ・ジオング / ジャスティスガンダム）",
+        "colors": "Red+White",
+        "colorDots": [
+          {
+            "name": "Red",
+            "hex": "#e53e3e"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 78,
+        "wins": 8,
+        "top4": 34,
+        "usePct": "3.3%",
+        "winPerEv": "3.1%",
+        "winPerDk": "10.3%",
+        "t4PerDk": "43.6%",
+        "score": 84,
+        "tier": "T2.5"
+      },
+      {
+        "archetype": "Green+White（ウイングガンダムゼロ / ユニコーンガンダム（覚醒））",
+        "colors": "Green+White",
+        "colorDots": [
+          {
+            "name": "Green",
+            "hex": "#38a169"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 30,
+        "wins": 4,
+        "top4": 15,
+        "usePct": "1.3%",
+        "winPerEv": "1.6%",
+        "winPerDk": "13.3%",
+        "t4PerDk": "50.0%",
+        "score": 83,
         "tier": "T2.5"
       },
       {
@@ -693,15 +739,38 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 86,
+        "decks": 85,
         "wins": 6,
-        "top4": 41,
+        "top4": 40,
         "usePct": "3.6%",
         "winPerEv": "2.3%",
-        "winPerDk": "7.0%",
-        "t4PerDk": "47.7%",
+        "winPerDk": "7.1%",
+        "t4PerDk": "47.1%",
         "score": 77,
         "tier": "T2.5"
+      },
+      {
+        "archetype": "Blue+Red（Vガンダム / GQuuuuuuX（オメガ・サイコミュ起動時））",
+        "colors": "Blue+Red",
+        "colorDots": [
+          {
+            "name": "Blue",
+            "hex": "#2b6cb0"
+          },
+          {
+            "name": "Red",
+            "hex": "#e53e3e"
+          }
+        ],
+        "decks": 24,
+        "wins": 2,
+        "top4": 10,
+        "usePct": "1.0%",
+        "winPerEv": "0.8%",
+        "winPerDk": "8.3%",
+        "t4PerDk": "41.7%",
+        "score": 65,
+        "tier": "T3"
       },
       {
         "archetype": "Red+White（プロヴィデンスガンダム / エールストライクガンダム）",
@@ -716,41 +785,18 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 63,
-        "wins": 4,
-        "top4": 33,
-        "usePct": "2.6%",
-        "winPerEv": "1.6%",
-        "winPerDk": "6.3%",
-        "t4PerDk": "52.4%",
-        "score": 76,
-        "tier": "T2.5"
+        "decks": 40,
+        "wins": 2,
+        "top4": 19,
+        "usePct": "1.7%",
+        "winPerEv": "0.8%",
+        "winPerDk": "5.0%",
+        "t4PerDk": "47.5%",
+        "score": 64,
+        "tier": "T3"
       },
       {
-        "archetype": "Blue+White（ガンダム / ユニコーンガンダム2号機 バンシィ・ノルン（デストロイモード））",
-        "colors": "Blue+White",
-        "colorDots": [
-          {
-            "name": "Blue",
-            "hex": "#2b6cb0"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 28,
-        "wins": 3,
-        "top4": 13,
-        "usePct": "1.2%",
-        "winPerEv": "1.2%",
-        "winPerDk": "10.7%",
-        "t4PerDk": "46.4%",
-        "score": 75,
-        "tier": "T2.5"
-      },
-      {
-        "archetype": "Red+White（GQuuuuuuX（オメガ・サイコミュ起動時） / エールストライクガンダム）",
+        "archetype": "Red+White（ネオ・ジオング / エールストライクガンダム）",
         "colors": "Red+White",
         "colorDots": [
           {
@@ -762,105 +808,36 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 37,
+        "decks": 40,
         "wins": 3,
-        "top4": 17,
-        "usePct": "1.6%",
+        "top4": 13,
+        "usePct": "1.7%",
         "winPerEv": "1.2%",
-        "winPerDk": "8.1%",
-        "t4PerDk": "45.9%",
-        "score": 71,
-        "tier": "T2.5"
+        "winPerDk": "7.5%",
+        "t4PerDk": "32.5%",
+        "score": 59,
+        "tier": "T3"
       },
       {
-        "archetype": "Green+White（ウイングガンダム / エールストライクガンダム）",
-        "colors": "Green+White",
+        "archetype": "Blue+Green（ガンダム / ザクⅡ（シャア・アズナブル機））",
+        "colors": "Blue+Green",
         "colorDots": [
+          {
+            "name": "Blue",
+            "hex": "#2b6cb0"
+          },
           {
             "name": "Green",
             "hex": "#38a169"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
           }
         ],
-        "decks": 97,
-        "wins": 5,
-        "top4": 42,
-        "usePct": "4.1%",
-        "winPerEv": "1.9%",
-        "winPerDk": "5.2%",
-        "t4PerDk": "43.3%",
-        "score": 68,
-        "tier": "T2.5"
-      },
-      {
-        "archetype": "Red+White（シナンジュ / エールストライクガンダム）",
-        "colors": "Red+White",
-        "colorDots": [
-          {
-            "name": "Red",
-            "hex": "#e53e3e"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 42,
-        "wins": 4,
-        "top4": 13,
-        "usePct": "1.8%",
-        "winPerEv": "1.6%",
-        "winPerDk": "9.5%",
-        "t4PerDk": "31.0%",
-        "score": 63,
-        "tier": "T3"
-      },
-      {
-        "archetype": "Blue+White（ガンダム / エールストライクガンダム）",
-        "colors": "Blue+White",
-        "colorDots": [
-          {
-            "name": "Blue",
-            "hex": "#2b6cb0"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 37,
-        "wins": 2,
-        "top4": 14,
-        "usePct": "1.6%",
-        "winPerEv": "0.8%",
-        "winPerDk": "5.4%",
-        "t4PerDk": "37.8%",
-        "score": 58,
-        "tier": "T3"
-      },
-      {
-        "archetype": "Purple+White（インパルスガンダム / エールストライクガンダム）",
-        "colors": "Purple+White",
-        "colorDots": [
-          {
-            "name": "Purple",
-            "hex": "#805ad5"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 39,
+        "decks": 38,
         "wins": 2,
         "top4": 13,
         "usePct": "1.6%",
         "winPerEv": "0.8%",
-        "winPerDk": "5.1%",
-        "t4PerDk": "33.3%",
+        "winPerDk": "5.3%",
+        "t4PerDk": "34.2%",
         "score": 54,
         "tier": "T3"
       },
@@ -877,18 +854,18 @@
             "hex": "#e53e3e"
           }
         ],
-        "decks": 41,
+        "decks": 40,
         "wins": 1,
         "top4": 16,
         "usePct": "1.7%",
         "winPerEv": "0.4%",
-        "winPerDk": "2.4%",
-        "t4PerDk": "39.0%",
-        "score": 51,
+        "winPerDk": "2.5%",
+        "t4PerDk": "40.0%",
+        "score": 52,
         "tier": "T3"
       },
       {
-        "archetype": "Blue+White（ガンダム / ユニコーンガンダム（覚醒））",
+        "archetype": "Blue+White（ユニコーンガンダム（デストロイモード） / ユニコーンガンダム（覚醒））",
         "colors": "Blue+White",
         "colorDots": [
           {
@@ -900,13 +877,13 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 33,
-        "wins": 1,
-        "top4": 11,
-        "usePct": "1.4%",
-        "winPerEv": "0.4%",
-        "winPerDk": "3.0%",
-        "t4PerDk": "33.3%",
+        "decks": 44,
+        "wins": 2,
+        "top4": 13,
+        "usePct": "1.9%",
+        "winPerEv": "0.8%",
+        "winPerDk": "4.5%",
+        "t4PerDk": "29.5%",
         "score": 49,
         "tier": "T3"
       },
@@ -942,6 +919,29 @@
     "totalDecks": 2830,
     "rows": [
       {
+        "archetype": "Blue+Purple（ガンダム / ガンダム・グシオンリベイク）",
+        "colors": "Blue+Purple",
+        "colorDots": [
+          {
+            "name": "Blue",
+            "hex": "#2b6cb0"
+          },
+          {
+            "name": "Purple",
+            "hex": "#805ad5"
+          }
+        ],
+        "decks": 283,
+        "wins": 40,
+        "top4": 140,
+        "usePct": "10.0%",
+        "winPerEv": "13.5%",
+        "winPerDk": "14.1%",
+        "t4PerDk": "49.5%",
+        "score": 160,
+        "tier": "T1"
+      },
+      {
         "archetype": "Blue+Purple（ガンダム / ガンダム・バルバトス（第1形態））",
         "colors": "Blue+Purple",
         "colorDots": [
@@ -954,38 +954,15 @@
             "hex": "#805ad5"
           }
         ],
-        "decks": 839,
-        "wins": 92,
-        "top4": 373,
-        "usePct": "29.6%",
-        "winPerEv": "31.1%",
-        "winPerDk": "11.0%",
-        "t4PerDk": "44.5%",
-        "score": 259,
+        "decks": 481,
+        "wins": 46,
+        "top4": 203,
+        "usePct": "17.0%",
+        "winPerEv": "15.5%",
+        "winPerDk": "9.6%",
+        "t4PerDk": "42.2%",
+        "score": 159,
         "tier": "T1"
-      },
-      {
-        "archetype": "Blue+Green（ガンダム / ザクⅡ（シャア・アズナブル機））",
-        "colors": "Blue+Green",
-        "colorDots": [
-          {
-            "name": "Blue",
-            "hex": "#2b6cb0"
-          },
-          {
-            "name": "Green",
-            "hex": "#38a169"
-          }
-        ],
-        "decks": 188,
-        "wins": 28,
-        "top4": 86,
-        "usePct": "6.6%",
-        "winPerEv": "9.5%",
-        "winPerDk": "14.9%",
-        "t4PerDk": "45.7%",
-        "score": 132,
-        "tier": "T1.5"
       },
       {
         "archetype": "Green+White（ウイングガンダムゼロ / エールストライクガンダム）",
@@ -1000,15 +977,61 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 254,
-        "wins": 28,
-        "top4": 107,
-        "usePct": "9.0%",
-        "winPerEv": "9.5%",
-        "winPerDk": "11.0%",
-        "t4PerDk": "42.1%",
-        "score": 123,
+        "decks": 308,
+        "wins": 33,
+        "top4": 138,
+        "usePct": "10.9%",
+        "winPerEv": "11.1%",
+        "winPerDk": "10.7%",
+        "t4PerDk": "44.8%",
+        "score": 135,
         "tier": "T1.5"
+      },
+      {
+        "archetype": "Blue+Green（ガンダム / ザクⅡ（シャア・アズナブル機））",
+        "colors": "Blue+Green",
+        "colorDots": [
+          {
+            "name": "Blue",
+            "hex": "#2b6cb0"
+          },
+          {
+            "name": "Green",
+            "hex": "#38a169"
+          }
+        ],
+        "decks": 155,
+        "wins": 22,
+        "top4": 71,
+        "usePct": "5.5%",
+        "winPerEv": "7.4%",
+        "winPerDk": "14.2%",
+        "t4PerDk": "45.8%",
+        "score": 119,
+        "tier": "T1.5"
+      },
+      {
+        "archetype": "Red+White（プロヴィデンスガンダム / ジャスティスガンダム）",
+        "colors": "Red+White",
+        "colorDots": [
+          {
+            "name": "Red",
+            "hex": "#e53e3e"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 129,
+        "wins": 16,
+        "top4": 54,
+        "usePct": "4.6%",
+        "winPerEv": "5.4%",
+        "winPerDk": "12.4%",
+        "t4PerDk": "41.9%",
+        "score": 100,
+        "tier": "T2"
       },
       {
         "archetype": "Red+White（プロヴィデンスガンダム / エールストライクガンダム）",
@@ -1023,60 +1046,37 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 148,
-        "wins": 22,
-        "top4": 66,
-        "usePct": "5.2%",
-        "winPerEv": "7.4%",
-        "winPerDk": "14.9%",
-        "t4PerDk": "44.6%",
-        "score": 119,
-        "tier": "T1.5"
-      },
-      {
-        "archetype": "Blue+Purple（ガンダム / ガンダム・グシオンリベイク）",
-        "colors": "Blue+Purple",
-        "colorDots": [
-          {
-            "name": "Blue",
-            "hex": "#2b6cb0"
-          },
-          {
-            "name": "Purple",
-            "hex": "#805ad5"
-          }
-        ],
-        "decks": 44,
+        "decks": 63,
         "wins": 10,
-        "top4": 23,
-        "usePct": "1.6%",
+        "top4": 30,
+        "usePct": "2.2%",
         "winPerEv": "3.4%",
-        "winPerDk": "22.7%",
-        "t4PerDk": "52.3%",
-        "score": 112,
+        "winPerDk": "15.9%",
+        "t4PerDk": "47.6%",
+        "score": 98,
         "tier": "T2"
       },
       {
-        "archetype": "Green+White（ウイングガンダム / エールストライクガンダム）",
-        "colors": "Green+White",
+        "archetype": "Red+White（GQuuuuuuX（オメガ・サイコミュ起動時） / ジャスティスガンダム）",
+        "colors": "Red+White",
         "colorDots": [
           {
-            "name": "Green",
-            "hex": "#38a169"
+            "name": "Red",
+            "hex": "#e53e3e"
           },
           {
             "name": "White",
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 174,
-        "wins": 17,
-        "top4": 78,
-        "usePct": "6.1%",
-        "winPerEv": "5.7%",
-        "winPerDk": "9.8%",
-        "t4PerDk": "44.8%",
-        "score": 100,
+        "decks": 116,
+        "wins": 14,
+        "top4": 50,
+        "usePct": "4.1%",
+        "winPerEv": "4.7%",
+        "winPerDk": "12.1%",
+        "t4PerDk": "43.1%",
+        "score": 96,
         "tier": "T2"
       },
       {
@@ -1092,130 +1092,61 @@
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 96,
-        "wins": 9,
-        "top4": 45,
-        "usePct": "3.4%",
-        "winPerEv": "3.0%",
-        "winPerDk": "9.4%",
-        "t4PerDk": "46.9%",
-        "score": 85,
-        "tier": "T2.5"
+        "decks": 137,
+        "wins": 14,
+        "top4": 62,
+        "usePct": "4.8%",
+        "winPerEv": "4.7%",
+        "winPerDk": "10.2%",
+        "t4PerDk": "45.3%",
+        "score": 95,
+        "tier": "T2"
       },
       {
-        "archetype": "Red+White（シナンジュ / エールストライクガンダム）",
-        "colors": "Red+White",
-        "colorDots": [
-          {
-            "name": "Red",
-            "hex": "#e53e3e"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 45,
-        "wins": 4,
-        "top4": 26,
-        "usePct": "1.6%",
-        "winPerEv": "1.4%",
-        "winPerDk": "8.9%",
-        "t4PerDk": "57.8%",
-        "score": 82,
-        "tier": "T2.5"
-      },
-      {
-        "archetype": "Blue+Red（ガンダム / クシャトリヤ）",
-        "colors": "Blue+Red",
+        "archetype": "Blue+Purple（ガンダム / ガンダム・バルバトスルプス）",
+        "colors": "Blue+Purple",
         "colorDots": [
           {
             "name": "Blue",
             "hex": "#2b6cb0"
           },
           {
-            "name": "Red",
-            "hex": "#e53e3e"
+            "name": "Purple",
+            "hex": "#805ad5"
           }
         ],
-        "decks": 146,
-        "wins": 10,
-        "top4": 61,
-        "usePct": "5.2%",
-        "winPerEv": "3.4%",
-        "winPerDk": "6.8%",
-        "t4PerDk": "41.8%",
-        "score": 78,
-        "tier": "T2.5"
+        "decks": 101,
+        "wins": 12,
+        "top4": 44,
+        "usePct": "3.6%",
+        "winPerEv": "4.1%",
+        "winPerDk": "11.9%",
+        "t4PerDk": "43.6%",
+        "score": 92,
+        "tier": "T2"
       },
       {
-        "archetype": "Red+White（GQuuuuuuX（オメガ・サイコミュ起動時） / エールストライクガンダム）",
-        "colors": "Red+White",
+        "archetype": "Green+White（ウイングガンダムゼロ / ジャスティスガンダム）",
+        "colors": "Green+White",
         "colorDots": [
           {
-            "name": "Red",
-            "hex": "#e53e3e"
+            "name": "Green",
+            "hex": "#38a169"
           },
           {
             "name": "White",
             "hex": "#cbd5e0"
           }
         ],
-        "decks": 36,
-        "wins": 5,
-        "top4": 12,
-        "usePct": "1.3%",
-        "winPerEv": "1.7%",
-        "winPerDk": "13.9%",
-        "t4PerDk": "33.3%",
-        "score": 72,
-        "tier": "T2.5"
-      },
-      {
-        "archetype": "Red+White（プロヴィデンスガンダム / ジャスティスガンダム）",
-        "colors": "Red+White",
-        "colorDots": [
-          {
-            "name": "Red",
-            "hex": "#e53e3e"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 39,
-        "wins": 4,
-        "top4": 16,
-        "usePct": "1.4%",
-        "winPerEv": "1.4%",
-        "winPerDk": "10.3%",
-        "t4PerDk": "41.0%",
-        "score": 71,
-        "tier": "T2.5"
-      },
-      {
-        "archetype": "Blue+White（ガンダム / エールストライクガンダム）",
-        "colors": "Blue+White",
-        "colorDots": [
-          {
-            "name": "Blue",
-            "hex": "#2b6cb0"
-          },
-          {
-            "name": "White",
-            "hex": "#cbd5e0"
-          }
-        ],
-        "decks": 96,
-        "wins": 7,
-        "top4": 34,
-        "usePct": "3.4%",
-        "winPerEv": "2.4%",
-        "winPerDk": "7.3%",
-        "t4PerDk": "35.4%",
-        "score": 67,
-        "tier": "T3"
+        "decks": 127,
+        "wins": 14,
+        "top4": 50,
+        "usePct": "4.5%",
+        "winPerEv": "4.7%",
+        "winPerDk": "11.0%",
+        "t4PerDk": "39.4%",
+        "score": 91,
+        "tier": "T2"
       },
       {
         "archetype": "Blue+Green（ガンダム / ガンダムデュナメス）",
@@ -1230,18 +1161,18 @@
             "hex": "#38a169"
           }
         ],
-        "decks": 76,
-        "wins": 5,
-        "top4": 25,
-        "usePct": "2.7%",
-        "winPerEv": "1.7%",
-        "winPerDk": "6.6%",
-        "t4PerDk": "32.9%",
-        "score": 59,
-        "tier": "T3"
+        "decks": 103,
+        "wins": 10,
+        "top4": 37,
+        "usePct": "3.6%",
+        "winPerEv": "3.4%",
+        "winPerDk": "9.7%",
+        "t4PerDk": "35.9%",
+        "score": 77,
+        "tier": "T2.5"
       },
       {
-        "archetype": "Blue+Red（ユニコーンガンダム2号機 バンシィ（デストロイモード） / クシャトリヤ）",
+        "archetype": "Blue+Red（ガンダム / GQuuuuuuX（オメガ・サイコミュ起動時））",
         "colors": "Blue+Red",
         "colorDots": [
           {
@@ -1253,15 +1184,130 @@
             "hex": "#e53e3e"
           }
         ],
-        "decks": 53,
+        "decks": 92,
+        "wins": 8,
+        "top4": 37,
+        "usePct": "3.3%",
+        "winPerEv": "2.7%",
+        "winPerDk": "8.7%",
+        "t4PerDk": "40.2%",
+        "score": 75,
+        "tier": "T2.5"
+      },
+      {
+        "archetype": "Green+Purple（ウイングガンダムゼロ / ガンダム・バルバトスルプス）",
+        "colors": "Green+Purple",
+        "colorDots": [
+          {
+            "name": "Green",
+            "hex": "#38a169"
+          },
+          {
+            "name": "Purple",
+            "hex": "#805ad5"
+          }
+        ],
+        "decks": 32,
         "wins": 4,
-        "top4": 16,
-        "usePct": "1.9%",
+        "top4": 13,
+        "usePct": "1.1%",
         "winPerEv": "1.4%",
-        "winPerDk": "7.5%",
-        "t4PerDk": "30.2%",
-        "score": 57,
+        "winPerDk": "12.5%",
+        "t4PerDk": "40.6%",
+        "score": 74,
+        "tier": "T2.5"
+      },
+      {
+        "archetype": "Purple+Red（ガンダム・バルバトスルプス / GQuuuuuuX（オメガ・サイコミュ起動時））",
+        "colors": "Purple+Red",
+        "colorDots": [
+          {
+            "name": "Purple",
+            "hex": "#805ad5"
+          },
+          {
+            "name": "Red",
+            "hex": "#e53e3e"
+          }
+        ],
+        "decks": 60,
+        "wins": 6,
+        "top4": 22,
+        "usePct": "2.1%",
+        "winPerEv": "2.0%",
+        "winPerDk": "10.0%",
+        "t4PerDk": "36.7%",
+        "score": 71,
+        "tier": "T2.5"
+      },
+      {
+        "archetype": "Blue+Red（ユニコーンガンダム2号機 バンシィ（デストロイモード） / GQuuuuuuX（オメガ・サイコミュ起動時））",
+        "colors": "Blue+Red",
+        "colorDots": [
+          {
+            "name": "Blue",
+            "hex": "#2b6cb0"
+          },
+          {
+            "name": "Red",
+            "hex": "#e53e3e"
+          }
+        ],
+        "decks": 58,
+        "wins": 4,
+        "top4": 23,
+        "usePct": "2.0%",
+        "winPerEv": "1.4%",
+        "winPerDk": "6.9%",
+        "t4PerDk": "39.7%",
+        "score": 64,
+        "tier": "T2.5"
+      },
+      {
+        "archetype": "Blue+White（ユニコーンガンダム（デストロイモード） / エールストライクガンダム）",
+        "colors": "Blue+White",
+        "colorDots": [
+          {
+            "name": "Blue",
+            "hex": "#2b6cb0"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 29,
+        "wins": 1,
+        "top4": 7,
+        "usePct": "1.0%",
+        "winPerEv": "0.3%",
+        "winPerDk": "3.4%",
+        "t4PerDk": "24.1%",
+        "score": 42,
         "tier": "T3"
+      },
+      {
+        "archetype": "Purple+White（ガンダム・バルバトスルプス / ガンダム・グシオンリベイク）",
+        "colors": "Purple+White",
+        "colorDots": [
+          {
+            "name": "Purple",
+            "hex": "#805ad5"
+          },
+          {
+            "name": "White",
+            "hex": "#cbd5e0"
+          }
+        ],
+        "decks": 42,
+        "wins": 0,
+        "top4": 15,
+        "usePct": "1.5%",
+        "winPerEv": "0.0%",
+        "winPerDk": "0.0%",
+        "t4PerDk": "35.7%",
+        "score": 0,
+        "tier": "--"
       }
     ]
   }
