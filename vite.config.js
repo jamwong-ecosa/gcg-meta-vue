@@ -23,6 +23,10 @@ export default defineConfig({
           }
         },
       },
+      onLog(level, log, defaultHandler) {
+        if (log.code === 'INVALID_ANNOTATION') return
+        else defaultHandler(level, log)
+      },
     },
   },
   plugins: [

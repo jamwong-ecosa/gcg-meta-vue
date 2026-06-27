@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-380 space-y-6 p-3 md:p-8">
-    <div class="flex items-center justify-between">
+    <div class="flex justify-between gap-2 max-md:flex-col md:items-center">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Archetype Tier</h1>
       <TierDropdown v-model="selectedKey" :options="seriesOptions" />
     </div>
