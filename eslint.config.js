@@ -17,10 +17,15 @@ export default [
       },
     },
   },
+  eslintConfigPrettier,
   {
     rules: {
       curly: ['error', 'all'],
-      'vue/component-name-in-template-casing': ['error', 'PascalCase', { registeredComponentsOnly: false }],
+      'vue/component-name-in-template-casing': [
+        'error',
+        'PascalCase',
+        { registeredComponentsOnly: false },
+      ],
       'vue/html-self-closing': [
         'error',
         {
@@ -31,5 +36,4 @@ export default [
       ],
     },
   },
-  eslintConfigPrettier,
 ]

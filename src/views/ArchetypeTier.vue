@@ -28,7 +28,7 @@ const validSeries = tierData.map(s => s.value)
 const initial = validSeries.includes(route.query.series) ? route.query.series : tierData[0]?.value
 const selectedKey = ref(initial ?? '')
 
-watch(selectedKey, (val) => {
+watch(selectedKey, val => {
   router.replace({ query: { series: val } })
 })
 

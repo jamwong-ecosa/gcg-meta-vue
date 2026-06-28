@@ -118,19 +118,35 @@ const colorHex = computed(() => COLOR_HEX[props.card.color] || '#718096')
 
 const inclusionTierClass = computed(() => {
   const rate = (props.card.inclusionRate ?? 0) * 100
-  if (rate >= 80) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-  if (rate >= 60) return 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300'
-  if (rate >= 40) return 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'
-  if (rate >= 20) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+  if (rate >= 80) {
+    return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+  }
+  if (rate >= 60) {
+    return 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300'
+  }
+  if (rate >= 40) {
+    return 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'
+  }
+  if (rate >= 20) {
+    return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+  }
   return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
 })
 
 const barColorClass = computed(() => {
   const rate = (props.card.inclusionRate ?? 0) * 100
-  if (rate >= 80) return 'bg-blue-500'
-  if (rate >= 60) return 'bg-sky-500'
-  if (rate >= 40) return 'bg-teal-500'
-  if (rate >= 20) return 'bg-amber-500'
+  if (rate >= 80) {
+    return 'bg-blue-500'
+  }
+  if (rate >= 60) {
+    return 'bg-sky-500'
+  }
+  if (rate >= 40) {
+    return 'bg-teal-500'
+  }
+  if (rate >= 20) {
+    return 'bg-amber-500'
+  }
   return 'bg-gray-400'
 })
 </script>

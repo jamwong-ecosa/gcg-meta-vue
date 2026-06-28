@@ -25,7 +25,10 @@ async function fetchTournaments() {
   $('.filterListItems a').each((_, el) => {
     items.push({
       label: $(el).text().trim(),
-      value: $(el).attr('href').match(/series=(\d+)/)?.[1] ?? '',
+      value:
+        $(el)
+          .attr('href')
+          .match(/series=(\d+)/)?.[1] ?? '',
       url: new URL($(el).attr('href'), baseUrl).href,
     })
   })
@@ -68,7 +71,7 @@ async function fetchPlayers(eventUrl) {
       fetchPlayerDeck(deckUrl).then(cards => {
         player.deck = cards
         console.log(`    ${player.rank} ${player.name}: ${cards.length} cards`)
-      })
+      }),
     )
   })
   await Promise.all(promises)
@@ -125,8 +128,13 @@ for (const t of tournaments) {
   t.events = events
 }
 
-const playerCount = tournaments.reduce((s, t) => s + t.events.reduce((s2, e) => s2 + (e.players?.length || 0), 0), 0)
-console.log(`\nDone. ${totalEvents} events, ${fetchedEvents} fetched, ${skippedEvents} cached, ${playerCount} total players`)
+const playerCount = tournaments.reduce(
+  (s, t) => s + t.events.reduce((s2, e) => s2 + (e.players?.length || 0), 0),
+  0,
+)
+console.log(
+  `\nDone. ${totalEvents} events, ${fetchedEvents} fetched, ${skippedEvents} cached, ${playerCount} total players`,
+)
 if (existsSync(dataFile)) {
   const bakPath = dataFile + '.bak'
   copyFileSync(dataFile, bakPath)

@@ -36,12 +36,10 @@ const seriesOptions = manifest.map(s => ({
 const validSeries = manifest.map(s => s.value)
 const seriesInitial = validSeries.includes(route.query.series)
   ? route.query.series
-  : manifest[0]?.value ?? ''
+  : (manifest[0]?.value ?? '')
 const seriesKey = ref(seriesInitial)
 
-const seriesManifest = computed(() =>
-  manifest.find(s => s.value === seriesKey.value),
-)
+const seriesManifest = computed(() => manifest.find(s => s.value === seriesKey.value))
 
 const archOptions = computed(() =>
   (seriesManifest.value?.archetypes ?? []).map((a, i) => ({
@@ -51,9 +49,7 @@ const archOptions = computed(() =>
 )
 
 const validArchKeys = computed(() => archOptions.value.map(o => o.value))
-const archInitial = validArchKeys.value.includes(route.query.arch)
-  ? route.query.arch
-  : '0'
+const archInitial = validArchKeys.value.includes(route.query.arch) ? route.query.arch : '0'
 const archKey = ref(archInitial)
 
 const selectedArchetype = ref(null)
@@ -76,15 +72,19 @@ async function loadArchetype(seriesVal, archIdx) {
   }
 }
 
-watch(seriesKey, (val) => {
+watch(seriesKey, val => {
   const archs = archOptions.value
   const newArch = archs.length ? '0' : ''
   archKey.value = newArch
   router.replace({ query: { series: val, arch: newArch } })
 })
 
-watch([seriesKey, archKey], async ([s, a]) => {
-  router.replace({ query: { series: s, arch: a } })
-  await loadArchetype(s, a)
-}, { immediate: true })
+watch(
+  [seriesKey, archKey],
+  async ([s, a]) => {
+    router.replace({ query: { series: s, arch: a } })
+    await loadArchetype(s, a)
+  },
+  { immediate: true },
+)
 </script>

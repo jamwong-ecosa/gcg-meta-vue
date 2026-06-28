@@ -56,7 +56,7 @@ async function fetchCardDetail(cardId) {
   const res = await axios.get(url)
   const $ = cheerio.load(res.data)
 
-  const text = (sel) => $(sel).text().trim()
+  const text = sel => $(sel).text().trim()
 
   const detail = {
     id: cardId,

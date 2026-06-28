@@ -14,7 +14,7 @@
 
     <div
       v-if="open"
-      class="absolute left-0 z-10 mt-1 w-full rounded-lg border border-gray-500/10 bg-white py-1 shadow-lg max-h-60 overflow-y-auto md:right-0 dark:border-nalika-border dark:bg-nalika-surface"
+      class="absolute left-0 z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-500/10 bg-white py-1 shadow-lg md:right-0 dark:border-nalika-border dark:bg-nalika-surface"
     >
       <button
         v-for="opt in options"

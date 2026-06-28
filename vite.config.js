@@ -17,15 +17,22 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('vue-router')) return 'vendor-vue-router'
-            if (id.includes('vue')) return 'vendor-vue'
+            if (id.includes('vue-router')) {
+              return 'vendor-vue-router'
+            }
+            if (id.includes('vue')) {
+              return 'vendor-vue'
+            }
             return 'vendor'
           }
         },
       },
       onLog(level, log, defaultHandler) {
-        if (log.code === 'INVALID_ANNOTATION') return
-        else defaultHandler(level, log)
+        if (log.code === 'INVALID_ANNOTATION') {
+          return
+        } else {
+          defaultHandler(level, log)
+        }
       },
     },
   },

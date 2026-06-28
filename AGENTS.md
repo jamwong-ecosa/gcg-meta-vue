@@ -10,19 +10,19 @@ source ~/.nvm/nvm.sh && nvm use 24
 
 ## Commands
 
-| Command                | What it does                                             |
-| ---------------------- | -------------------------------------------------------- |
-| `npm run dev`          | Vite dev server                                          |
-| `npm run build`        | Vite production build → `dist/`                          |
-| `npm run preview`      | Preview production build                                 |
-| `npm run lint`         | ESLint (flat config: `eslint.config.js`)                 |
-| `npm run lint:fix`     | ESLint auto-fix                                          |
-| `npm run format`       | Prettier (`.prettierrc` + `prettier-plugin-tailwindcss`) |
-| `npm run format:check` | Prettier check-only                                      |
-| `npm run data`          | Full pipeline: scrape cards → scrape tournaments → build tiers |
-| `npm run scrape:cards`  | Scrape card database from `gundam-gcg.com` (→ `data/cards.json`) |
-| `npm run scrape:tournament` | Scrape tournament results (→ `data/tournaments-all.json`) |
-| `npm run build:tiers`   | Rebuild tier data from existing scraped data → `src/data/tiers.json` |
+| Command                     | What it does                                                         |
+| --------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`               | Vite dev server                                                      |
+| `npm run build`             | Vite production build → `dist/`                                      |
+| `npm run preview`           | Preview production build                                             |
+| `npm run lint`              | ESLint (flat config: `eslint.config.js`)                             |
+| `npm run lint:fix`          | ESLint auto-fix                                                      |
+| `npm run format`            | Prettier (`.prettierrc` + `prettier-plugin-tailwindcss`)             |
+| `npm run format:check`      | Prettier check-only                                                  |
+| `npm run data`              | Full pipeline: scrape cards → scrape tournaments → build tiers       |
+| `npm run scrape:cards`      | Scrape card database from `gundam-gcg.com` (→ `data/cards.json`)     |
+| `npm run scrape:tournament` | Scrape tournament results (→ `data/tournaments-all.json`)            |
+| `npm run build:tiers`       | Rebuild tier data from existing scraped data → `src/data/tiers.json` |
 
 ## Project structure
 

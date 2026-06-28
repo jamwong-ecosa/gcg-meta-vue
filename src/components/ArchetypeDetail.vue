@@ -187,7 +187,9 @@ const filteredCards = computed(() => props.archetype.filteredCards || [])
 const filteredByType = computed(() => {
   const byType = {}
   for (const card of filteredCards.value) {
-    if (!byType[card.type]) byType[card.type] = []
+    if (!byType[card.type]) {
+      byType[card.type] = []
+    }
     byType[card.type].push(card)
   }
   return Object.entries(byType)
