@@ -6,15 +6,23 @@
     </div>
 
     <div class="space-y-3 md:hidden">
-      <MobileTierCard v-for="row in rows" :key="row.archetype" :row="row" />
+      <MobileTierCard v-for="row in rows" :key="row.archetype" :row="row" @detail="openDetail" />
     </div>
 
-    <TierTable :rows="rows" />
+    <TierTable :rows="rows" @detail="openDetail" />
+
+    <ArchetypeModal v-if="detailArch" :archetype="detailArch" @close="closeDetail" />
   </div>
 </template>
 
 <script setup>
 import tierData from '$data/tiers.json'
+import manifest from '$data/archetypes/index.json'
+import archModules from '@/utils/archModules'
+
+function normalizeName(name) {
+  return name.replace(/[（）]/g, c => (c === '（' ? '(' : ')')).replace(/\s*\(/g, '(')
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -36,4 +44,26 @@ const rows = computed(() => {
   const series = tierData.find(s => s.value === selectedKey.value)
   return series ? series.rows : []
 })
+
+const detailArch = ref(null)
+
+function closeDetail() {
+  detailArch.value = null
+}
+
+async function openDetail(row) {
+  const entry = manifest.find(s => s.value === selectedKey.value)
+  if (!entry) {
+    return
+  }
+  const idx = entry.archetypes.findIndex(
+    a => normalizeName(a.combo) === normalizeName(row.archetype),
+  )
+  if (idx === -1) {
+    return
+  }
+  const path = `/data-processed/archetypes/${selectedKey.value}/${idx}.json`
+  const mod = await archModules[path]?.()
+  detailArch.value = mod?.default ?? null
+}
 </script>

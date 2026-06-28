@@ -24,11 +24,10 @@
 
 <script setup>
 import manifest from '$data/archetypes/index.json'
+import archModules from '@/utils/archModules'
 
 const router = useRouter()
 const route = useRoute()
-
-const archModules = import.meta.glob('$data/archetypes/*/*.json')
 
 const seriesOptions = manifest.map(s => ({
   value: s.value,

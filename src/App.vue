@@ -6,14 +6,14 @@
       <div class="md:flex-1" />
       <div class="flex gap-4">
         <RouterLink
-          to="/"
+          :to="{ path: '/', query: { series: $route.query.series } }"
           class="max-sm:text-sm md:w-60"
           :exact-active-class="tw`font-bold text-primary dark:text-gunjyo`"
         >
           Archetype Tier
         </RouterLink>
         <RouterLink
-          to="/archetype-analysis"
+          :to="{ path: '/archetype-analysis', query: { series: $route.query.series } }"
           class="max-sm:text-sm md:w-60"
           :exact-active-class="tw`font-bold text-primary dark:text-gunjyo`"
         >

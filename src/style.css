@@ -20,6 +20,10 @@
   --color-nalika-header: #192d4d;
 }
 
+html {
+  overflow-y: scroll;
+}
+
 :root {
   --gloss-start: rgba(214, 158, 46, 0.12);
   --gloss-mid: rgba(214, 158, 46, 0.06);

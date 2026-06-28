@@ -97,6 +97,14 @@
         </div>
       </div>
     </div>
+    <div class="flex justify-end px-4 pb-3">
+      <button
+        class="text-xs font-medium text-primary hover:underline focus:outline-none"
+        @click="$emit('detail', row)"
+      >
+        Detail ▶
+      </button>
+    </div>
   </div>
 </template>
 
@@ -104,4 +112,5 @@
 defineProps({
   row: { type: Object, required: true },
 })
+defineEmits(['detail'])
 </script>

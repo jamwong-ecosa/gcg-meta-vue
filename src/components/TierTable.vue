@@ -14,7 +14,8 @@
           <th class="px-4 py-2 text-right font-semibold">Win/Dk</th>
           <th class="px-4 py-2 text-right font-semibold">T4/Dk</th>
           <th class="px-4 py-2 text-right font-semibold">Score</th>
-          <th class="rounded-tr-lg px-4 py-2 text-right font-semibold">Tier</th>
+          <th class="px-4 py-2 text-right font-semibold">Tier</th>
+          <th class="w-8 rounded-tr-lg px-1 py-2" />
         </tr>
       </thead>
       <tbody>
@@ -67,6 +68,14 @@
               {{ row.tier }}
             </div>
           </td>
+          <td class="w-8 px-1 py-2 text-center">
+            <button
+              class="text-[0.55rem] font-medium text-gray-400 hover:text-primary focus:outline-none dark:text-gray-500 dark:hover:text-primary"
+              @click="$emit('detail', row)"
+            >
+              ▶
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -77,4 +86,5 @@
 defineProps({
   rows: { type: Array, required: true },
 })
+defineEmits(['detail'])
 </script>
