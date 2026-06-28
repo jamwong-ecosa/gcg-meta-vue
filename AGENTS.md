@@ -22,7 +22,7 @@ source ~/.nvm/nvm.sh && nvm use 24
 | `npm run data`              | Full pipeline: scrape cards → scrape tournaments → build tiers       |
 | `npm run scrape:cards`      | Scrape card database from `gundam-gcg.com` (→ `data/cards.json`)     |
 | `npm run scrape:tournament` | Scrape tournament results (→ `data/tournaments-all.json`)            |
-| `npm run build:tiers`       | Rebuild tier data from existing scraped data → `src/data/tiers.json` |
+| `npm run build:tiers`       | Rebuild tier data from existing scraped data → `data-processed/tiers.json` |
 
 ## Project structure
 
@@ -33,6 +33,7 @@ source ~/.nvm/nvm.sh && nvm use 24
 - `src/components/` — currently empty
 - `scripts/` — data pipeline scripts (scrapers, tier builder)
 - `data/` — generated raw scraped data (gitignored)
+- `data-processed/` — generated tier & archetype data (gitignored)
 - `index.html` — FOUC prevention via inline `<script>`
 
 ## Style conventions
@@ -56,6 +57,6 @@ source ~/.nvm/nvm.sh && nvm use 24
 
 1. `scrape:cards` — fetches all card data (name, color, type) from GCG website
 2. `scrape:tournament` — fetches tournament events, players, and deck lists (uses local cache, skips already-fetched events)
-3. `build:tiers` — groups decks by color-combo archetype, computes scores and tier thresholds (ckmeans clustering), outputs `src/data/tiers.json`
+3. `build:tiers` — groups decks by color-combo archetype, computes scores and tier thresholds (ckmeans clustering), outputs `data-processed/tiers.json`
 
-You must run `npm run data` (or at minimum `npm run build:tiers`) after cloning to generate `src/data/tiers.json`. The app will not work without this file.
+You must run `npm run data` (or at minimum `npm run build:tiers`) after cloning to generate `data-processed/tiers.json`. The app will not work without this file.

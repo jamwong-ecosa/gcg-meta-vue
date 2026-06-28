@@ -1,5 +1,19 @@
-# Vue 3 + Vite
+# GCG Meta Vue
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Vue 3 + Vite 8 frontend for Gundam Card Game meta analysis.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Data
+
+The app needs processed tier data to work. Run the full pipeline:
+
+```bash
+npm run data
+```
+
+This scrapes card data, tournament results, and builds tier/archetype files into `data-processed/`.
+
+If you already have scraped data in `data/`, you can skip to building tiers:
+
+```bash
+npm run build:tiers
+```

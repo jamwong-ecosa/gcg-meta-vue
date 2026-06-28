@@ -422,7 +422,7 @@ const cardsRaw = loadJSON('data/cards.json')
 
 const { lookup, nameToColor } = createCardLookups(cardsRaw)
 
-mkdirSync('src/data/archetypes', { recursive: true })
+mkdirSync('data-processed/archetypes', { recursive: true })
 
 const tierData = []
 const manifest = []
@@ -535,7 +535,7 @@ for (const series of tournaments) {
 
   // --- Write per-archetype files for lazy loading ---
 
-  const seriesDir = `src/data/archetypes/${series.value}`
+  const seriesDir = `data-processed/archetypes/${series.value}`
   mkdirSync(seriesDir, { recursive: true })
 
   mainDetails.forEach((arch, idx) => {
@@ -620,12 +620,12 @@ for (const series of tournaments) {
   })
 }
 
-writeFileSync('src/data/tiers.json', JSON.stringify(tierData, null, 2))
+writeFileSync('data-processed/tiers.json', JSON.stringify(tierData, null, 2))
 console.log(
-  `Saved src/data/tiers.json (${tierData.length} series, ${tierData.reduce((s, t) => s + t.rows.length, 0)} archetype rows)`,
+  `Saved data-processed/tiers.json (${tierData.length} series, ${tierData.reduce((s, t) => s + t.rows.length, 0)} archetype rows)`,
 )
 
-writeFileSync('src/data/archetypes/index.json', JSON.stringify(manifest, null, 2))
+writeFileSync('data-processed/archetypes/index.json', JSON.stringify(manifest, null, 2))
 console.log(
-  `Saved src/data/archetypes/index.json (${manifest.length} series, ${manifest.reduce((s, t) => s + t.archetypes.length, 0)} archetypes)`,
+  `Saved data-processed/archetypes/index.json (${manifest.length} series, ${manifest.reduce((s, t) => s + t.archetypes.length, 0)} archetypes)`,
 )

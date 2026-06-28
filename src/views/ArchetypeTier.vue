@@ -14,7 +14,7 @@
 </template>
 
 <script setup>
-import tierData from '@/data/tiers.json'
+import tierData from '$data/tiers.json'
 
 const router = useRouter()
 const route = useRoute()

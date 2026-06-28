@@ -21,12 +21,12 @@
 </template>
 
 <script setup>
-import manifest from '@/data/archetypes/index.json'
+import manifest from '$data/archetypes/index.json'
 
 const router = useRouter()
 const route = useRoute()
 
-const archModules = import.meta.glob('@/data/archetypes/*/*.json')
+const archModules = import.meta.glob('$data/archetypes/*/*.json')
 
 const seriesOptions = manifest.map(s => ({
   value: s.value,
@@ -62,7 +62,7 @@ async function loadArchetype(seriesVal, archIdx) {
   }
   loading.value = true
   try {
-    const path = `/src/data/archetypes/${seriesVal}/${archIdx}.json`
+    const path = `/data-processed/archetypes/${seriesVal}/${archIdx}.json`
     const mod = await archModules[path]?.()
     selectedArchetype.value = mod?.default ?? null
   } catch {
