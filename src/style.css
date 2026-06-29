@@ -25,12 +25,14 @@ html {
 }
 
 :root {
+  --color-sig-white: #64748b;
   --gloss-start: rgba(189, 192, 186, 0.4);
   --gloss-mid: rgba(189, 192, 186, 0.12);
   --gloss-end: rgba(189, 192, 186, 0.03);
 }
 
 .dark {
+  --color-sig-white: #94a3b8;
   --gloss-start: rgba(255, 255, 255, 0.18);
   --gloss-mid: rgba(255, 255, 255, 0.08);
   --gloss-end: rgba(255, 255, 255, 0.04);
