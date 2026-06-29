@@ -1,14 +1,28 @@
 <template>
   <div
-    class="overflow-hidden rounded-lg bg-white not-dark:shadow not-dark:shadow-gray-400/10 dark:bg-nalika-surface"
+    class="overflow-hidden rounded-r-lg border-l-3 bg-shironezumi/7 not-dark:shadow-md not-dark:shadow-gray-400/10 dark:bg-nalika-surface"
+    :class="tierBorderClass(row.tier)"
   >
-    <div :class="['flex h-8 items-center justify-between px-4', tierBarClass(row.tier)]">
-      <div class="text-sm font-bold text-aisumicha uppercase dark:text-gray-200">
-        {{ row.tier }}
+    <div class="flex items-center justify-between gap-2 px-3 pt-3">
+      <div class="flex items-center gap-2">
+        <span
+          class="w-11 rounded px-1.5 py-0.5 text-center text-xs font-bold"
+          :class="tierPillClass(row.tier)"
+        >
+          {{ row.tier }}
+        </span>
+        <span
+          class="font-mono text-sm font-bold text-aisumicha tabular-nums dark:text-nalika-text-muted"
+        >
+          {{ row.score }}
+        </span>
       </div>
-      <div class="text-sm font-bold text-aisumicha dark:text-gray-200">
-        {{ row.score }}
-      </div>
+      <button
+        class="shrink-0 rounded px-2 py-1 text-xs font-medium text-ruri hover:bg-primary/10 focus:outline-none dark:text-shinbashi dark:hover:bg-primary/20"
+        @click="$emit('detail', row)"
+      >
+        Detail ▶
+      </button>
     </div>
 
     <div class="px-3 py-2.5">
@@ -97,14 +111,6 @@
           {{ row.t4PerDk }}
         </div>
       </div>
-    </div>
-    <div class="flex justify-end px-3 pb-3">
-      <button
-        class="rounded px-2 py-1 text-xs font-medium text-ruri hover:bg-primary/10 focus:outline-none dark:text-shinbashi dark:hover:bg-primary/20"
-        @click="$emit('detail', row)"
-      >
-        Detail ▶
-      </button>
     </div>
   </div>
 </template>

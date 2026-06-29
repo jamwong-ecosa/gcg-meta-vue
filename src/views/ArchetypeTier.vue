@@ -1,7 +1,12 @@
 <template>
   <div class="mx-auto max-w-380 space-y-6 p-3 md:p-8">
     <div class="flex justify-between gap-2 max-md:flex-col md:items-center">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Archetype Tier</h1>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Archetype Tier</h1>
+        <p v-if="currentSeries" class="mt-0.5 text-xs text-gray-500 dark:text-nalika-text-muted">
+          {{ currentSeries.events }} events · {{ totalWins }} wins · {{ currentSeries.totalDecks.toLocaleString() }} decks
+        </p>
+      </div>
       <TierDropdown v-model="selectedKey" :options="seriesOptions" />
     </div>
 
@@ -40,9 +45,12 @@ watch(selectedKey, val => {
   router.replace({ query: { series: val } })
 })
 
+const currentSeries = computed(() => tierData.find(s => s.value === selectedKey.value))
+
+const totalWins = computed(() => rows.value.reduce((sum, r) => sum + (r.wins || 0), 0))
+
 const rows = computed(() => {
-  const series = tierData.find(s => s.value === selectedKey.value)
-  return series ? series.rows : []
+  return currentSeries.value ? currentSeries.value.rows : []
 })
 
 const detailArch = ref(null)

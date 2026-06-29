@@ -10,6 +10,18 @@ export function tierBarClass(tier) {
   return map[tier] || tw`bg-gray-300 dark:bg-gray-700`
 }
 
+export function tierBorderClass(tier) {
+  const map = {
+    T1: tw`border-red-300 dark:border-red-800`,
+    'T1.5': tw`border-orange-300 dark:border-orange-800`,
+    T2: tw`border-amber-400 dark:border-amber-800`,
+    'T2.5': tw`border-green-300 dark:border-green-800`,
+    T3: tw`border-blue-300 dark:border-blue-900/65`,
+    '--': tw`border-gray-300 dark:border-gray-700`,
+  }
+  return map[tier] || tw`border-gray-300 dark:border-gray-700`
+}
+
 export function tierPillClass(tier) {
   const map = {
     T1: tw`bg-red-100 text-red-700 dark:bg-red-800/50 dark:text-red-300/90`,

@@ -1,6 +1,12 @@
 <template>
   <div class="mx-auto max-w-380 space-y-6 p-3 md:p-8">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Archetype Analysis</h1>
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Archetype Analysis</h1>
+      <p v-if="currentSeriesData" class="mt-0.5 text-xs text-gray-500 dark:text-nalika-text-muted">
+        {{ currentSeriesData.events }} events · {{ totalWins }} wins ·
+        {{ currentSeriesData.totalDecks.toLocaleString() }} decks
+      </p>
+    </div>
     <div class="flex flex-col gap-2">
       <TierDropdown v-model="seriesKey" class="w-fit md:max-w-md" :options="seriesOptions" />
       <ArchDropdown v-model="archKey" class="md:max-w-3xl" :options="archOptions" />
@@ -20,6 +26,7 @@
 
 <script setup>
 import manifest from '$data/archetypes/index.json'
+import tierData from '$data/tiers.json'
 import archModules from '@/utils/archModules'
 
 function comboColors(combo) {
@@ -46,6 +53,12 @@ const seriesInitial = validSeries.includes(route.query.series)
 const seriesKey = ref(seriesInitial)
 
 const seriesManifest = computed(() => manifest.find(s => s.value === seriesKey.value))
+
+const currentSeriesData = computed(() => tierData.find(s => s.value === seriesKey.value))
+
+const totalWins = computed(
+  () => seriesManifest.value?.archetypes.reduce((s, a) => s + (a.winnerDeckCount || 0), 0) ?? 0,
+)
 
 const archOptions = computed(() =>
   (seriesManifest.value?.archetypes ?? []).map((a, i) => ({
