@@ -4,7 +4,12 @@ const routes = [
   {
     path: '/',
     name: 'home',
-    component: () => import('@/views/HomeView.vue'),
+    component: () => import('@/views/ArchetypeTier.vue'),
+  },
+  {
+    path: '/archetype-analysis',
+    name: 'archetype-analysis',
+    component: () => import('@/views/ArchetypeAnalysis.vue'),
   },
 ]
 

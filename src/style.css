@@ -1,9 +1,12 @@
 @import 'tailwindcss';
+@import './nippon-colors.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-display: 'Roboto Mono', 'Noto Sans TC', monospace;
+
+  --text-xxs: 0.625rem;
 
   --color-primary: #006284;
   --color-secondary: #58b2dc;
@@ -11,8 +14,24 @@
 
   --color-nalika-bg: #152036;
   --color-nalika-surface: #1b2a47;
-  --color-nalika-text: #dee2e6;
+  --color-nalika-text: #c2c7cb;
   --color-nalika-text-muted: #a7acb1;
   --color-nalika-border: #2a3f5c;
-  --color-nalika-header: #20355a;
+  --color-nalika-header: #192d4d;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+:root {
+  --gloss-start: rgba(214, 158, 46, 0.12);
+  --gloss-mid: rgba(214, 158, 46, 0.06);
+  --gloss-end: rgba(214, 158, 46, 0.04);
+}
+
+.dark {
+  --gloss-start: rgba(255, 255, 255, 0.18);
+  --gloss-mid: rgba(255, 255, 255, 0.08);
+  --gloss-end: rgba(255, 255, 255, 0.04);
 }

@@ -10,6 +10,7 @@
   "[tailwindcss]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "tailwindCSS.lint.suggestCanonicalClasses": "ignore",
   "tailwindCSS.experimental.classRegex": [
     "tw`(.*?)`",
     "tw\\('(.*?)'\\)",

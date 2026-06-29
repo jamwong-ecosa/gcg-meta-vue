@@ -1,4 +1,4 @@
-import autoImportGlobals from './.eslintrc-auto-import.json' with { type: 'json' }
+import autoImportGlobals from './.dev/.eslintrc-auto-import.json' with { type: 'json' }
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import globals from 'globals'
@@ -17,9 +17,15 @@ export default [
       },
     },
   },
+  eslintConfigPrettier,
   {
     rules: {
       curly: ['error', 'all'],
+      'vue/component-name-in-template-casing': [
+        'error',
+        'PascalCase',
+        { registeredComponentsOnly: false },
+      ],
       'vue/html-self-closing': [
         'error',
         {
@@ -30,5 +36,4 @@ export default [
       ],
     },
   },
-  eslintConfigPrettier,
 ]

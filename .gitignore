@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+/data
 node_modules
 dist
 dist-ssr
@@ -23,5 +24,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-components.d.ts
-.eslintrc-auto-import.json
+.dev
+data-processed/
+
+# Local Netlify folder
+.netlify
