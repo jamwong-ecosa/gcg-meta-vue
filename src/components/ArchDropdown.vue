@@ -22,7 +22,7 @@
         </div>
         <div
           v-if="selectedDetails"
-          class="mt-1 text-xxs text-gray-500 sm:text-xs dark:text-nalika-text-muted/70"
+          class="mt-1 text-xs text-gray-500 dark:text-nalika-text-muted/70"
         >
           {{ selectedDetails }}
         </div>

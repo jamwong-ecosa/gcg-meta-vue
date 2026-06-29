@@ -70,7 +70,7 @@ const totalWins = computed(
 const archOptions = computed(() =>
   (seriesManifest.value?.archetypes ?? []).map((a, i) => ({
     value: String(i),
-    details: `${a.cardCount} cards · ${a.winnerDeckCount} wins · ${a.deckCount} decks · ${a.percent}% use`,
+    details: `${a.cardCount} cards · ${a.winnerDeckCount} wins · ${a.deckCount} decks (${a.percent}%)`,
     colors: comboColors(a.combo),
     labelSegments: buildLabelSegments(a.combo, a.sigCards),
     tier: a.tier || null,
