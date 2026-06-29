@@ -331,7 +331,7 @@ function aggregateCards(groupDecks) {
 
 function calculateTechScore(wins, decks, totalArchetypeDecks) {
   const inclusionRate = decks / totalArchetypeDecks
-  if (inclusionRate > 0.4 || inclusionRate < 0.01) {
+  if (inclusionRate > 0.4 || inclusionRate <= 0.1) {
     return 0
   }
   if (wins < 2) {
@@ -372,8 +372,8 @@ function selectTopCards(allCards) {
     if (selectedIds.has(card.cardId)) {
       continue
     }
-    if (selected.length >= 30) {
-      break
+    if (card.inclusionRate <= 0.1) {
+      continue
     }
     selected.push(card)
     selectedIds.add(card.cardId)
@@ -485,9 +485,9 @@ for (const series of tournaments) {
       rarity?.startsWith('LR') ? 100 : rarity?.startsWith('R') ? 50 : 0
     allCards.sort(
       (a, b) =>
+        (TYPE_ORDER[a.type.toLowerCase()] ?? 9) - (TYPE_ORDER[b.type.toLowerCase()] ?? 9) ||
         b.inclusionRate - a.inclusionRate ||
         rarityScore(b.rarity) - rarityScore(a.rarity) ||
-        (TYPE_ORDER[a.type.toLowerCase()] ?? 9) - (TYPE_ORDER[b.type.toLowerCase()] ?? 9) ||
         a.cardId.localeCompare(b.cardId) ||
         a.color.localeCompare(b.color),
     )

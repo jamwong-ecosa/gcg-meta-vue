@@ -1,6 +1,9 @@
 <template>
   <Teleport to="body">
-    <div v-if="archetype" class="fixed inset-0 z-[1000] flex flex-col bg-white dark:bg-nalika-bg">
+    <div
+      v-if="archetype"
+      class="fixed inset-0 z-[1000] flex flex-col bg-white font-display dark:bg-nalika-bg"
+    >
       <div
         class="relative flex items-center justify-between border-b border-gray-500/10 px-4 py-2 dark:bg-nalika-surface"
       >

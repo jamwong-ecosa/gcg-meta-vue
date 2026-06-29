@@ -35,7 +35,10 @@
               />
             </div>
             <div class="text-gray-900 dark:text-nalika-text">
-              <template v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [])" :key="si">
+              <template
+                v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [])"
+                :key="si"
+              >
                 <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
                 <span v-else>{{ seg.text }}</span>
               </template>

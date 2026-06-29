@@ -1,13 +1,18 @@
 <template>
-  <div class="mx-auto max-w-380 space-y-6 p-3 md:p-8">
-    <div class="flex justify-between gap-2 max-md:flex-col md:items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Archetype Tier</h1>
-        <p v-if="currentSeries" class="mt-0.5 text-xs text-gray-500 dark:text-nalika-text-muted">
-          {{ currentSeries.events }} events · {{ totalWins }} wins · {{ currentSeries.totalDecks.toLocaleString() }} decks
-        </p>
-      </div>
-      <TierDropdown v-model="selectedKey" :options="seriesOptions" />
+  <div class="mx-auto max-w-380 p-3 md:p-8">
+    <div class="mb-3">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Archetype Tier</h1>
+      <p v-if="currentSeries" class="mt-0.5 text-xs text-gray-500 dark:text-nalika-text-muted">
+        {{ currentSeries.events }} events · {{ totalWins }} wins ·
+        {{ currentSeries.totalDecks.toLocaleString() }} decks
+      </p>
+    </div>
+
+    <div
+      class="sticky top-12 z-40 -mx-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
+      :class="hideFilter ? '-translate-y-full' : 'translate-y-0'"
+    >
+      <TierDropdown v-model="selectedKey" class="w-fit md:max-w-md" :options="seriesOptions" />
     </div>
 
     <div class="space-y-3 md:hidden">
@@ -46,6 +51,8 @@ watch(selectedKey, val => {
 })
 
 const currentSeries = computed(() => tierData.find(s => s.value === selectedKey.value))
+
+const { hideFilter } = useScrollHide()
 
 const totalWins = computed(() => rows.value.reduce((sum, r) => sum + (r.wins || 0), 0))
 

@@ -1,15 +1,20 @@
 <template>
-  <div class="mx-auto max-w-380 space-y-6 p-3 md:p-8">
-    <div>
+  <div class="mx-auto max-w-380 p-3 md:p-8">
+    <div class="mb-3">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-nalika-text">Archetype Analysis</h1>
       <p v-if="currentSeriesData" class="mt-0.5 text-xs text-gray-500 dark:text-nalika-text-muted">
         {{ currentSeriesData.events }} events · {{ totalWins }} wins ·
         {{ currentSeriesData.totalDecks.toLocaleString() }} decks
       </p>
     </div>
-    <div class="flex flex-col gap-2">
-      <TierDropdown v-model="seriesKey" class="w-fit md:max-w-md" :options="seriesOptions" />
-      <ArchDropdown v-model="archKey" class="md:max-w-3xl" :options="archOptions" />
+    <div
+      class="sticky top-12 z-40 -mx-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
+      :class="hideFilter ? '-translate-y-full' : 'translate-y-0'"
+    >
+      <div class="flex flex-col gap-2">
+        <TierDropdown v-model="seriesKey" class="w-fit md:max-w-md" :options="seriesOptions" />
+        <ArchDropdown v-model="archKey" class="md:max-w-3xl" :options="archOptions" />
+      </div>
     </div>
 
     <div v-if="loading" class="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
@@ -55,6 +60,8 @@ const seriesKey = ref(seriesInitial)
 const seriesManifest = computed(() => manifest.find(s => s.value === seriesKey.value))
 
 const currentSeriesData = computed(() => tierData.find(s => s.value === seriesKey.value))
+
+const { hideFilter } = useScrollHide(180)
 
 const totalWins = computed(
   () => seriesManifest.value?.archetypes.reduce((s, a) => s + (a.winnerDeckCount || 0), 0) ?? 0,

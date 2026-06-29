@@ -94,7 +94,7 @@
         Other Cards ({{ archetype.filteredCards.length }}) {{ showOther ? '−' : '+' }}
       </button>
       <div v-if="showOther" class="mt-2 space-y-4">
-        <div v-for="[type, cards] in [...filteredByType].reverse()" :key="type">
+        <div v-for="[type, cards] in filteredByType" :key="type">
           <h5 class="mb-2 text-xs font-semibold text-gray-600 dark:text-nalika-text">
             {{ typeLabel[type] || type }}
           </h5>

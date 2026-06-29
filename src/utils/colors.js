@@ -10,5 +10,5 @@ export const COLOR_HEX = {
 
 export const COLOR_TEXT = {
   ...COLOR_HEX,
-  White: '#94a3b8',
+  White: '#64748b',
 }
