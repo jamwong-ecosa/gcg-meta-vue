@@ -36,12 +36,10 @@
 <script setup>
 import { onClickOutside } from '@vueuse/core'
 
+const modelValue = defineModel({ type: [String, Number], required: true })
 const props = defineProps({
-  modelValue: { type: [String, Number], required: true },
   options: { type: Array, required: true },
 })
-
-const emit = defineEmits(['update:modelValue'])
 
 const dropdownRef = useTemplateRef('dropdownRef')
 const open = ref(false)
@@ -51,11 +49,11 @@ onClickOutside(dropdownRef, () => {
 })
 
 const selectedLabel = computed(
-  () => props.options.find(o => o.value === props.modelValue)?.label ?? '',
+  () => props.options.find(o => o.value === modelValue.value)?.label ?? '',
 )
 
 function select(value) {
-  emit('update:modelValue', value)
+  modelValue.value = value
   open.value = false
 }
 </script>

@@ -602,6 +602,7 @@ for (const series of tournaments) {
         archetype: archetypeName,
         colors: baseCombo,
         colorDots: colorDots(baseCombo),
+        sigCards: a.sigCards,
         decks: a.deckCount,
         wins: a.winnerDeckCount,
         top4: a.top4 ?? 0,

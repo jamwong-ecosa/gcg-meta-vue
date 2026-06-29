@@ -25,17 +25,21 @@
           class="group cursor-pointer text-aisumicha odd:bg-gray-100/15 even:bg-gray-100/45 hover:bg-gray-200/50 dark:text-nalika-text-muted dark:odd:bg-gray-100/10 dark:even:bg-white/3 dark:hover:bg-white/15"
           @click="$emit('detail', row)"
         >
-          <td class="flex items-center px-4 py-2">
-            <div class="flex items-center gap-0.5">
+          <td class="flex items-center gap-1.5 px-4 py-2">
+            <div class="flex shrink-0 items-center gap-0.5">
               <div
                 v-for="dot in row.colorDots"
                 :key="dot.name"
                 class="mr-px inline-block h-2 w-2 rounded-full"
                 :style="{ background: dot.hex }"
               />
-              <div class="ml-1 text-gray-900 dark:text-nalika-text">{{ row.colors }}</div>
             </div>
-            <div class="text-xs">（{{ row.archetype }}）</div>
+            <div class="text-gray-900 dark:text-nalika-text">
+              <template v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [])" :key="si">
+                <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
+                <span v-else>{{ seg.text }}</span>
+              </template>
+            </div>
           </td>
           <td class="w-18 px-4 py-2 text-right">
             <div class="font-mono tabular-nums">{{ row.decks }}</div>

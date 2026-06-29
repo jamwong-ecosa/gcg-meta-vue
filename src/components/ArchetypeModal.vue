@@ -2,8 +2,12 @@
   <Teleport to="body">
     <div v-if="archetype" class="fixed inset-0 z-[1000] flex flex-col bg-white dark:bg-nalika-bg">
       <div
-        class="relative flex items-center justify-end border-b border-gray-500/10 px-4 py-2 dark:bg-nalika-surface"
+        class="relative flex items-center justify-between border-b border-gray-500/10 px-4 py-2 dark:bg-nalika-surface"
       >
+        <div class="text-xs text-gray-500">
+          {{ archetype.cardCount }} cards · {{ archetype.winnerDeckCount }} wins ·
+          {{ archetype.deckCount }} decks · {{ archetype.percent }}% use
+        </div>
         <button
           class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-400 hover:bg-black/5 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-300"
           @click="$emit('close')"
@@ -28,10 +32,6 @@
               {{ archetype.combo }}
             </h2>
           </div>
-          <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            {{ archetype.cardCount }} cards · {{ archetype.winnerDeckCount }} wins ·
-            {{ archetype.deckCount }} decks · {{ archetype.percent }}% use
-          </div>
         </div>
         <ArchetypeDetail :archetype="archetype" class="mx-auto max-w-380" />
       </div>
@@ -47,8 +47,12 @@ const props = defineProps({
 })
 
 const colorDots = computed(() => {
-  const seen = new Set()
-  return (props.archetype.sigCards ?? []).map(s => s.color).filter(c => !seen.has(c) && seen.add(c))
+  const combo = props.archetype.combo ?? ''
+  const baseCombo = combo.split(' (')[0]
+  return baseCombo
+    .split('+')
+    .map(c => c.trim())
+    .filter(Boolean)
 })
 
 const emit = defineEmits(['close'])

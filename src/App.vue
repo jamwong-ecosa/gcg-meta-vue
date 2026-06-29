@@ -7,17 +7,17 @@
       <div class="flex gap-4">
         <RouterLink
           :to="{ path: '/', query: { series: $route.query.series } }"
-          class="max-sm:text-sm md:w-60"
+          class="max-sm:text-sm md:w-30"
           :exact-active-class="tw`font-bold text-primary dark:text-gunjyo`"
         >
-          Archetype Tier
+          Tier
         </RouterLink>
         <RouterLink
           :to="{ path: '/archetype-analysis', query: { series: $route.query.series } }"
-          class="max-sm:text-sm md:w-60"
+          class="max-sm:text-sm md:w-30"
           :exact-active-class="tw`font-bold text-primary dark:text-gunjyo`"
         >
-          Archetype Analysis
+          Analysis
         </RouterLink>
       </div>
       <div class="flex flex-1 justify-end">

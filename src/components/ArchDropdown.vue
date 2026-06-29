@@ -22,7 +22,7 @@
         </div>
         <div
           v-if="selectedDetails"
-          class="mt-1 text-xxs text-gray-400 sm:text-xs dark:text-nalika-text-muted/70"
+          class="mt-1 text-xxs text-gray-500 sm:text-xs dark:text-nalika-text-muted/70"
         >
           {{ selectedDetails }}
         </div>
@@ -70,7 +70,7 @@
           </div>
           <span
             v-if="opt.details"
-            class="mt-1 block text-left text-xxs font-normal text-gray-400 sm:text-xs dark:text-nalika-text-muted/70"
+            class="mt-1 block text-left text-xxs font-normal text-gray-500 sm:text-xs dark:text-nalika-text-muted/70"
           >
             {{ opt.details }}
           </span>
@@ -90,12 +90,10 @@
 <script setup>
 import { onClickOutside } from '@vueuse/core'
 
+const modelValue = defineModel({ type: [String, Number], required: true })
 const props = defineProps({
-  modelValue: { type: [String, Number], required: true },
   options: { type: Array, required: true },
 })
-
-const emit = defineEmits(['update:modelValue'])
 
 const dropdownRef = useTemplateRef('dropdownRef')
 const open = ref(false)
@@ -104,7 +102,7 @@ onClickOutside(dropdownRef, () => {
   open.value = false
 })
 
-const selected = computed(() => props.options.find(o => o.value === props.modelValue))
+const selected = computed(() => props.options.find(o => o.value === modelValue.value))
 
 const selectedColors = computed(() => selected.value?.colors ?? [])
 const selectedSegments = computed(() => selected.value?.labelSegments ?? [])
@@ -112,7 +110,7 @@ const selectedDetails = computed(() => selected.value?.details ?? '')
 const selectedTier = computed(() => selected.value?.tier ?? null)
 
 function select(value) {
-  emit('update:modelValue', value)
+  modelValue.value = value
   open.value = false
 }
 </script>

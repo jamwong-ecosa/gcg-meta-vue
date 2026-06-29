@@ -21,7 +21,7 @@
           v-if="card.rarity"
           class="font-mono text-xs text-gray-400 dark:text-gray-500"
           :class="{
-            'font-semibold text-yellow-600 dark:text-yellow-400': card.rarity.startsWith('LR'),
+            'font-semibold text-yellow-600 dark:text-yellow-400/80': card.rarity.startsWith('LR'),
           }"
         >
           {{ card.rarity.replace(/\+{1,2}$/, '') }}
@@ -33,14 +33,14 @@
       <div class="flex gap-1.5">
         <span
           v-if="card.level && card.level !== '-'"
-          class="font-mono text-xxs font-medium text-blue-700 dark:text-blue-300"
+          class="font-mono text-xs font-medium text-gray-600 dark:text-gray-400/80"
           title="Level"
         >
           L{{ card.level }}
         </span>
         <span
           v-if="card.cost && card.cost !== '-'"
-          class="font-mono text-xxs font-medium text-orange-700 dark:text-orange-300"
+          class="font-mono text-xs font-medium text-gray-500"
           title="Cost"
         >
           C{{ card.cost }}
@@ -49,14 +49,14 @@
       <div class="flex gap-1.5">
         <span
           v-if="card.ap && card.ap !== '-'"
-          class="font-mono text-xxs font-medium text-red-700 dark:text-red-300"
+          class="font-mono text-xs font-medium text-red-700 dark:text-red-700/80"
           title="AP"
         >
           AP{{ card.ap }}
         </span>
         <span
           v-if="card.hp && card.hp !== '-'"
-          class="font-mono text-xxs font-medium text-green-700 dark:text-green-300"
+          class="font-mono text-xs font-medium text-green-700 dark:text-green-600/75"
           title="HP"
         >
           HP{{ card.hp }}
@@ -71,18 +71,18 @@
       <img
         :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?fit=crop&ar=3:2&w=300&crop=focalpoint&fp-x=0.5&fp-y=0.05`"
         :alt="card.name"
-        class="h-full w-full scale-150 object-cover transition-all duration-200 group-hover:brightness-75"
+        class="h-full w-full scale-150 object-cover brightness-85 transition-all duration-200 group-hover:brightness-95"
         loading="lazy"
       />
     </div>
 
     <div
-      class="mt-1.5 w-full truncate text-center text-sm font-semibold text-aisumicha dark:text-nalika-text"
+      class="mt-1.5 w-full truncate text-center text-xs font-semibold text-aisumicha dark:text-nalika-text"
     >
       {{ card.name }}
     </div>
 
-    <div class="mt-1.5 flex items-center justify-between text-xs">
+    <div class="mt-2 flex items-center justify-between text-xs">
       <span class="font-mono font-bold text-gray-600 dark:text-gray-400">
         {{ (card.inclusionRate * 100).toFixed(1) }}%
       </span>
@@ -104,7 +104,7 @@
         <span v-if="card.avgQty" class="text-gray-300 dark:text-gray-500">·</span>
         <span
           v-if="card.avgQty"
-          class="font-mono text-indigo-500 dark:text-indigo-400"
+          class="font-mono text-indigo-500 dark:text-indigo-400/70"
           title="Avg copies per deck"
         >
           ×{{ card.avgQty }}
