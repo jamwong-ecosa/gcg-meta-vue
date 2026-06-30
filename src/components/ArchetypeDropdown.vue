@@ -50,7 +50,7 @@
       <button
         v-for="opt in options"
         :key="opt.value"
-        class="flex w-full items-center gap-2 px-3 py-2 text-xs hover:bg-gray-100/30 sm:text-sm dark:hover:bg-white/5"
+        class="flex w-full items-center gap-2 border-gray-100 px-3 py-2 text-xs not-last:border-b hover:bg-gray-100/30 sm:text-sm dark:hover:bg-white/5"
         :class="{ 'bg-gunjyo/10 dark:bg-gunjyo/15': opt.value === modelValue }"
         @click="select(opt.value)"
       >

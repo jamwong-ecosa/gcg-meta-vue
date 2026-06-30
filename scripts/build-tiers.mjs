@@ -1,6 +1,9 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import * as ss from 'simple-statistics'
 
+// ─── Builds tier data, per-archetype card analysis, and the manifest ─────────
+// Run via `npm run build:tiers` or `npm run data`.
+
 const WINNER = '優勝'
 const TOP4 = ['優勝', '準優勝', '3位', '4位']
 const COLOR_HEX = {
@@ -18,6 +21,7 @@ function loadJSON(path) {
   return JSON.parse(readFileSync(path, 'utf8'))
 }
 
+// Builds cardMap (cardId → card info), nameToColor, and cardToGroup (effect hash)
 function createCardLookups(cardsRaw) {
   const cardMap = {}
   const nameToColor = {}
@@ -48,6 +52,7 @@ function createCardLookups(cardsRaw) {
         : `${card.color}|${card.level}|${card.cost}|${card.ap}|${card.hp}|${card.effect || '-'}`
   }
 
+  // Safe card info getter — returns placeholder for unknown IDs
   const lookup = cardId =>
     cardMap[cardId] ?? {
       name: '?',
@@ -65,6 +70,7 @@ function createCardLookups(cardsRaw) {
   return { lookup, nameToColor, cardToGroup }
 }
 
+// Returns alphabetically sorted unique colors in a deck
 function getDeckColors(deck, lookup) {
   const colors = new Set()
   for (const card of deck) {
@@ -73,6 +79,11 @@ function getDeckColors(deck, lookup) {
   return [...colors].sort()
 }
 
+// Identifies up to 2 signature cards that define an archetype.
+// Scoring: qty × 10 + level × 7, only LR UNIT cards qualify.
+// A card must appear in qty ≥ 2 to be considered.
+// If only 1 color has qualifying sigs → take top 2 from that color.
+// If multiple colors have qualifying sigs → take top 1 from each.
 function getSignatureCard(deck, lookup) {
   const best = {}
   for (const card of deck) {
@@ -89,9 +100,6 @@ function getSignatureCard(deck, lookup) {
     const entry = { name: info.name, color, score, qty: card.quantity }
     best[color].push(entry)
     best[color].sort((a, b) => b.score - a.score)
-    if (best[color].length > 2) {
-      best[color].length = 2
-    }
   }
 
   const colors = Object.keys(best).sort()
@@ -118,6 +126,7 @@ function getSignatureCard(deck, lookup) {
   return signatures.length > 0 ? signatures : null
 }
 
+// Archetype grouping key: "Color1+Color2 (Sig1 / Sig2)" or just "Color1+Color2"
 function buildComboKey(deck, lookup, useSig = true) {
   const colors = getDeckColors(deck, lookup)
   if (colors.length === 0) {
@@ -131,6 +140,7 @@ function buildComboKey(deck, lookup, useSig = true) {
   return colors.join('+') + (sigNames.length > 0 ? ` (${sigNames.join(' / ')})` : '')
 }
 
+// Groups decks by combo key into archetype buckets (all, winners, top4)
 function buildArchetypeMaps(allPlayers, winners, top4Players, lookup, useSig = true) {
   const comboArchetypes = {}
   for (const player of allPlayers) {
@@ -179,6 +189,7 @@ function buildArchetypeMaps(allPlayers, winners, top4Players, lookup, useSig = t
   return { comboArchetypes, winnerComboArchetypes, top4ComboArchetypes }
 }
 
+// Extracts all players, winners, and top-4 players from a series
 function getSeriesMetadata(series) {
   const allPlayers = series.events.flatMap(e => e.players).filter(p => p.deck.length > 0)
   const winners = allPlayers.filter(p => p.rank === WINNER)
@@ -192,6 +203,7 @@ function getSeriesMetadata(series) {
   }
 }
 
+// Scoring cap = 2× average winner win rate (among winner archetypes)
 function getSeriesCeiling(series) {
   const rates = series.archetypes
     .filter(a => a.winnerDeckCount > 0)
@@ -203,6 +215,7 @@ function getSeriesCeiling(series) {
   return avg * 2
 }
 
+// Average top-4 rate among winner archetypes (used as Bayesian prior)
 function getSeriesAvgTop4Rate(series) {
   const archs = series.archetypes.filter(a => a.winnerDeckCount > 0)
   if (archs.length === 0) {
@@ -213,6 +226,9 @@ function getSeriesAvgTop4Rate(series) {
   return totalDecks > 0 ? (totalTop4 / totalDecks) * 100 : 40
 }
 
+// Weighted composite score: event win share, usage rate, win rate, top-4 bonus,
+// minus a penalty when usage outpaces win rate relative to ceiling.
+// Weights: [0.5, 0.2, 0.2, 0.1]. Win rate and top-4 use Bayesian smoothing (K=10).
 function archetypeScoreV2(wins, archDecks, totalDecks, totalEvents, top4, ceiling, top4Prior) {
   if (wins === 0) {
     return 0
@@ -231,6 +247,7 @@ function archetypeScoreV2(wins, archDecks, totalDecks, totalEvents, top4, ceilin
   return Math.round((raw - penalty) * 10)
 }
 
+// ckmeans clustering on archetype scores → tier cutoffs (T1, T1.5, T2, T2.5, T3, --)
 function computeTierThresholds(series) {
   const ceiling = getSeriesCeiling(series)
   const allScores = series.archetypes
@@ -253,6 +270,7 @@ function computeTierThresholds(series) {
   try {
     clusters = ss.ckmeans(allScores, Math.max(1, k))
   } catch {
+    // Fallback: equal-sized buckets if ckmeans fails (e.g. all scores identical)
     const n = Math.max(1, k)
     clusters = Array.from({ length: n }, (_, i) => {
       const start = Math.floor((i * allScores.length) / n)
@@ -281,10 +299,12 @@ function computeTierThresholds(series) {
   return thresholds
 }
 
+// Returns the tier label for a score by finding the highest threshold it meets
 function getDeckTier(score, thresholds) {
   return thresholds.find(t => score >= t.min) || thresholds[thresholds.length - 1]
 }
 
+// Maps a "Color1+Color2" string → [{ name, hex }] for bullet rendering
 function colorDots(colors) {
   return colors.split('+').map(name => ({
     name,
@@ -294,6 +314,7 @@ function colorDots(colors) {
 
 // ─── Card-level analysis ─────────────────────────────────────────────────────
 
+// Counts how many distinct winner decks include each card ID
 function countWinnerCards(winnerGroup) {
   const counts = {}
   if (!winnerGroup) {
@@ -311,6 +332,7 @@ function countWinnerCards(winnerGroup) {
   return counts
 }
 
+// Aggregates total copies + deck-inclusion count per card across all decks
 function aggregateCards(groupDecks) {
   const cardStats = {}
   for (const deck of groupDecks) {
@@ -329,6 +351,8 @@ function aggregateCards(groupDecks) {
   return cardStats
 }
 
+// Tech card score: rewards cards with moderate inclusion (10-40%) and high win association.
+// Requires at least 2 winner appearances.
 function calculateTechScore(wins, decks, totalArchetypeDecks) {
   const inclusionRate = decks / totalArchetypeDecks
   if (inclusionRate > 0.4 || inclusionRate <= 0.1) {
@@ -341,6 +365,8 @@ function calculateTechScore(wins, decks, totalArchetypeDecks) {
   return Math.round(score * 1000) / 1000
 }
 
+// Picks top N cards per type (4 UNIT, 2 each of PILOT/COMMAND/BASE) by inclusion rate,
+// then fills remaining slots with cards above 10% inclusion.
 function selectTopCards(allCards) {
   const perType = {}
   for (const card of allCards) {
@@ -381,6 +407,7 @@ function selectTopCards(allCards) {
   return selected
 }
 
+// Counts feature keyword occurrences (e.g. 三隻同盟) across top cards, sorted by frequency
 function computeFeatureBadges(topCards) {
   const featureCounts = {}
   for (const card of topCards) {
@@ -402,6 +429,7 @@ function computeFeatureBadges(topCards) {
   return Object.entries(featureCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
 }
 
+// Serializes a deck to "ID:qty|ID:qty" (sorted by type, then ID) for dedup comparison
 function serializeDeckCards(deck, lookup) {
   const cardQty = deck.reduce((acc, card) => {
     acc[card.cardId] = (acc[card.cardId] || 0) + (card.quantity || 1)
@@ -415,8 +443,9 @@ function serializeDeckCards(deck, lookup) {
   return sorted.map(([id, qty]) => `${id}:${qty}`).join('|')
 }
 
-// ─── Main ────────────────────────────────────────────────────────────────────
+// ─── Main pipeline ────────────────────────────────────────────────────────────
 
+// Load scraped data
 const tournaments = loadJSON('data/tournaments-all.json')
 const cardsRaw = loadJSON('data/cards.json')
 
@@ -527,6 +556,7 @@ for (const series of tournaments) {
 
   // --- Threshold archetypes (same minSize filter as tiers) ---
 
+  // Minimum deck count to qualify as an archetype (1% or 5% capped at 12)
   const minSize = Math.max(Math.ceil(totalAll * 0.01), Math.min(12, Math.ceil(totalAll * 0.05)))
 
   const mainDetails = archetypeDetails
@@ -596,6 +626,7 @@ for (const series of tournaments) {
       const top4PerDeck = a.deckCount > 0 ? (a.top4 ?? 0) / a.deckCount : 0
       const baseCombo = a.combo.split(' (')[0]
       const sigPart = a.combo.match(/\((.+)\)/)?.[1]
+      // Convert half-width parens to full-width for display consistency
       const archetypeName = sigPart ? `${baseCombo}（${sigPart}）` : baseCombo
 
       return {
@@ -614,6 +645,7 @@ for (const series of tournaments) {
         tier: a.tierLabel,
       }
     })
+    // Sort by tier rank (ascending), then by score (descending) within same tier
     .sort((a, b) => {
       const tA = a.tier === '--' ? 99 : parseFloat(a.tier.slice(1))
       const tB = b.tier === '--' ? 99 : parseFloat(b.tier.slice(1))

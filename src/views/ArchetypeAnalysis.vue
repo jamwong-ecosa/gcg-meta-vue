@@ -2,10 +2,15 @@
   <div class="mx-auto max-w-380 p-3 md:p-8">
     <div class="mb-3">
       <h1 class="text-2xl font-bold text-sumi dark:text-nalika-text">Archetype Analysis</h1>
-      <p v-if="currentSeriesData" class="mt-0.5 text-xs text-gray-500 dark:text-nalika-text-muted">
-        {{ currentSeriesData.events }} events · {{ totalWins }} wins ·
-        {{ currentSeriesData.totalDecks.toLocaleString() }} decks
-      </p>
+      <div
+        v-if="currentSeriesData"
+        class="mt-0.5 flex flex-wrap gap-x-1 text-xs text-gray-500 dark:text-nalika-text-muted"
+      >
+        <span>{{ currentSeriesData.events }} events</span>
+        <span>· {{ totalWins }} wins</span>
+        <span>· {{ currentSeriesData.totalDecks.toLocaleString() }} decks</span>
+        <span>· {{ seriesManifest.archetypes.length }} archetypes</span>
+      </div>
     </div>
     <div
       class="sticky top-12 z-40 -mx-3 mb-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
@@ -13,7 +18,7 @@
     >
       <div class="flex flex-col items-end gap-2">
         <GeneralDropdown v-model="seriesKey" class="w-fit md:max-w-md" :options="seriesOptions" />
-        <ArchetypeDropdown v-model="archKey" class="md:max-w-3xl" :options="archOptions" />
+        <ArchetypeDropdown v-model="archKey" class="max-w-full md:w-3xl" :options="archOptions" />
       </div>
     </div>
 

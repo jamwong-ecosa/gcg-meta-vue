@@ -2,10 +2,15 @@
   <div class="mx-auto max-w-380 p-3 md:p-8">
     <div class="mb-3">
       <h1 class="text-2xl font-bold text-sumi dark:text-nalika-text">Archetype Tier</h1>
-      <p v-if="currentSeries" class="mt-0.5 text-xs text-gray-500 dark:text-nalika-text-muted">
-        {{ currentSeries.events }} events · {{ totalWins }} wins ·
-        {{ currentSeries.totalDecks.toLocaleString() }} decks
-      </p>
+      <div
+        v-if="currentSeries"
+        class="mt-0.5 flex flex-wrap gap-x-1 text-xs text-gray-500 dark:text-nalika-text-muted"
+      >
+        <span>{{ currentSeries.events }} events</span>
+        <span>· {{ totalWins }} wins</span>
+        <span>· {{ currentSeries.totalDecks.toLocaleString() }} decks</span>
+        <span>· {{ currentSeries.rows.length }} archetypes</span>
+      </div>
     </div>
 
     <div
