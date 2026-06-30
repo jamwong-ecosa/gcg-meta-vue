@@ -154,6 +154,7 @@
             v-for="(d, i) in winnerDeckPreviews"
             :key="d.url"
             :cards="d.cards"
+            :url="d.url"
             class="flex items-center gap-2"
           >
             <a
@@ -181,7 +182,12 @@
         </div>
 
         <div class="flex flex-wrap gap-x-6 gap-y-3">
-          <DeckPopover v-for="(d, i) in otherDeckPreviews" :key="d.url" :cards="d.cards">
+          <DeckPopover
+            v-for="(d, i) in otherDeckPreviews"
+            :key="d.url"
+            :cards="d.cards"
+            :url="d.url"
+          >
             <a
               :href="d.url"
               target="_blank"

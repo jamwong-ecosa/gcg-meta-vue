@@ -5,9 +5,6 @@
     @mouseleave="onLeave"
     @contextmenu.prevent
     @click="onClick"
-    @touchstart="onTouchStart"
-    @touchend="onTouchEnd"
-    @touchmove="cancelLongPress"
   >
     <slot />
 
@@ -33,10 +30,13 @@
               :alt="card.name"
               class="w-full object-cover"
               loading="lazy"
+              style="-webkit-touch-callout: none; touch-action: none"
+              draggable="false"
               @contextmenu.prevent
             />
             <span
-              class="absolute top-0 right-0 rounded-bl-lg bg-black/60 px-1.5 text-2xl leading-tight font-bold text-white"
+              class="absolute top-0 right-0 rounded-bl-lg bg-black/60 px-1.5 text-2xl leading-tight font-bold text-white select-none"
+              style="-webkit-touch-callout: none; touch-action: none"
             >
               {{ card.qty }}
             </span>
@@ -54,31 +54,43 @@
           @click="closeMobile"
         >
           <div
-            class="mx-2 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-2 shadow-2xl dark:bg-gray-800"
+            class="mx-2 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-2 shadow-2xl select-none dark:bg-gray-800"
             @click.stop
+            @contextmenu.prevent
           >
-            <div class="grid grid-cols-4 gap-1">
+            <div class="mb-2 flex gap-2">
+              <button
+                class="flex-1 rounded-lg bg-gray-100 py-1.5 text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                @click="closeMobile"
+              >
+                Close
+              </button>
+              <button
+                class="flex-1 rounded-lg bg-ruri py-1.5 text-sm font-medium text-white"
+                @click="openUrl"
+              >
+                Open
+              </button>
+            </div>
+            <div class="grid grid-cols-3 gap-1">
               <div v-for="card in cards" :key="card.cardId" class="relative">
                 <img
                   :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200`"
                   :alt="card.name"
                   class="w-full object-cover"
                   loading="lazy"
+                  style="-webkit-touch-callout: none; touch-action: none"
+                  draggable="false"
                   @contextmenu.prevent
                 />
                 <span
-                  class="absolute top-0 right-0 rounded-bl-lg bg-black/60 px-1.5 text-2xl leading-tight font-bold text-white"
+                  class="absolute top-0 right-0 rounded-bl-lg bg-black/60 px-1.5 text-2xl leading-tight font-bold text-white select-none"
+                  style="-webkit-touch-callout: none; touch-action: none"
                 >
                   {{ card.qty }}
                 </span>
               </div>
             </div>
-            <button
-              class="mt-3 w-full rounded-lg bg-gray-100 py-2.5 text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-              @click="closeMobile"
-            >
-              Close
-            </button>
           </div>
         </div>
       </Transition>
@@ -89,14 +101,13 @@
 <script setup>
 const props = defineProps({
   cards: { type: Array, required: true },
+  url: { type: String, default: '' },
 })
 
 const open = ref(false)
 const mobileOpen = ref(false)
 const anchor = ref('bottom')
 const hPos = ref('left')
-let longPressTimer = null
-const preventNextClick = ref(false)
 
 const MAX_COLS = 8
 const CARD_W = 120
@@ -133,33 +144,22 @@ function closeMobile() {
   mobileOpen.value = false
 }
 
-function onClick(event) {
-  if (!preventNextClick.value || !event.target.closest('a')) {
-    return
+function openUrl() {
+  if (props.url) {
+    window.open(props.url, '_blank', 'noopener')
   }
-  preventNextClick.value = false
-  event.preventDefault()
+  mobileOpen.value = false
 }
 
-function onTouchStart(event) {
+function onClick(event) {
   if (window.innerWidth >= 768 || !event.target.closest('a')) {
     return
   }
-  longPressTimer = setTimeout(() => {
-    preventNextClick.value = true
-    mobileOpen.value = true
-  }, 500)
+  event.preventDefault()
+  mobileOpen.value = true
 }
 
-function onTouchEnd() {
-  clearTimeout(longPressTimer)
-}
-
-function cancelLongPress() {
-  clearTimeout(longPressTimer)
-}
-
-// Max columns that fit viewport with 20px margin each side
+// Max columns that fit viewport with 16px margin each side
 function calcFitCols() {
   const maxAvail = window.innerWidth - 32
   return Math.max(
