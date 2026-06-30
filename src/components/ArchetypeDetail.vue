@@ -111,10 +111,10 @@
     </div>
 
     <!-- Other Cards (collapsible) -->
-    <div v-if="filteredByType.length" class="mt-4">
+    <div v-if="filteredByType.length" ref="otherCardsSection" class="mt-4 scroll-mt-14">
       <button
-        class="text-xs font-medium text-primary hover:underline focus:outline-none"
-        @click="showOther = !showOther"
+        class="text-xs font-medium text-ruri hover:underline focus:outline-none"
+        @click="toggleOther"
       >
         Other Cards ({{ archetype.filteredCards.length }}) {{ showOther ? '−' : '+' }}
       </button>
@@ -136,10 +136,10 @@
     </div>
 
     <!-- Deck URLs (hidden, toggle) -->
-    <div v-if="archetype.deckUrls?.length" class="mt-4">
+    <div v-if="archetype.deckUrls?.length" ref="deckUrlsSection" class="mt-4 scroll-mt-14">
       <button
-        class="text-xs font-medium text-primary hover:underline focus:outline-none"
-        @click="showDeckUrls = !showDeckUrls"
+        class="text-xs font-medium text-ruri hover:underline focus:outline-none"
+        @click="toggleDeckUrls"
       >
         Deck URLs ({{ archetype.deckUrls.length }}) {{ showDeckUrls ? '−' : '+' }}
       </button>
@@ -150,23 +150,28 @@
           Winner Decks
         </div>
         <div class="flex flex-wrap gap-x-6 gap-y-3">
-          <div v-for="(url, i) in winnerDeckUrls" :key="url" class="flex items-center gap-2">
+          <DeckPopover
+            v-for="(d, i) in winnerDeckPreviews"
+            :key="d.url"
+            :cards="d.cards"
+            class="flex items-center gap-2"
+          >
             <a
-              :href="url"
+              :href="d.url"
               target="_blank"
               rel="noopener"
-              class="text-xs break-all text-primary hover:underline"
+              class="text-xs break-all text-ruri hover:underline"
             >
               Deck {{ i + 1 }}
             </a>
             <span
-              class="rounded bg-yellow-100 px-1 text-[0.55rem] font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+              class="rounded bg-yellow-100 px-1 text-xxs font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
             >
               W
             </span>
-          </div>
+          </DeckPopover>
         </div>
-        <div v-if="!winnerDeckUrls.length" class="text-xs text-gray-400 dark:text-gray-500">
+        <div v-if="!winnerDeckPreviews.length" class="text-xs text-gray-400 dark:text-gray-500">
           No winner decks
         </div>
         <div
@@ -176,16 +181,16 @@
         </div>
 
         <div class="flex flex-wrap gap-x-6 gap-y-3">
-          <div v-for="(url, i) in otherDeckUrls" :key="url">
+          <DeckPopover v-for="(d, i) in otherDeckPreviews" :key="d.url" :cards="d.cards">
             <a
-              :href="url"
+              :href="d.url"
               target="_blank"
               rel="noopener"
-              class="text-xs break-all text-primary hover:underline"
+              class="text-xs break-all text-ruri hover:underline"
             >
               Deck {{ i + 1 }}
             </a>
-          </div>
+          </DeckPopover>
         </div>
       </div>
     </div>
@@ -199,8 +204,48 @@ const props = defineProps({
 
 const showOther = ref(false)
 const showDeckUrls = ref(false)
+const otherCardsSection = ref(null)
+const deckUrlsSection = ref(null)
+
+function toggleOther() {
+  showOther.value = !showOther.value
+  if (showOther.value) {
+    nextTick(() => otherCardsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+}
+
+function toggleDeckUrls() {
+  showDeckUrls.value = !showDeckUrls.value
+  if (showDeckUrls.value) {
+    nextTick(() => deckUrlsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+}
 
 const sigCardNames = computed(() => new Set(props.archetype.sigCards?.map(s => s.name) ?? []))
+
+const cardIdToName = computed(() => {
+  const map = new Map()
+  for (const c of props.archetype.cards ?? []) {
+    map.set(c.cardId, c.name)
+  }
+  for (const c of props.archetype.filteredCards ?? []) {
+    map.set(c.cardId, c.name)
+  }
+  return map
+})
+
+const deckPreviews = computed(() =>
+  (props.archetype.deckUrls ?? []).map((url, i) => {
+    const cards = (props.archetype.deckCardIds?.[i] ?? '')
+      .split('|')
+      .filter(Boolean)
+      .map(part => {
+        const [cardId, qty] = part.split(':')
+        return { cardId, qty: Number(qty), name: cardIdToName.value.get(cardId) ?? cardId }
+      })
+    return { url, idx: i, isWinner: props.archetype.deckWinnerFlags?.[i] ?? false, cards }
+  }),
+)
 
 const unitCards = computed(() => props.archetype.cards.filter(c => c.type === 'UNIT'))
 const coreUnits = computed(() => unitCards.value.filter(c => (c.inclusionRate ?? 0) >= 0.6))
@@ -229,10 +274,6 @@ const typeLabel = {
   BASE: 'Base',
 }
 
-const winnerDeckUrls = computed(
-  () => props.archetype.deckUrls?.filter((_, i) => props.archetype.deckWinnerFlags?.[i]) ?? [],
-)
-const otherDeckUrls = computed(
-  () => props.archetype.deckUrls?.filter((_, i) => !props.archetype.deckWinnerFlags?.[i]) ?? [],
-)
+const winnerDeckPreviews = computed(() => deckPreviews.value.filter(d => d.isWinner))
+const otherDeckPreviews = computed(() => deckPreviews.value.filter(d => !d.isWinner))
 </script>
