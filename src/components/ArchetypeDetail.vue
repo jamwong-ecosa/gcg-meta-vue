@@ -202,8 +202,7 @@ const props = defineProps({
   archetype: { type: Object, required: true },
 })
 
-const showOther = ref(false)
-const showDeckUrls = ref(false)
+const { showOther, showDeckUrls } = useCollapseState()
 const otherCardsSection = ref(null)
 const deckUrlsSection = ref(null)
 
