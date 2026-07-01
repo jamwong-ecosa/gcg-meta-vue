@@ -196,7 +196,7 @@ function calculateTechScore(wins, decks, totalArchetypeDecks, isVanilla = false)
     return 0
   }
   const inclusionRate = decks / totalArchetypeDecks
-  if (inclusionRate > 0.4 || inclusionRate <= 0.15) {
+  if (inclusionRate > 0.4 || inclusionRate <= 0.1) {
     return 0
   }
   if (wins < 2) {
@@ -238,7 +238,7 @@ function selectTopCards(allCards) {
         continue
       }
     }
-    if (card.inclusionRate <= 0.15) {
+    if (card.inclusionRate <= 0.1) {
       continue
     }
     selected.push(card)
@@ -488,7 +488,12 @@ function buildArchetypeDetails(
         winnerDeckCount: winnerCounts[cardId] || 0,
         avgQty: Math.round(cardData.totalQty / cardData.decksIncluded),
         inWinner: false,
-        techScore: calculateTechScore(winnerCounts[cardId] || 0, cardData.decksIncluded, count, isVanilla),
+        techScore: calculateTechScore(
+          winnerCounts[cardId] || 0,
+          cardData.decksIncluded,
+          count,
+          isVanilla,
+        ),
       }
     })
 
@@ -527,7 +532,10 @@ function buildArchetypeDetails(
         }))
       : []
 
-    const sigCardIds = sigCards.map(s => allCards.find(c => c.name === s.name)).filter(Boolean).map(c => c.cardId)
+    const sigCardIds = sigCards
+      .map(s => allCards.find(c => c.name === s.name))
+      .filter(Boolean)
+      .map(c => c.cardId)
 
     const deckCardIds = group.deckCardIds
 

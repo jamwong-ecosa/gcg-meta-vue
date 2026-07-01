@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-380 p-3 md:p-8">
+  <div class="mx-auto max-w-380 p-3 pb-6 md:p-8">
     <div class="mb-3">
       <h1 class="text-2xl font-bold text-sumi dark:text-nalika-text">Archetype Tier</h1>
       <div
