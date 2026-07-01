@@ -18,7 +18,7 @@
           </svg>
         </button>
       </div>
-      <div ref="modalRef" class="flex-1 overflow-y-auto p-4 md:p-6">
+      <div ref="modalRef" class="flex-1 overflow-y-auto p-4 max-sm:pb-8 md:p-6">
         <div class="mx-auto mb-4 max-w-380">
           <div class="flex items-baseline gap-1">
             <div

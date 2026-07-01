@@ -1,6 +1,6 @@
 <template>
   <div
-    class="overflow-hidden rounded-r-lg border-l-3 bg-shironezumi/7 not-dark:shadow-md not-dark:shadow-gray-400/10 dark:bg-nalika-surface"
+    class="overflow-hidden rounded-r-lg border-l-5 bg-shironezumi/7 not-dark:shadow-md not-dark:shadow-gray-400/10 dark:bg-nalika-surface"
     :class="tierBorderClass(row.tier)"
   >
     <div class="flex items-center justify-between gap-2 px-3 pt-3">

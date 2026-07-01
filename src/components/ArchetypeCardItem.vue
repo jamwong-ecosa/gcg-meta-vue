@@ -1,11 +1,11 @@
 <template>
   <div
-    class="relative rounded-lg border border-gray-500/10 bg-shironezumi/7 p-2 dark:border-nalika-border dark:bg-nalika-surface"
+    class="relative rounded border border-gray-500/10 bg-shironezumi/7 p-2 dark:border-nalika-border dark:bg-nalika-surface"
     :class="{ 'ring-2 ring-yellow-400 dark:ring-yellow-700': card.inWinner }"
   >
     <div
       v-if="card.inWinner"
-      class="gloss-overlay pointer-events-none absolute inset-0 z-10 rounded-lg"
+      class="gloss-overlay pointer-events-none absolute inset-0 z-10 rounded"
     />
     <div
       v-if="isSig"
@@ -164,16 +164,16 @@ const colorHex = computed(() => COLOR_HEX[props.card.color] || '#718096')
 
 const barColorClass = computed(() => {
   const rate = (props.card.inclusionRate ?? 0) * 100
-  if (rate >= 80) {
+  if (rate >= 90) {
     return tw`bg-red-500 dark:bg-red-700`
   }
-  if (rate >= 60) {
+  if (rate >= 75) {
     return tw`bg-amber-500 dark:bg-amber-700`
   }
-  if (rate >= 40) {
+  if (rate >= 50) {
     return tw`bg-yellow-400 dark:bg-yellow-600`
   }
-  if (rate >= 20) {
+  if (rate >= 25) {
     return tw`bg-green-500 dark:bg-green-700`
   }
   return tw`bg-sky-400 dark:bg-sky-600`

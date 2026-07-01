@@ -33,19 +33,21 @@
       <!-- Left: Units -->
       <div class="space-y-4">
         <div>
-          <h4 class="mb-2 text-xs font-semibold text-gray-600 dark:text-nalika-text">Unit: Core</h4>
+          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
+            Unit: Core
+          </h4>
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <ArchetypeCardItem
               v-for="card in coreUnits"
               :key="card.cardId"
               :card="card"
-              :is-sig="sigCardNames.has(card.name)"
+              :is-sig="sigCardIds.has(card.cardId)"
             />
           </div>
           <p v-if="!coreUnits.length" class="text-xs text-gray-400 dark:text-gray-500">No cards</p>
         </div>
         <div class="border-t border-gray-200 pt-3 dark:border-gray-700">
-          <h4 class="mb-2 text-xs font-semibold text-gray-600 dark:text-nalika-text">
+          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
             Unit: Other
           </h4>
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -53,7 +55,7 @@
               v-for="card in otherUnits"
               :key="card.cardId"
               :card="card"
-              :is-sig="sigCardNames.has(card.name)"
+              :is-sig="sigCardIds.has(card.cardId)"
             />
           </div>
           <p v-if="!otherUnits.length" class="text-xs text-gray-400 dark:text-gray-500">No cards</p>
@@ -63,35 +65,41 @@
       <!-- Right: Pilots, Commands, Bases -->
       <div class="space-y-4">
         <div v-if="pilotCards.length">
-          <h4 class="mb-2 text-xs font-semibold text-gray-600 dark:text-nalika-text">Pilot</h4>
+          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
+            Pilot
+          </h4>
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <ArchetypeCardItem
               v-for="card in pilotCards"
               :key="card.cardId"
               :card="card"
-              :is-sig="sigCardNames.has(card.name)"
+              :is-sig="sigCardIds.has(card.cardId)"
             />
           </div>
         </div>
         <div v-if="commandCards.length" class="border-t border-gray-200 pt-3 dark:border-gray-700">
-          <h4 class="mb-2 text-xs font-semibold text-gray-600 dark:text-nalika-text">Command</h4>
+          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
+            Command
+          </h4>
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <ArchetypeCardItem
               v-for="card in commandCards"
               :key="card.cardId"
               :card="card"
-              :is-sig="sigCardNames.has(card.name)"
+              :is-sig="sigCardIds.has(card.cardId)"
             />
           </div>
         </div>
         <div v-if="baseCards.length" class="border-t border-gray-200 pt-3 dark:border-gray-700">
-          <h4 class="mb-2 text-xs font-semibold text-gray-600 dark:text-nalika-text">Base</h4>
+          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
+            Base
+          </h4>
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <ArchetypeCardItem
               v-for="card in baseCards"
               :key="card.cardId"
               :card="card"
-              :is-sig="sigCardNames.has(card.name)"
+              :is-sig="sigCardIds.has(card.cardId)"
             />
           </div>
         </div>
@@ -111,16 +119,16 @@
     </div>
 
     <!-- Other Cards (collapsible) -->
-    <div v-if="filteredByType.length" ref="otherCardsSection" class="mt-4 scroll-mt-14">
+    <div v-if="filteredByType.length" ref="otherCardsSection" class="mt-6 scroll-mt-14">
       <button
-        class="text-xs font-medium text-ruri hover:underline focus:outline-none"
+        class="font-medium text-ruri underline-offset-5 hover:underline focus:outline-none"
         @click="toggleOther"
       >
         Other Cards ({{ archetype.filteredCards.length }}) {{ showOther ? '−' : '+' }}
       </button>
       <div v-if="showOther" class="mt-2 space-y-4">
         <div v-for="[type, cards] in filteredByType" :key="type">
-          <h5 class="mb-2 text-xs font-semibold text-gray-600 dark:text-nalika-text">
+          <h5 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
             {{ typeLabel[type] || type }}
           </h5>
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-8">
@@ -128,7 +136,7 @@
               v-for="card in cards"
               :key="card.cardId"
               :card="card"
-              :is-sig="sigCardNames.has(card.name)"
+              :is-sig="sigCardIds.has(card.cardId)"
             />
           </div>
         </div>
@@ -138,35 +146,36 @@
     <!-- Deck URLs (hidden, toggle) -->
     <div v-if="archetype.deckUrls?.length" ref="deckUrlsSection" class="mt-4 scroll-mt-14">
       <button
-        class="text-xs font-medium text-ruri hover:underline focus:outline-none"
+        class="font-medium text-ruri underline-offset-5 hover:underline focus:outline-none"
         @click="toggleDeckUrls"
       >
         Deck URLs ({{ archetype.deckUrls.length }}) {{ showDeckUrls ? '−' : '+' }}
       </button>
       <div v-if="showDeckUrls" class="mt-2 space-y-1">
         <div
-          class="mb-1 text-xxs font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
+          class="mb-1 text-sm font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
         >
           Winner Decks
         </div>
-        <div class="flex flex-wrap gap-x-6 gap-y-3">
+        <div class="flex flex-wrap gap-x-5 gap-y-2.5">
           <DeckPopover
             v-for="(d, i) in winnerDeckPreviews"
             :key="d.url"
             :cards="d.cards"
             :url="d.url"
+            :label="'Deck ' + (i + 1)"
             class="flex items-center gap-2"
           >
             <a
               :href="d.url"
               target="_blank"
               rel="noopener"
-              class="text-xs break-all text-ruri hover:underline"
+              class="text-xs break-all text-ruri hover:underline dark:text-sora/65"
             >
               Deck {{ i + 1 }}
             </a>
             <span
-              class="rounded bg-yellow-100 px-1 text-xxs font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+              class="rounded bg-yellow-100 px-1 text-xxs font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300/70"
             >
               W
             </span>
@@ -176,23 +185,24 @@
           No winner decks
         </div>
         <div
-          class="mt-3 mb-1 text-xxs font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
+          class="mt-3 mb-1 text-sm font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
         >
           Other Decks
         </div>
 
-        <div class="flex flex-wrap gap-x-6 gap-y-3">
+        <div class="flex flex-wrap gap-x-5 gap-y-2.5">
           <DeckPopover
             v-for="(d, i) in otherDeckPreviews"
             :key="d.url"
             :cards="d.cards"
             :url="d.url"
+            :label="'Deck ' + (i + 1)"
           >
             <a
               :href="d.url"
               target="_blank"
               rel="noopener"
-              class="text-xs break-all text-ruri hover:underline"
+              class="text-xs break-all text-ruri hover:underline dark:text-sora/65"
             >
               Deck {{ i + 1 }}
             </a>
@@ -226,7 +236,7 @@ function toggleDeckUrls() {
   }
 }
 
-const sigCardNames = computed(() => new Set(props.archetype.sigCards?.map(s => s.name) ?? []))
+const sigCardIds = computed(() => new Set(props.archetype.sigCardIds ?? []))
 
 const cardIdToName = computed(() => {
   const map = new Map()
@@ -239,22 +249,53 @@ const cardIdToName = computed(() => {
   return map
 })
 
+const cardIdToInfo = computed(() => {
+  const map = new Map()
+  for (const c of props.archetype.cards ?? []) {
+    map.set(c.cardId, {
+      type: c.type,
+      color: c.color,
+      level: Number(c.level),
+      inclusionRate: c.inclusionRate ?? 0,
+    })
+  }
+  for (const c of props.archetype.filteredCards ?? []) {
+    map.set(c.cardId, {
+      type: c.type,
+      color: c.color,
+      level: Number(c.level),
+      inclusionRate: c.inclusionRate ?? 0,
+    })
+  }
+  return map
+})
+
 const deckPreviews = computed(() =>
   (props.archetype.deckUrls ?? []).map((url, i) => {
+    const infoMap = cardIdToInfo.value
     const cards = (props.archetype.deckCardIds?.[i] ?? '')
       .split('|')
       .filter(Boolean)
       .map(part => {
         const [cardId, qty] = part.split(':')
-        return { cardId, qty: Number(qty), name: cardIdToName.value.get(cardId) ?? cardId }
+        const info = infoMap.get(cardId)
+        return {
+          cardId,
+          qty: Number(qty),
+          name: cardIdToName.value.get(cardId) ?? cardId,
+          type: info?.type ?? 'UNIT',
+          color: info?.color ?? '',
+          level: info?.level ?? 0,
+          inclusionRate: info?.inclusionRate ?? 0,
+        }
       })
     return { url, idx: i, isWinner: props.archetype.deckWinnerFlags?.[i] ?? false, cards }
   }),
 )
 
 const unitCards = computed(() => props.archetype.cards.filter(c => c.type === 'UNIT'))
-const coreUnits = computed(() => unitCards.value.filter(c => (c.inclusionRate ?? 0) >= 0.6))
-const otherUnits = computed(() => unitCards.value.filter(c => (c.inclusionRate ?? 0) < 0.6))
+const coreUnits = computed(() => unitCards.value.filter(c => (c.inclusionRate ?? 0) >= 0.75))
+const otherUnits = computed(() => unitCards.value.filter(c => (c.inclusionRate ?? 0) < 0.75))
 const pilotCards = computed(() => props.archetype.cards.filter(c => c.type === 'PILOT'))
 const commandCards = computed(() => props.archetype.cards.filter(c => c.type === 'COMMAND'))
 const baseCards = computed(() => props.archetype.cards.filter(c => c.type === 'BASE'))

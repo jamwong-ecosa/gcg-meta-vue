@@ -1,17 +1,13 @@
 <template>
-  <div class="mx-auto max-w-380 p-3 md:p-8">
-    <div class="mb-3">
-      <h1 class="text-2xl font-bold text-sumi dark:text-nalika-text">Archetype Tier</h1>
-      <div
-        v-if="currentSeries"
-        class="mt-0.5 flex flex-wrap gap-x-1 text-xs text-gray-500 dark:text-nalika-text-muted"
-      >
-        <span>{{ currentSeries.events }} events</span>
-        <span>· {{ totalWins }} wins</span>
-        <span>· {{ currentSeries.totalDecks.toLocaleString() }} decks</span>
-        <span>· {{ currentSeries.rows.length }} archetypes</span>
-      </div>
-    </div>
+  <div class="mx-auto max-w-400 p-3 pb-6 md:p-8">
+    <SeriesHeader
+      title="Archetype Tier"
+      :visible="!!currentSeries"
+      :events="currentSeries?.events ?? 0"
+      :wins="totalWins"
+      :decks="currentSeries?.totalDecks ?? 0"
+      :archetypes="allRows.length"
+    />
 
     <div
       class="sticky top-12 z-40 -mx-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
@@ -25,10 +21,26 @@
     </div>
 
     <div class="space-y-3 md:hidden">
-      <MobileTierCard v-for="row in rows" :key="row.archetype" :row="row" @detail="openDetail" />
+      <MobileTierCard v-for="row in tierRows" :key="row.archetype" :row="row" @detail="openDetail" />
+      <button
+        v-if="zeroWinRows.length"
+        class="w-full cursor-pointer py-2 text-center text-xs font-medium text-ruri"
+        @click="toggleZeroWins"
+      >
+        0 Wins（{{ zeroWinRows.length }}）{{ showZeroWins ? '−' : '+' }}
+      </button>
+      <template v-if="showZeroWins">
+        <MobileTierCard v-for="row in zeroWinRows" :key="row.archetype" :row="row" @detail="openDetail" />
+      </template>
     </div>
 
-    <TierTable :rows="rows" @detail="openDetail" />
+    <TierTable
+      :rows="tierRows"
+      :zero-win-rows="zeroWinRows"
+      :show-zero-wins="showZeroWins"
+      @detail="openDetail"
+      @toggle-zero-wins="toggleZeroWins"
+    />
 
     <ArchetypeModal
       v-if="detailArch"
@@ -68,11 +80,19 @@ const currentSeries = computed(() => tierData.find(s => s.value === selectedKey.
 
 const { hideFilter } = useScrollHide()
 
-const totalWins = computed(() => rows.value.reduce((sum, r) => sum + (r.wins || 0), 0))
+const totalWins = computed(() => currentSeries.value?.winDecks ?? 0)
 
-const rows = computed(() => {
-  return currentSeries.value ? currentSeries.value.rows : []
-})
+const allRows = computed(() => currentSeries.value?.rows ?? [])
+
+const tierRows = computed(() => allRows.value.filter(r => r.wins > 0))
+
+const zeroWinRows = computed(() => allRows.value.filter(r => r.wins === 0))
+
+const showZeroWins = ref(false)
+
+function toggleZeroWins() {
+  showZeroWins.value = !showZeroWins.value
+}
 
 const detailArch = ref(null)
 const detailTier = ref(null)

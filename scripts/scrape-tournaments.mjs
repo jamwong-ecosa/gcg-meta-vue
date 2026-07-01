@@ -116,7 +116,7 @@ for (const t of tournaments) {
   for (const ev of events) {
     eventIdx++
     const cached = cachedByUrl.get(ev.url)
-    if (cached?.players) {
+    if (cached?.players?.length > 0) {
       ev.players = cached.players
       skippedEvents++
     } else {
