@@ -6,7 +6,7 @@
       :events="currentSeries?.events ?? 0"
       :wins="totalWins"
       :decks="currentSeries?.totalDecks ?? 0"
-      :archetypes="currentSeries?.rows.length ?? 0"
+      :archetypes="allRows.length"
     />
 
     <div
@@ -21,10 +21,26 @@
     </div>
 
     <div class="space-y-3 md:hidden">
-      <MobileTierCard v-for="row in rows" :key="row.archetype" :row="row" @detail="openDetail" />
+      <MobileTierCard v-for="row in tierRows" :key="row.archetype" :row="row" @detail="openDetail" />
+      <button
+        v-if="zeroWinRows.length"
+        class="w-full cursor-pointer py-2 text-center text-xs font-medium text-ruri"
+        @click="toggleZeroWins"
+      >
+        0 Wins（{{ zeroWinRows.length }}）{{ showZeroWins ? '−' : '+' }}
+      </button>
+      <template v-if="showZeroWins">
+        <MobileTierCard v-for="row in zeroWinRows" :key="row.archetype" :row="row" @detail="openDetail" />
+      </template>
     </div>
 
-    <TierTable :rows="rows" @detail="openDetail" />
+    <TierTable
+      :rows="tierRows"
+      :zero-win-rows="zeroWinRows"
+      :show-zero-wins="showZeroWins"
+      @detail="openDetail"
+      @toggle-zero-wins="toggleZeroWins"
+    />
 
     <ArchetypeModal
       v-if="detailArch"
@@ -66,9 +82,17 @@ const { hideFilter } = useScrollHide()
 
 const totalWins = computed(() => currentSeries.value?.winDecks ?? 0)
 
-const rows = computed(() => {
-  return currentSeries.value ? currentSeries.value.rows : []
-})
+const allRows = computed(() => currentSeries.value?.rows ?? [])
+
+const tierRows = computed(() => allRows.value.filter(r => r.wins > 0))
+
+const zeroWinRows = computed(() => allRows.value.filter(r => r.wins === 0))
+
+const showZeroWins = ref(false)
+
+function toggleZeroWins() {
+  showZeroWins.value = !showZeroWins.value
+}
 
 const detailArch = ref(null)
 const detailTier = ref(null)

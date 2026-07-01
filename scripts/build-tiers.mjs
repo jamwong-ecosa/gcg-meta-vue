@@ -330,7 +330,10 @@ function archetypeScoreV2(wins, archDecks, totalDecks, totalEvents, top4, ceilin
   const top4Bonus = archDecks > 0 ? ((top4 + (K * top4PriorRate) / 100) / (archDecks + K)) * 100 : 0
   const raw = eventWinShare * w[0] + usageRate * w[1] + archWinRate * w[2] + top4Bonus * w[3]
   const penalty = Math.max(0, usageRate * (1 - archWinRate / ceil)) * 0.15
-  return Math.round((raw - penalty) * 10)
+  // Confidence multiplier: archetypes with <10 decks get proportionally reduced scores
+  // to prevent small-sample flukes from ranking high.
+  const confidence = Math.min(1, archDecks / 10)
+  return Math.round((raw - penalty) * 10 * confidence)
 }
 
 // ckmeans clustering on archetype scores → tier cutoffs (T1 → T3).
