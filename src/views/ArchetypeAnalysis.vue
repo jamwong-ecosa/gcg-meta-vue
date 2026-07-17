@@ -190,5 +190,4 @@ watch([seriesKey, archKey], async ([s, a]) => {
 
 await loadTierData()
 await loadArchetype(seriesKey.value, archKey.value)
-finish()
 </script>

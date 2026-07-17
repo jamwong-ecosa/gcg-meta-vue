@@ -155,7 +155,6 @@ const { tierData, tierDataLoaded, loadTierData } = useTierData()
 const { start, finish } = useLoadingBar()
 
 await loadTierData()
-finish()
 
 const seriesOptions = computed(() =>
   tierData.value.map(s => ({

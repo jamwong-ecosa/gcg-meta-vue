@@ -69,9 +69,6 @@
 </template>
 
 <script setup>
-const { finish } = useLoadingBar()
-finish()
-
 const heroCards = ['ST01-001', 'GD02-054', 'ST04-001', 'GD01-066', 'GD01-024']
 
 const heroCardClasses = [

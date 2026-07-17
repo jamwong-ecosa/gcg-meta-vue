@@ -39,15 +39,21 @@
       </div>
     </nav>
 
-    <Suspense>
-      <template #default>
-        <RouterView />
-      </template>
-      <template #fallback>
-        <div class="py-12 text-center text-sm text-gray-400 dark:text-gray-500">Loading…</div>
-      </template>
-    </Suspense>
+    <RouterView v-slot="{ Component }">
+      <Suspense @resolve="onResolve">
+        <component :is="Component" />
+        <template #fallback>
+          <div class="py-12 text-center text-sm text-gray-400 dark:text-gray-500">Loading…</div>
+        </template>
+      </Suspense>
+    </RouterView>
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+const { finish } = useLoadingBar()
+
+function onResolve() {
+  finish()
+}
+</script>

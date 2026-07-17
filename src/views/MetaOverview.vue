@@ -155,7 +155,6 @@ const { archetypeProductGroups, colorCounts } = useProductGroups({
 
 const enlargedCard = ref(null)
 const viewAllModal = ref(null)
-const { finish } = useLoadingBar()
 
 function toggleEnlarge(cardId) {
   enlargedCard.value = enlargedCard.value === cardId ? null : cardId
@@ -163,5 +162,4 @@ function toggleEnlarge(cardId) {
 
 await loadTierData()
 await loadCardData(selectedKey.value)
-finish()
 </script>
