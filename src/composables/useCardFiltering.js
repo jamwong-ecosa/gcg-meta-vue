@@ -9,7 +9,7 @@ export function useCardFiltering(aggregationResult) {
   }
 
   const typeTab = useStorage('gcg-type-tab', null)
-  const colorFilter = useStorage('gcg-color-filter', null)
+  const colorFilter = useColorFilter()
   const cardTypeChart = useStorage('gcg-card-type-chart', null)
 
   const colorTabOptions = [

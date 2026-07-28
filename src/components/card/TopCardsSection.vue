@@ -9,7 +9,7 @@
     <CardMetaCardSection
       title="Top Signature Cards"
       :cards="filteredSigCards"
-      @toggle-enlarge="$emit('toggle-enlarge', $event)"
+      @toggle-enlarge="enlargedCard = $event"
     >
       <template #footer="{ card }">
         <div class="mt-2 text-center font-mono text-xs text-gray-500 dark:text-nalika-text-muted">
@@ -22,7 +22,7 @@
       title="Top 10 Cards"
       :cards="filteredTopCards"
       empty-text="Select a series to view card data"
-      @toggle-enlarge="$emit('toggle-enlarge', $event)"
+      @toggle-enlarge="enlargedCard = $event"
     >
       <template #tabs>
         <div class="ml-auto flex flex-col gap-2 sm:flex-row">
@@ -67,21 +67,14 @@
 </template>
 
 <script setup>
-const colorFilter = defineModel('colorFilter', { type: String, default: null })
-const cardTab = defineModel('cardTab', { type: String, default: 'played' })
-const typeTab = defineModel('typeTab', { type: String, default: null })
+const {
+  aggregationResult,
+  totalSeriesDecks,
+  totalArchetypes,
+  totalSeriesWinnerDecks,
+  enlargedCard,
+} = inject('meta')
 
-defineProps({
-  filteredSigCards: { type: Array, default: () => [] },
-  filteredTopCards: { type: Array, default: () => [] },
-  colorTabOptions: { type: Array, default: () => [] },
-  cardMetricOptions: { type: Array, default: () => [] },
-  cardTypeOptions: { type: Array, default: () => [] },
-  percentOf1: { type: Function, required: true },
-  totalSeriesDecks: { type: Number, default: 0 },
-  totalArchetypes: { type: Number, default: 0 },
-  totalSeriesWinnerDecks: { type: Number, default: 0 },
-})
-
-defineEmits(['toggle-enlarge'])
+const { cardTab, typeTab, colorFilter, colorTabOptions, cardMetricOptions, cardTypeOptions, filteredSigCards, filteredTopCards } =
+  useCardFiltering(aggregationResult)
 </script>

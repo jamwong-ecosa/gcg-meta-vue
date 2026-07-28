@@ -6,8 +6,14 @@
 </template>
 
 <script setup>
-defineProps({
-  levelDist: { type: Array, default: () => [] },
-  costDist: { type: Array, default: () => [] },
+const { currentSeries, previousSeries, allRows, totalSeriesDecks, totalSeriesWinnerDecks, aggregationResult } =
+  inject('meta')
+const { levelDist, costDist } = useDistributionData({
+  currentSeries,
+  previousSeries,
+  allRows,
+  totalSeriesDecks,
+  totalSeriesWinnerDecks,
+  aggregationResult,
 })
 </script>

@@ -17,7 +17,5 @@ const ArchetypeQuadrantChart = defineAsyncComponent(
   () => import('@/components/archetype/ArchetypeQuadrantChart.vue'),
 )
 
-defineProps({
-  quadrantData: { type: Array, default: () => [] },
-})
+const { quadrantData } = inject('meta')
 </script>

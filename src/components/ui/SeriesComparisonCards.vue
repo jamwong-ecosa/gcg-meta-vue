@@ -66,8 +66,6 @@
 </template>
 
 <script setup>
-defineProps({
-  seriesComparison: { type: Object, default: null },
-  previousSeries: { type: Object, default: null },
-})
+const { currentSeries, previousSeries } = inject('meta')
+const { seriesComparison } = useSeriesComparison({ currentSeries, previousSeries })
 </script>

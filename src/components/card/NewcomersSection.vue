@@ -3,7 +3,7 @@
     title="Newcomers"
     :cards="recentlyUsedCards"
     empty-text="No new cards used"
-    @toggle-enlarge="$emit('toggle-enlarge', $event)"
+    @toggle-enlarge="enlargedCard = $event"
   >
     <template #footer="{ card }">
       <div class="mt-2 flex flex-col items-center justify-center text-xs">
@@ -23,12 +23,24 @@
 </template>
 
 <script setup>
-defineProps({
-  recentlyUsedCards: { type: Array, default: () => [] },
-  percentOf1: { type: Function, required: true },
-  totalSeriesDecks: { type: Number, default: 0 },
-  totalSeriesWinnerDecks: { type: Number, default: 0 },
-})
+const {
+  cardMeta,
+  aggregationResult,
+  eventCutoffDate,
+  eventMinDate,
+  currentSeries,
+  totalSeriesDecks,
+  totalSeriesWinnerDecks,
+  enlargedCard,
+} = inject('meta')
 
-defineEmits(['toggle-enlarge'])
+const colorFilter = useColorFilter()
+const { recentlyUsedCards } = useCardEligibility({
+  cardMeta,
+  aggregationResult,
+  eventCutoffDate,
+  eventMinDate,
+  colorFilter,
+  currentSeries,
+})
 </script>

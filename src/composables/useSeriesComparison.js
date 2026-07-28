@@ -1,4 +1,10 @@
-export function useSeriesComparison({ currentSeries, previousSeries, allColorDist }) {
+export function useSeriesComparison({ currentSeries, previousSeries }) {
+  const currentTopColor = computed(() => {
+    const data = currentSeries.value?.colorComboData ?? []
+    const items = [...data].sort((a, b) => b.decks - a.decks)
+    return items[0]?.colors ?? null
+  })
+
   const previousTopColor = computed(() => {
     const data = previousSeries.value?.colorComboData ?? []
     const items = [...data].sort((a, b) => b.decks - a.decks)
@@ -11,7 +17,7 @@ export function useSeriesComparison({ currentSeries, previousSeries, allColorDis
     if (!current || !prev) {
       return null
     }
-    const topColor = allColorDist.value[0]?.colors || null
+    const topColor = currentTopColor.value
     const makeMetric = (label, currentVal, previousVal, format = v => v) => ({
       label,
       current: currentVal,

@@ -1,13 +1,6 @@
 <template>
   <div class="mx-auto max-w-340 p-3 max-sm:pb-6 md:p-8">
-    <UiSeriesHeader
-      title="Meta Overview"
-      :visible="!!currentSeries"
-      :events="currentSeries?.events ?? 0"
-      :wins="currentSeries?.winDecks ?? 0"
-      :decks="currentSeries?.totalDecks ?? 0"
-      :archetypes="allRows.length"
-    />
+    <UiSeriesHeader />
 
     <div
       class="sticky top-12 z-40 -mx-3 mb-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
@@ -20,24 +13,11 @@
       />
     </div>
 
-    <CardStatsSection
-      :total-card-count="totalCardCount"
-      :used-card-count="usedCardCount"
-      :series-timeline="seriesTimeline"
-      :color-counts="colorCounts"
-      :archetype-product-groups="archetypeProductGroups"
-    />
+    <CardStatsSection />
 
-    <ChartDistributionsGrid
-      :tier-dist="tierDist"
-      :color-dist="colorDist"
-      :all-color-dist="allColorDist"
-      :win-rate-dist="winRateDist"
-      :all-win-rate-dist="allWinRateDist"
-      @view-all="viewAllModal = $event"
-    />
+    <ChartDistributionsGrid />
 
-    <ArchetypeQuadrantsSection :quadrant-data="quadrantData" />
+    <ArchetypeQuadrantsSection />
 
     <UiViewAllModal
       :visible="!!viewAllModal"
@@ -47,45 +27,17 @@
       @close="viewAllModal = null"
     />
 
-    <UiSeriesComparisonCards
-      :series-comparison="seriesComparison"
-      :previous-series="previousSeries"
-    />
+    <UiSeriesComparisonCards />
 
-    <CardStateCards :card-state-comparison="cardStateComparison" />
+    <CardStateCards />
 
-    <ChartLevelCostDistribution :level-dist="levelDist" :cost-dist="costDist" />
+    <ChartLevelCostDistribution />
 
-    <CardTopCardsSection
-      v-model:color-filter="colorFilter"
-      v-model:card-tab="cardTab"
-      v-model:type-tab="typeTab"
-      :filtered-sig-cards="filteredSigCards"
-      :filtered-top-cards="filteredTopCards"
-      :color-tab-options="colorTabOptions"
-      :card-metric-options="cardMetricOptions"
-      :card-type-options="cardTypeOptions"
-      :percent-of1="percentOf1"
-      :total-series-decks="totalSeriesDecks"
-      :total-archetypes="totalArchetypes"
-      :total-series-winner-decks="totalSeriesWinnerDecks"
-      @toggle-enlarge="toggleEnlarge"
-    />
+    <CardTopCardsSection />
 
-    <CardNewcomersSection
-      :recently-used-cards="recentlyUsedCards"
-      :percent-of1="percentOf1"
-      :total-series-decks="totalSeriesDecks"
-      :total-series-winner-decks="totalSeriesWinnerDecks"
-      @toggle-enlarge="toggleEnlarge"
-    />
+    <CardNewcomersSection />
 
-    <ChartCardQuadrantsSection
-      v-model:card-type-chart="cardTypeChart"
-      :card-type-options="cardTypeOptions"
-      :filtered-card-items="filteredCardItems"
-      :selected-key="selectedKey"
-    />
+    <ChartCardQuadrantsSection />
 
     <CardImageOverlay v-model="enlargedCard" />
   </div>
@@ -98,7 +50,6 @@ const {
   currentSeries,
   totalSeriesDecks,
   totalSeriesWinnerDecks,
-  percentOf1,
   previousSeries,
   eventCutoffDate,
   eventMinDate,
@@ -109,56 +60,41 @@ const {
   quadrantData,
 } = useSeriesState()
 
+const { aggregationResult, cardMeta, cardInfoById, loadCardData } = useCardData(selectedKey)
+
 const { loadTierData } = useTierData()
-const { aggregationResult, cardMeta, cardInfoById, loadCardData } =
-  useCardData(selectedKey)
-const {
-  cardTab,
-  typeTab,
-  colorFilter,
-  cardTypeChart,
-  colorTabOptions,
-  cardMetricOptions,
-  cardTypeOptions,
-  filteredCardItems,
-  filteredSigCards,
-  filteredTopCards,
-} = useCardFiltering(aggregationResult)
-const { totalCardCount, usedCardCount, recentlyUsedCards } = useCardEligibility({
-  cardMeta,
-  aggregationResult,
-  eventCutoffDate,
-  eventMinDate,
-  colorFilter,
+
+provide('meta', {
+  seriesOptions,
+  selectedKey,
   currentSeries,
-})
-const { tierDist, allColorDist, colorDist, allWinRateDist, winRateDist, levelDist, costDist } =
-  useDistributionData({
-    currentSeries,
-    previousSeries,
-    allRows,
-    totalSeriesDecks,
-    totalSeriesWinnerDecks,
-    aggregationResult,
-  })
-const { seriesComparison, cardStateComparison } = useSeriesComparison({
-  currentSeries,
+  totalSeriesDecks,
+  totalSeriesWinnerDecks,
   previousSeries,
-  allColorDist,
-})
-const { archetypeProductGroups, colorCounts } = useProductGroups({
-  aggregationResult,
-  cardInfoById,
-  eventMinDate,
   eventCutoffDate,
+  eventMinDate,
+  seriesTimeline,
+  allRows,
+  totalArchetypes,
+  quadrantData,
+  aggregationResult,
+  cardMeta,
+  cardInfoById,
+  enlargedCard,
+  viewAllModal,
 })
 
 const enlargedCard = ref(null)
 const viewAllModal = ref(null)
 
-function toggleEnlarge(cardId) {
-  enlargedCard.value = enlargedCard.value === cardId ? null : cardId
-}
+const { allColorDist, allWinRateDist } = useDistributionData({
+  currentSeries,
+  previousSeries,
+  allRows,
+  totalSeriesDecks,
+  totalSeriesWinnerDecks,
+  aggregationResult,
+})
 
 await loadTierData()
 await loadCardData(selectedKey.value)

@@ -61,7 +61,6 @@
 </template>
 
 <script setup>
-defineProps({
-  cardStateComparison: { type: Object, default: null },
-})
+const { currentSeries, previousSeries } = inject('meta')
+const { cardStateComparison } = useSeriesComparison({ currentSeries, previousSeries })
 </script>

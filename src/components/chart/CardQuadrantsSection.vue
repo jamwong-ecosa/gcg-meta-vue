@@ -23,11 +23,7 @@ const ChartCardQuadrantChart = defineAsyncComponent(
   () => import('@/components/chart/CardQuadrantChart.vue'),
 )
 
-const cardTypeChart = defineModel('cardTypeChart', { type: String, default: null })
+const { aggregationResult, selectedKey } = inject('meta')
 
-defineProps({
-  cardTypeOptions: { type: Array, default: () => [] },
-  filteredCardItems: { type: Array, default: () => [] },
-  selectedKey: { type: String, default: '' },
-})
+const { cardTypeChart, cardTypeOptions, filteredCardItems } = useCardFiltering(aggregationResult)
 </script>
