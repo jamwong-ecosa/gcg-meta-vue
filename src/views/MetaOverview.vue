@@ -1,6 +1,13 @@
 <template>
   <div class="mx-auto max-w-340 p-3 max-sm:pb-6 md:p-8">
-    <UiSeriesHeader />
+    <UiSeriesHeader
+      title="Meta Overview"
+      :visible="!!currentSeries"
+      :events="currentSeries?.events ?? 0"
+      :wins="totalSeriesWinnerDecks"
+      :decks="currentSeries?.totalDecks ?? 0"
+      :archetypes="allRows.length"
+    />
 
     <div
       class="sticky top-12 z-40 -mx-3 mb-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
@@ -64,6 +71,9 @@ const { aggregationResult, cardMeta, cardInfoById, loadCardData } = useCardData(
 
 const { loadTierData } = useTierData()
 
+const enlargedCard = ref(null)
+const viewAllModal = ref(null)
+
 provide('meta', {
   seriesOptions,
   selectedKey,
@@ -83,9 +93,6 @@ provide('meta', {
   enlargedCard,
   viewAllModal,
 })
-
-const enlargedCard = ref(null)
-const viewAllModal = ref(null)
 
 const { allColorDist, allWinRateDist } = useDistributionData({
   currentSeries,
