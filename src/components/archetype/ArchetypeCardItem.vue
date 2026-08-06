@@ -79,7 +79,7 @@
 
     <div
       class="group relative mt-1.5 aspect-[20/11] overflow-hidden rounded"
-      @click="enlarged = true"
+      @click="enlargedCardId = card.cardId"
     >
       <img
         :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?fit=crop&ar=3:2&w=300&crop=focalpoint&fp-x=0.5&fp-y=0.05&auto=format,compress`"
@@ -135,27 +135,7 @@
       </div>
     </template>
 
-    <Teleport to="body">
-      <div
-        v-if="enlarged"
-        class="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60"
-        @click.self="enlarged = false"
-      >
-        <div class="relative max-h-[85vh] overflow-hidden rounded-lg shadow-2xl">
-          <img
-            :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?auto=format,compress`"
-            :alt="card.name"
-            class="h-auto max-h-[85vh] w-auto rounded-lg"
-          />
-          <button
-            class="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60"
-            @click="enlarged = false"
-          >
-            ×
-          </button>
-        </div>
-      </div>
-    </Teleport>
+    <CardImageOverlay v-model="enlargedCardId" :z-index="1100" />
   </div>
 </template>
 
@@ -167,7 +147,7 @@ const props = defineProps({
   isRemoved: { type: Boolean, default: false },
 })
 
-const enlarged = ref(false)
+const enlargedCardId = ref(null)
 
 const colorHex = computed(() => COLOR_HEX[props.card.color] || '#718096')
 

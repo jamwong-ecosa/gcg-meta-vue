@@ -6,9 +6,16 @@
       <div class="md:flex-1" />
       <div class="flex gap-6 md:gap-16">
         <RouterLink
-          :to="{ path: '/', query: { series: $route.query.series } }"
+          :to="{ path: '/' }"
           class="max-sm:text-sm"
           :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
+        >
+          Home
+        </RouterLink>
+        <RouterLink
+          :to="{ path: '/tier', query: { series: $route.query.series } }"
+          class="max-sm:text-sm"
+          :active-class="tw`font-bold text-ruri dark:text-sora`"
         >
           Tier
         </RouterLink>
@@ -28,12 +35,25 @@
         </RouterLink>
       </div>
       <div class="flex flex-1 justify-end">
-        <DarkToggle />
+        <UiDarkToggle />
       </div>
     </nav>
 
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <Suspense @resolve="onResolve">
+        <component :is="Component" />
+        <template #fallback>
+          <div class="py-12 text-center text-sm text-gray-400 dark:text-gray-500">Loading…</div>
+        </template>
+      </Suspense>
+    </RouterView>
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+const { finish } = useLoadingBar()
+
+function onResolve() {
+  finish()
+}
+</script>

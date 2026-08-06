@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'nprogress/nprogress.css';
 @import './nippon-colors.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -36,4 +37,17 @@ html {
   --gloss-start: rgba(255, 255, 255, 0.18);
   --gloss-mid: rgba(255, 255, 255, 0.08);
   --gloss-end: rgba(255, 255, 255, 0.04);
+}
+
+.mobile-group-header {
+  transition: background-color 0.15s;
+}
+
+#nprogress .bar {
+  background: var(--color-accent);
+  height: 3px;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--color-accent), 0 0 5px var(--color-accent);
 }

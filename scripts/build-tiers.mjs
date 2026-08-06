@@ -81,39 +81,6 @@ function writeCardMeta() {
 
 writeCardMeta()
 
-function buildCardState(mainDetails, eventMaxDate) {
-  const usedCardIds = new Set()
-  for (const arch of mainDetails) {
-    for (const card of arch.cards) {
-      usedCardIds.add(card.cardId)
-    }
-    for (const card of arch.filteredCards) {
-      usedCardIds.add(card.cardId)
-    }
-  }
-
-  const usedByColor = {}
-  const cardMap = new Map(baseCards.map(c => [c.id, c]))
-  for (const id of usedCardIds) {
-    const color = cardMap.get(id)?.color || '?'
-    usedByColor[color] = (usedByColor[color] || 0) + 1
-  }
-
-  const releasedCards = baseCards.filter(
-    c =>
-      TYPE_PICK_ORDER.includes(c.type) &&
-      c.releaseDate &&
-      addDays(c.releaseDate, 7) <= eventMaxDate,
-  ).length
-
-  return {
-    releasedCards,
-    usedCards: usedCardIds.size,
-    unusedCards: releasedCards - usedCardIds.size,
-    usedByColor,
-  }
-}
-
 // ── Deck analysis ────────────────────────────────────────────────────────────
 
 // Sorted unique colors in a deck, used for combo key prefix
@@ -173,7 +140,7 @@ function buildComboKey(deck) {
   return { key, sigCardIds: sigData ? sigData.map(s => s.cardId) : [] }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Card helpers ───────────────────────────────────────────────────────────────
 
 function accumulateCardAgg(cardAgg, deck) {
   for (const card of deck) {
@@ -181,19 +148,6 @@ function accumulateCardAgg(cardAgg, deck) {
     cardAgg[card.cardId].totalQty += card.quantity
     cardAgg[card.cardId].decksIncluded++
   }
-}
-
-function groupByCombo(players, { init, accumulate }) {
-  const map = {}
-  for (const player of players) {
-    const { key, sigCardIds } = buildComboKey(player.deck)
-    if (!key) {
-      continue
-    }
-    map[key] ??= init(sigCardIds)
-    map[key] = accumulate(map[key], player)
-  }
-  return map
 }
 
 // Serializes a deck to "ID:qty|ID:qty" for deck preview dedup comparison
@@ -208,6 +162,21 @@ function serializeDeckCards(deck) {
     return typeA !== typeB ? typeA - typeB : aId.localeCompare(bId)
   })
   return sorted.map(([id, qty]) => `${id}:${qty}`).join('|')
+}
+
+// ── Archetype helpers ──────────────────────────────────────────────────────────
+
+function groupByCombo(players, { init, accumulate }) {
+  const map = {}
+  for (const player of players) {
+    const { key, sigCardIds } = buildComboKey(player.deck)
+    if (!key) {
+      continue
+    }
+    map[key] ??= init(sigCardIds)
+    map[key] = accumulate(map[key], player)
+  }
+  return map
 }
 
 // ── Archetype grouping ───────────────────────────────────────────────────────
@@ -316,20 +285,27 @@ function bayesianRate(observed, total, avgRate, baseK = 15) {
   return ((observed + (dynamicK * avgRate) / 100) / (total + dynamicK)) * 100
 }
 
-// Confidence multiplier: dynamic K based on how far Bayesian-smoothed win rate
-// deviates from the series average. Archetypes whose performance is surprisingly
-// different need more decks for full confidence.
+// Confidence multiplier: requires more deck evidence when an archetype's
+// performance deviates from the series average. Baseline 10 decks, deviation
+// penalty reduced by divisor /3.
 function computeConfidence(archDecks, smoothedRate, avgRate) {
   const deviation = avgRate > 0 ? Math.abs(smoothedRate - avgRate) / avgRate : 0
-  return Math.min(1, archDecks / (10 * (1 + deviation / 2)))
+  return Math.min(1, archDecks / (10 * (1 + deviation / 3)))
+}
+
+// Penalty: usageRate × gap × 0.15 — penalizes archetypes with high usage rate
+// AND low win rate relative to the cap (capMultiplier × series average). Losses
+// are proportional to both popularity and performance gap.
+// Self-regulates: strong archetypes get gap≈0 → penalty≈0.
+function computePenalty(usageRate, archWinRate, seriesAvgDeckWinRate, capMultiplier = 1.5) {
+  const deckWinRateCap = seriesAvgDeckWinRate * capMultiplier
+  const gap = Math.max(0, 1 - archWinRate / deckWinRateCap)
+  return usageRate * gap * 0.15
 }
 
 // Weighted composite score: event win share (0.5), usage rate (0.3),
 // Bayesian-smoothed win rate (0.1), Bayesian-smoothed top-4 bonus (0.1).
 // K=15 smoothing with prior = series avg deck win rate / top-4 rate.
-// Penalty: usageRate × gap × 0.15 — penalizes archetypes with low win rate
-// relative to the cap (2× series average). No hard threshold; self-regulates
-// via gap (strong archetypes get gap≈0 → penalty≈0).
 function archetypeScore({
   wins,
   archDecks,
@@ -343,16 +319,13 @@ function archetypeScore({
     return 0
   }
 
-  const deckWinRateCap = seriesAvgDeckWinRate * 2
-
   const eventWinShare = (wins / totalEvents) * 100
   const usageRate = (archDecks / totalDecks) * 100
   const archWinRate = bayesianRate(wins, archDecks, seriesAvgDeckWinRate)
   const top4Bonus = bayesianRate(top4, archDecks, seriesAvgDeckTop4Rate)
 
   const raw = eventWinShare * 0.5 + usageRate * 0.3 + archWinRate * 0.1 + top4Bonus * 0.1
-  const gap = Math.max(0, 1 - archWinRate / deckWinRateCap)
-  const penalty = usageRate * gap * 0.15
+  const penalty = computePenalty(usageRate, archWinRate, seriesAvgDeckWinRate)
   const confidence = computeConfidence(archDecks, archWinRate, seriesAvgDeckWinRate)
 
   return Math.round((raw - penalty) * 10 * confidence)
@@ -636,6 +609,41 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, tot
       deckCardIds,
     }
   })
+}
+
+// ── Card state ────────────────────────────────────────────────────────────
+
+function buildCardState(mainDetails, eventMaxDate) {
+  const usedCardIds = new Set()
+  for (const arch of mainDetails) {
+    for (const card of arch.cards) {
+      usedCardIds.add(card.cardId)
+    }
+    for (const card of arch.filteredCards) {
+      usedCardIds.add(card.cardId)
+    }
+  }
+
+  const usedByColor = {}
+  const cardMap = new Map(baseCards.map(c => [c.id, c]))
+  for (const id of usedCardIds) {
+    const color = cardMap.get(id)?.color || '?'
+    usedByColor[color] = (usedByColor[color] || 0) + 1
+  }
+
+  const releasedCards = baseCards.filter(
+    c =>
+      TYPE_PICK_ORDER.includes(c.type) &&
+      c.releaseDate &&
+      addDays(c.releaseDate, 7) <= eventMaxDate,
+  ).length
+
+  return {
+    releasedCards,
+    usedCards: usedCardIds.size,
+    unusedCards: releasedCards - usedCardIds.size,
+    usedByColor,
+  }
 }
 
 // ── Phase: Process one series ────────────────────────────────────────────────

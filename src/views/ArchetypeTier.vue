@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-340 p-3 max-sm:pb-6 md:p-8">
-    <SeriesHeader
+    <UiSeriesHeader
       title="Archetype Tier"
       :visible="!!currentSeries"
       :events="currentSeries?.events ?? 0"
@@ -10,14 +10,17 @@
     />
 
     <div
-      class="sticky top-12 z-40 -mx-3 flex items-center gap-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
+      ref="filterBarRef"
+      class="sticky top-12 z-40 -mx-3 flex flex-col items-start gap-2 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:flex-row md:items-center md:gap-3 md:px-8 dark:bg-nalika-bg"
       :class="hideFilter ? '-translate-y-full' : 'translate-y-0'"
     >
       <button
-        class="flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
-        :class="groupByColor
-          ? 'bg-ruri text-white'
-          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'"
+        class="order-2 flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors md:order-1"
+        :class="
+          groupByColor
+            ? 'bg-ruri text-white'
+            : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+        "
         @click="groupByColor = !groupByColor"
       >
         <span
@@ -26,62 +29,40 @@
         />
         Group by color
       </button>
-      <GeneralDropdown
+      <UiGeneralDropdown
         v-model="selectedKey"
-        class="ml-auto w-fit md:max-w-md"
+        class="order-1 w-full md:order-2 md:ml-auto md:max-w-md"
         :options="seriesOptions"
       />
     </div>
 
-    <div v-if="!tierDataLoaded" class="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-      Loading…
-    </div>
-
-    <template v-if="tierDataLoaded">
-      <SigPieChart
+    <ChartSigPieChart
         :rows="allRows"
         :series-decks="currentSeries?.totalDecks ?? 0"
         :color-combo-data="currentSeries?.colorComboData ?? []"
         class="mb-6 md:mb-2"
       />
-      <div class="space-y-3 md:hidden">
-        <MobileTierCard
-          v-for="row in tierRows"
-          :key="row.archetype"
-          :row="row"
-          :detail-loading="detailLoading"
-          @detail="openDetail"
-        />
-        <button
-          v-if="zeroWinRows.length"
-          class="w-full cursor-pointer py-2 text-center text-xs font-medium text-ruri"
-          @click="toggleZeroWins"
-        >
-          0 Wins（{{ zeroWinRows.length }}）{{ showZeroWins ? '−' : '+' }}
-        </button>
-        <template v-if="showZeroWins">
-          <MobileTierCard
-            v-for="row in zeroWinRows"
-            :key="row.archetype"
-            :row="row"
-            :detail-loading="detailLoading"
-            @detail="openDetail"
-          />
-        </template>
-      </div>
+      <TierMobileTierCard
+        :rows="tierRows"
+        :group-by-color="groupByColor"
+        :zero-win-rows="zeroWinRows"
+        :show-zero-wins="showZeroWins"
+        :group-top="groupTop"
+        @detail="openDetail"
+        @toggle-zero-wins="toggleZeroWins"
+      />
 
       <TierTable
         :rows="tierRows"
         :zero-win-rows="zeroWinRows"
         :show-zero-wins="showZeroWins"
         :group-by-color="groupByColor"
-        :detail-loading="detailLoading"
         @detail="openDetail"
         @toggle-zero-wins="toggleZeroWins"
       />
 
       <!-- Unassigned Decks (collapsible) -->
-      <CollapsibleSection
+      <UiCollapsibleSection
         v-if="unassignedDecks?.deckUrls?.length"
         :show="showUnassigned"
         :count="unassignedDecks.count"
@@ -94,7 +75,7 @@
           Winner Decks
         </div>
         <div class="flex flex-wrap gap-x-5 gap-y-2.5">
-          <DeckPopover
+          <UiDeckPopover
             v-for="(d, i) in unassignedDeckPreviews.filter(d => d.isWinner)"
             :key="d.url"
             :cards="d.cards"
@@ -115,7 +96,7 @@
             >
               W
             </span>
-          </DeckPopover>
+          </UiDeckPopover>
         </div>
         <div
           v-if="!unassignedDeckPreviews.filter(d => d.isWinner).length"
@@ -129,7 +110,7 @@
           Other Decks
         </div>
         <div class="flex flex-wrap gap-x-5 gap-y-2.5">
-          <DeckPopover
+          <UiDeckPopover
             v-for="(d, i) in unassignedDeckPreviews.filter(d => !d.isWinner)"
             :key="d.url"
             :cards="d.cards"
@@ -144,10 +125,9 @@
             >
               Deck {{ i + 1 }}
             </a>
-          </DeckPopover>
+          </UiDeckPopover>
         </div>
-      </CollapsibleSection>
-    </template>
+      </UiCollapsibleSection>
 
     <ArchetypeModal
       v-if="detailArch"
@@ -159,9 +139,8 @@
 </template>
 
 <script setup>
-import SigPieChart from '../components/SigPieChart.vue'
-import DeckPopover from '../components/DeckPopover.vue'
 import manifest from '$data/archetypes/index.json'
+import { useStorage } from '@vueuse/core'
 import cardMeta from '$data/card-meta.json'
 
 const cardMetaMap = new Map(cardMeta.map(c => [c.id, c]))
@@ -173,6 +152,9 @@ function normalizeName(name) {
 const router = useRouter()
 const route = useRoute()
 const { tierData, tierDataLoaded, loadTierData } = useTierData()
+const { start, finish } = useLoadingBar()
+
+await loadTierData()
 
 const seriesOptions = computed(() =>
   tierData.value.map(s => ({
@@ -209,6 +191,10 @@ const currentSeries = computed(() => tierData.value.find(s => s.value === select
 
 const { hideFilter } = useScrollHide()
 
+const filterBarRef = ref(null)
+const filterBarH = computed(() => filterBarRef.value?.offsetHeight ?? 0)
+const groupTop = computed(() => (hideFilter.value ? '53px' : `calc(53px + ${filterBarH.value}px)`))
+
 const totalWins = computed(() => currentSeries.value?.winDecks ?? 0)
 
 const allRows = computed(() => currentSeries.value?.rows ?? [])
@@ -217,7 +203,7 @@ const tierRows = computed(() => allRows.value.filter(r => r.wins > 0))
 
 const zeroWinRows = computed(() => allRows.value.filter(r => r.wins === 0))
 
-const groupByColor = ref(false)
+const groupByColor = useStorage('gcg-group-color', false)
 const showZeroWins = ref(false)
 
 function toggleZeroWins() {
@@ -263,9 +249,6 @@ function closeDetail() {
   detailTier.value = null
 }
 
-const detailLoading = ref(false)
-let loadingTimeout = null
-
 async function openDetail(row) {
   const entry = manifest.find(s => s.value === selectedKey.value)
   if (!entry) {
@@ -277,11 +260,8 @@ async function openDetail(row) {
   if (idx === -1) {
     return
   }
+  start()
   const path = `/data-processed/archetypes/${selectedKey.value}/${idx}.json`
-  clearTimeout(loadingTimeout)
-  loadingTimeout = setTimeout(() => {
-    detailLoading.value = true
-  }, 200)
   try {
     const mod = await archModules[path]?.()
     detailArch.value = mod?.default ?? null
@@ -289,12 +269,7 @@ async function openDetail(row) {
   } catch {
     // import failed — reset silently
   } finally {
-    clearTimeout(loadingTimeout)
-    detailLoading.value = false
+    finish()
   }
 }
-
-onUnmounted(() => clearTimeout(loadingTimeout))
-
-onMounted(() => loadTierData())
 </script>

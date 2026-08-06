@@ -38,9 +38,6 @@ export function useSeriesState() {
   const totalSeriesDecks = computed(() => currentSeries.value?.totalDecks ?? 0)
   const totalSeriesWinnerDecks = computed(() => currentSeries.value?.winDecks ?? 0)
 
-  const percentOf = (value, total) => (total ? Math.round((value / total) * 100) : 0)
-  const percentOf1 = (value, total) => (total ? ((value / total) * 100).toFixed(1) : 0)
-
   const previousSeries = computed(() => {
     const current = currentSeries.value
     if (!current?.eventMinDate) {
@@ -97,8 +94,6 @@ export function useSeriesState() {
     currentSeries,
     totalSeriesDecks,
     totalSeriesWinnerDecks,
-    percentOf,
-    percentOf1,
     previousSeries,
     eventCutoffDate,
     eventMinDate,

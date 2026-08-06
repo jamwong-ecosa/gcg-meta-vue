@@ -32,11 +32,10 @@
         </tr>
       </thead>
       <template v-if="groupByColor">
-        <tbody
-          v-for="group in groups"
-          :key="group.colors"
-        >
-          <tr class="bg-gray-200/30 text-xs font-semibold text-gray-500 dark:bg-white/8 dark:text-gray-400">
+        <tbody v-for="group in groups" :key="group.colors">
+          <tr
+            class="bg-gray-300/40 text-xs font-semibold text-gray-500 dark:bg-white/15 dark:text-gray-400"
+          >
             <td colspan="11" class="px-4 py-1.5">
               <div class="flex items-center gap-2">
                 <div class="flex items-center gap-0.5">
@@ -49,7 +48,9 @@
                 </div>
                 <span>{{ group.colors }}</span>
                 <span class="text-gray-400">({{ group.rows.length }})</span>
-                <span class="ml-auto font-mono tabular-nums">{{ group.totalDecks }} decks / {{ group.totalWins }} wins</span>
+                <span class="ml-auto font-mono tabular-nums">
+                  {{ group.totalDecks }} decks / {{ group.totalWins }} wins
+                </span>
               </div>
             </td>
           </tr>
@@ -59,11 +60,13 @@
             class="group cursor-pointer text-aisumicha odd:bg-gray-100/15 even:bg-gray-100/45 hover:bg-gray-200/50 dark:text-nalika-text-muted dark:odd:bg-gray-100/10 dark:even:bg-white/3 dark:hover:bg-white/15"
             @click="$emit('detail', row)"
           >
-            <td class="flex items-baseline gap-1 px-4 py-2">
+            <td class="flex items-baseline gap-1 py-2 pr-4 pl-6">
               <div class="flex items-center gap-1">
                 <div class="text-sumi dark:text-nalika-text">
                   <template
-                    v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [], { skipBaseCombo: true })"
+                    v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [], {
+                      skipBaseCombo: true,
+                    })"
                     :key="si"
                   >
                     <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
@@ -73,30 +76,49 @@
                 <span
                   v-if="row.darkHorse"
                   class="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 text-xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                >🐴</span>
+                >
+                  🐴
+                </span>
               </div>
             </td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.decks }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.wins }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.top4 }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.usePct }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.winPerEv }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.winPerDk }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.t4PerDk }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.score }}</div></td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.decks }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.wins }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.top4 }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.usePct }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.winPerEv }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.t4PerDk }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.score }}</div>
+            </td>
             <td class="px-4 py-2 text-right">
               <div
                 class="w-12 rounded px-1.5 py-0.5 text-center text-xs font-bold"
                 :class="tierPillClass(row.tier)"
-              >{{ row.tier }}</div>
+              >
+                {{ row.tier }}
+              </div>
             </td>
             <td class="px-1 py-2 text-center">
               <button
                 class="rounded text-xxs font-medium text-gray-400 group-hover:text-sora focus:outline-none dark:text-gray-500"
                 @click.stop="$emit('detail', row)"
               >
-                <span v-if="detailLoading" class="animate-pulse">⋯</span>
-                <span v-else>▶</span>
+                <span>▶</span>
               </button>
             </td>
           </tr>
@@ -133,30 +155,49 @@
                 <span
                   v-if="row.darkHorse"
                   class="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 text-xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                >🐴</span>
+                >
+                  🐴
+                </span>
               </div>
             </td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.decks }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.wins }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.top4 }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.usePct }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.winPerEv }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.winPerDk }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.t4PerDk }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.score }}</div></td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.decks }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.wins }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.top4 }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.usePct }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.winPerEv }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.t4PerDk }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.score }}</div>
+            </td>
             <td class="px-4 py-2 text-right">
               <div
                 class="w-12 rounded px-1.5 py-0.5 text-center text-xs font-bold"
                 :class="tierPillClass(row.tier)"
-              >{{ row.tier }}</div>
+              >
+                {{ row.tier }}
+              </div>
             </td>
             <td class="px-1 py-2 text-center">
               <button
                 class="rounded text-xxs font-medium text-gray-400 group-hover:text-sora focus:outline-none dark:text-gray-500"
                 @click.stop="$emit('detail', row)"
               >
-                <span v-if="detailLoading" class="animate-pulse">⋯</span>
-                <span v-else>▶</span>
+                <span>▶</span>
               </button>
             </td>
           </tr>
@@ -199,27 +240,44 @@
                 </template>
               </div>
             </td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.decks }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.wins }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.top4 }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.usePct }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.winPerEv }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.winPerDk }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.t4PerDk }}</div></td>
-            <td class="px-4 py-2 text-right"><div class="font-mono tabular-nums">{{ row.score }}</div></td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.decks }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.wins }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.top4 }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.usePct }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.winPerEv }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.t4PerDk }}</div>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <div class="font-mono tabular-nums">{{ row.score }}</div>
+            </td>
             <td class="px-4 py-2 text-right">
               <div
                 class="w-12 rounded px-1.5 py-0.5 text-center text-xs font-bold"
                 :class="tierPillClass(row.tier)"
-              >{{ row.tier }}</div>
+              >
+                {{ row.tier }}
+              </div>
             </td>
             <td class="px-1 py-2 text-center">
               <button
                 class="rounded text-xxs font-medium text-gray-400 group-hover:text-sora focus:outline-none dark:text-gray-500"
                 @click.stop="$emit('detail', row)"
               >
-                <span v-if="detailLoading" class="animate-pulse">⋯</span>
-                <span v-else>▶</span>
+                <span>▶</span>
               </button>
             </td>
           </tr>
@@ -235,7 +293,6 @@ const props = defineProps({
   zeroWinRows: { type: Array, default: () => [] },
   showZeroWins: { type: Boolean, default: false },
   groupByColor: { type: Boolean, default: false },
-  detailLoading: { type: Boolean, default: false },
 })
 defineEmits(['detail', 'toggleZeroWins'])
 
@@ -246,7 +303,13 @@ const groups = computed(() => {
   const map = {}
   for (const row of props.rows) {
     if (!map[row.colors]) {
-      map[row.colors] = { colors: row.colors, colorDots: row.colorDots, rows: [], totalDecks: 0, totalWins: 0 }
+      map[row.colors] = {
+        colors: row.colors,
+        colorDots: row.colorDots,
+        rows: [],
+        totalDecks: 0,
+        totalWins: 0,
+      }
     }
     map[row.colors].rows.push(row)
     map[row.colors].totalDecks += row.decks

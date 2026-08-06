@@ -54,7 +54,11 @@ export default defineConfig({
       vueTemplate: true,
       dts: './.dev/auto-imports.d.ts',
     }),
-    Components({ dts: './.dev/components.d.ts' }),
+    Components({
+      dts: './.dev/components.d.ts',
+      directoryAsNamespace: true,
+      collapseSamePrefixes: true,
+    }),
     vue(),
     tailwindcss(),
   ],

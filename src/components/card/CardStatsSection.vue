@@ -74,11 +74,29 @@
 </template>
 
 <script setup>
-defineProps({
-  totalCardCount: { type: Number, required: true },
-  usedCardCount: { type: Number, required: true },
-  seriesTimeline: { type: String, default: null },
-  colorCounts: { type: Array, default: () => [] },
-  archetypeProductGroups: { type: Array, default: () => [] },
+const {
+  aggregationResult,
+  cardMeta,
+  cardInfoById,
+  eventCutoffDate,
+  eventMinDate,
+  currentSeries,
+  seriesTimeline,
+} = inject('meta')
+
+const colorFilter = useColorFilter()
+const { totalCardCount, usedCardCount } = useCardEligibility({
+  cardMeta,
+  aggregationResult,
+  eventCutoffDate,
+  eventMinDate,
+  colorFilter,
+  currentSeries,
+})
+const { archetypeProductGroups, colorCounts } = useProductGroups({
+  aggregationResult,
+  cardInfoById,
+  eventMinDate,
+  eventCutoffDate,
 })
 </script>

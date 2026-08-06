@@ -19,16 +19,15 @@
       </div>
       <button
         class="shrink-0 rounded px-2 py-1 text-xs font-medium text-sora hover:bg-sora/10 focus:outline-none dark:hover:bg-sora/20"
-        :class="{ 'animate-pulse': detailLoading }"
         @click="$emit('detail', row)"
       >
-        {{ detailLoading ? 'Loading…' : 'Detail ▶' }}
+        Detail ▶
       </button>
     </div>
 
     <div class="px-3 py-2.5">
       <div class="flex items-baseline gap-1.5">
-        <div class="flex shrink-0 items-center gap-1">
+        <div v-if="!hideColorDots" class="flex shrink-0 items-center gap-1">
           <div
             v-for="dot in row.colorDots"
             :key="dot.name"
@@ -39,7 +38,7 @@
         <div class="flex items-center gap-1">
           <div class="text-sm text-gray-800 dark:text-nalika-text">
             <template
-              v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [])"
+              v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [], { skipBaseCombo: hideColorName })"
               :key="si"
             >
               <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
@@ -49,7 +48,9 @@
           <span
             v-if="row.darkHorse"
             class="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 text-xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-          >🐴</span>
+          >
+            🐴
+          </span>
         </div>
       </div>
     </div>
@@ -125,7 +126,8 @@
 <script setup>
 defineProps({
   row: { type: Object, required: true },
-  detailLoading: { type: Boolean, default: false },
+  hideColorDots: { type: Boolean, default: false },
+  hideColorName: { type: Boolean, default: false },
 })
 defineEmits(['detail'])
 </script>

@@ -1,20 +1,18 @@
 <template>
   <div
+    v-if="cardStateComparison"
     class="mb-6 rounded border border-gray-500/10 bg-shironezumi/2 p-2 dark:border-nalika-border dark:bg-nalika-surface"
   >
     <div class="mb-3 flex items-center justify-between max-sm:flex-col max-sm:items-start">
       <h2
         class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
       >
-        vs Previous Series
+        Card State vs Previous
       </h2>
-      <div v-if="previousSeries" class="text-xs text-gray-500 dark:text-gray-400">
-        {{ previousSeries.label }}
-      </div>
     </div>
-    <div v-if="seriesComparison" class="grid grid-cols-2 gap-3 lg:grid-cols-3">
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
       <div
-        v-for="m in seriesComparison.metrics"
+        v-for="m in cardStateComparison.metrics"
         :key="m.label"
         class="rounded border border-gray-500/10 bg-shironezumi/4 p-2 dark:border-nalika-border dark:bg-nalika-surface"
       >
@@ -44,30 +42,25 @@
       <div
         class="rounded border border-gray-500/10 bg-shironezumi/4 p-2 dark:border-nalika-border dark:bg-nalika-surface"
       >
-        <div class="text-xs text-gray-500 dark:text-gray-400">Top color</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">Top used color</div>
         <div class="mt-1 flex items-center justify-between">
           <span class="text-sm font-bold text-gray-700 dark:text-nalika-text">
-            {{ seriesComparison.topColor.current || '—' }}
+            {{ cardStateComparison.topColor.current || '—' }}
           </span>
           <span
-            v-if="seriesComparison.topColor.current !== seriesComparison.topColor.previous"
+            v-if="cardStateComparison.topColor.current !== cardStateComparison.topColor.previous"
             class="text-xs text-gray-500 dark:text-gray-400"
           >
-            was {{ seriesComparison.topColor.previous || '—' }}
+            was {{ cardStateComparison.topColor.previous || '—' }}
           </span>
           <span v-else class="text-xs text-gray-500 dark:text-gray-400">same</span>
         </div>
       </div>
     </div>
-    <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
-      No previous series
-    </p>
   </div>
 </template>
 
 <script setup>
-defineProps({
-  seriesComparison: { type: Object, default: null },
-  previousSeries: { type: Object, default: null },
-})
+const { currentSeries, previousSeries } = inject('meta')
+const { cardStateComparison } = useSeriesComparison({ currentSeries, previousSeries })
 </script>

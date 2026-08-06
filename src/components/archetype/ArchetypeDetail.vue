@@ -125,12 +125,12 @@
 
     <!-- Level & Cost Distribution -->
     <div class="mt-4 grid gap-4 md:grid-cols-2">
-      <DistributionBars title="Level Distribution" :items="levelDist" color="#005caf" />
-      <DistributionBars title="Cost Distribution" :items="costDist" color="#0b346e" />
+      <ChartDistributionBars title="Level Distribution" :items="levelDist" color="#005caf" />
+      <ChartDistributionBars title="Cost Distribution" :items="costDist" color="#0b346e" />
     </div>
 
     <!-- Other Cards (collapsible) -->
-    <CollapsibleSection
+    <UiCollapsibleSection
       v-if="filteredByType.length"
       :show="showOther"
       :count="archetype.filteredCards.length"
@@ -153,10 +153,10 @@
           />
         </div>
       </div>
-    </CollapsibleSection>
+    </UiCollapsibleSection>
 
     <!-- Removed Cards (collapsible) -->
-    <CollapsibleSection
+    <UiCollapsibleSection
       v-if="removedCards.length"
       :show="showRemoved"
       :count="removedCards.length"
@@ -172,10 +172,10 @@
           <ArchetypeCardItem v-for="card in cards" :key="card.cardId" :card="card" is-removed />
         </div>
       </div>
-    </CollapsibleSection>
+    </UiCollapsibleSection>
 
     <!-- Deck URLs (hidden, toggle) -->
-    <CollapsibleSection
+    <UiCollapsibleSection
       v-if="archetype.deckUrls?.length"
       :show="showDeckUrls"
       :count="archetype.deckUrls.length"
@@ -188,7 +188,7 @@
         Winner Decks
       </div>
       <div class="flex flex-wrap gap-x-5 gap-y-2.5">
-        <DeckPopover
+        <UiDeckPopover
           v-for="(d, i) in winnerDeckPreviews"
           :key="d.url"
           :cards="d.cards"
@@ -209,7 +209,7 @@
           >
             W
           </span>
-        </DeckPopover>
+        </UiDeckPopover>
       </div>
       <div v-if="!winnerDeckPreviews.length" class="text-xs text-gray-400 dark:text-gray-500">
         No winner decks
@@ -221,7 +221,7 @@
       </div>
 
       <div class="flex flex-wrap gap-x-5 gap-y-2.5">
-        <DeckPopover
+        <UiDeckPopover
           v-for="(d, i) in otherDeckPreviews"
           :key="d.url"
           :cards="d.cards"
@@ -236,9 +236,9 @@
           >
             Deck {{ i + 1 }}
           </a>
-        </DeckPopover>
+        </UiDeckPopover>
       </div>
-    </CollapsibleSection>
+    </UiCollapsibleSection>
   </div>
 </template>
 

@@ -1,9 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useLoadingBar } from '@/composables/useLoadingBar'
 
 const routes = [
   {
     path: '/',
     name: 'home',
+    component: () => import('@/views/HomePage.vue'),
+  },
+  {
+    path: '/tier',
+    name: 'tier',
     component: () => import('@/views/ArchetypeTier.vue'),
   },
   {
@@ -24,6 +30,14 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 }
   },
+})
+
+const { start } = useLoadingBar()
+
+router.beforeEach((to, from) => {
+  if (to.path !== from.path) {
+    start()
+  }
 })
 
 export default router

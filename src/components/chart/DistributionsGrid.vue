@@ -44,7 +44,7 @@
         <button
           v-if="allColorDist.length > colorDist.length"
           class="text-xxs font-medium text-ruri hover:underline"
-          @click="$emit('view-all', 'colors')"
+          @click="viewAllModal = 'colors'"
         >
           View All →
         </button>
@@ -105,7 +105,7 @@
         <button
           v-if="allWinRateDist.length > winRateDist.length"
           class="text-xxs font-medium text-ruri hover:underline"
-          @click="$emit('view-all', 'winrate')"
+          @click="viewAllModal = 'winrate'"
         >
           View All →
         </button>
@@ -157,13 +157,22 @@
 </template>
 
 <script setup>
-defineProps({
-  tierDist: { type: Array, default: () => [] },
-  colorDist: { type: Array, default: () => [] },
-  allColorDist: { type: Array, default: () => [] },
-  winRateDist: { type: Array, default: () => [] },
-  allWinRateDist: { type: Array, default: () => [] },
-})
+const {
+  currentSeries,
+  previousSeries,
+  allRows,
+  totalSeriesDecks,
+  totalSeriesWinnerDecks,
+  aggregationResult,
+  viewAllModal,
+} = inject('meta')
 
-defineEmits(['view-all'])
+const { tierDist, allColorDist, colorDist, allWinRateDist, winRateDist } = useDistributionData({
+  currentSeries,
+  previousSeries,
+  allRows,
+  totalSeriesDecks,
+  totalSeriesWinnerDecks,
+  aggregationResult,
+})
 </script>

@@ -63,8 +63,6 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { COLOR_HEX } from '../utils/colors.js'
 
 const props = defineProps({
   rows: { type: Array, required: true },

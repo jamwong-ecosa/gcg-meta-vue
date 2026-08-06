@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 const tierData = ref([])
 const tierDataLoaded = ref(false)
 let loading = null

@@ -14,6 +14,7 @@
     "scrape:products": "node scripts/scrape-products.mjs",
     "scrape:cards": "node scripts/scrape-cards.mjs",
     "scrape:tournament": "node scripts/scrape-tournaments.mjs",
+    "scrape:bandai": "node scripts/scrape-tournaments-bandai-plus.mjs",
     "build:tiers": "node scripts/build-tiers.mjs",
     "data": "node scripts/scrape-products.mjs && node scripts/scrape-cards.mjs && node scripts/scrape-tournaments.mjs && node scripts/build-tiers.mjs",
     "postinstall": "node scripts/generate.mjs"
@@ -22,6 +23,7 @@
     "@vueuse/core": "^14.3.0",
     "apexcharts": "^5.15.2",
     "clsx": "^2.1.1",
+    "nprogress": "^0.2.0",
     "tailwind-merge": "^3.6.0",
     "vue": "^3.5.38",
     "vue-router": "^5.1.0",

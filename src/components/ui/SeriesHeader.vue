@@ -15,8 +15,8 @@
 
 <script setup>
 defineProps({
-  title: { type: String, required: true },
-  visible: { type: Boolean, default: false },
+  title: { type: String, default: 'Meta Overview' },
+  visible: Boolean,
   events: { type: Number, default: 0 },
   wins: { type: Number, default: 0 },
   decks: { type: Number, default: 0 },
