@@ -195,9 +195,9 @@ function buildArchetypeMaps(allPlayers, winners, top4Players) {
       entry.count++
       entry.deckCardIds.push(serializeDeckCards(player.deck))
       accumulateCardAgg(entry.cardAgg, player.deck)
+      entry.deckWinnerFlags.push(player.rank === WINNER)
       if (player.deckUrl) {
         entry.deckUrls.push(player.deckUrl)
-        entry.deckWinnerFlags.push(player.rank === WINNER)
       }
       return entry
     },

@@ -174,12 +174,12 @@
       </div>
     </UiCollapsibleSection>
 
-    <!-- Deck URLs (hidden, toggle) -->
+    <!-- Decks (hidden, toggle) -->
     <UiCollapsibleSection
-      v-if="archetype.deckUrls?.length"
+      v-if="archetype.deckCardIds?.length"
       :show="showDeckUrls"
-      :count="archetype.deckUrls.length"
-      title="Deck URLs"
+      :count="archetype.deckCardIds.length"
+      title="Decks"
       @toggle="showDeckUrls = !showDeckUrls"
     >
       <div
@@ -190,13 +190,14 @@
       <div class="flex flex-wrap gap-x-5 gap-y-2.5">
         <UiDeckPopover
           v-for="(d, i) in winnerDeckPreviews"
-          :key="d.url"
+          :key="i"
           :cards="d.cards"
           :url="d.url"
           :label="'Deck ' + (i + 1)"
           class="flex items-center gap-2"
         >
           <a
+            v-if="d.url"
             :href="d.url"
             target="_blank"
             rel="noopener"
@@ -204,6 +205,9 @@
           >
             Deck {{ i + 1 }}
           </a>
+          <span v-else class="text-xs text-gray-500 dark:text-gray-400">
+            Deck {{ i + 1 }}
+          </span>
           <span
             class="rounded bg-yellow-100 px-1 text-xxs font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300/70"
           >
@@ -223,12 +227,13 @@
       <div class="flex flex-wrap gap-x-5 gap-y-2.5">
         <UiDeckPopover
           v-for="(d, i) in otherDeckPreviews"
-          :key="d.url"
+          :key="i"
           :cards="d.cards"
           :url="d.url"
           :label="'Deck ' + (i + 1)"
         >
           <a
+            v-if="d.url"
             :href="d.url"
             target="_blank"
             rel="noopener"
@@ -236,6 +241,9 @@
           >
             Deck {{ i + 1 }}
           </a>
+          <span v-else class="text-xs text-gray-500 dark:text-gray-400">
+            Deck {{ i + 1 }}
+          </span>
         </UiDeckPopover>
       </div>
     </UiCollapsibleSection>
@@ -290,9 +298,10 @@ const cardIdToInfo = computed(() => {
 })
 
 const deckPreviews = computed(() =>
-  (props.archetype.deckUrls ?? []).map((url, i) => {
+  (props.archetype.deckCardIds ?? []).map((cardStr, i) => {
+    const url = props.archetype.deckUrls?.[i] ?? ''
     const infoMap = cardIdToInfo.value
-    const cards = (props.archetype.deckCardIds?.[i] ?? '')
+    const cards = cardStr
       .split('|')
       .filter(Boolean)
       .map(part => {
