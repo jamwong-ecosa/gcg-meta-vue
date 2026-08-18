@@ -12,7 +12,12 @@
       <div v-for="group in groups" :key="group.colors" class="space-y-3">
         <div
           :ref="el => registerStuck(el, group.colors)"
-          :class="['mobile-group-header sticky z-30 flex items-center gap-2 rounded px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400', stuckIds.has(group.colors) ? 'bg-gray-300 dark:bg-nalika-surface' : 'bg-gray-300/40 dark:bg-white/15']"
+          :class="[
+            'mobile-group-header sticky z-30 flex items-center gap-2 rounded px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400',
+            stuckIds.has(group.colors)
+              ? 'bg-gray-300 dark:bg-nalika-surface'
+              : 'bg-gray-300/40 dark:bg-white/15',
+          ]"
           :style="{ top: groupTop }"
         >
           <div class="flex items-center gap-0.5">
@@ -25,7 +30,9 @@
           </div>
           <span>{{ group.colors }}</span>
           <span class="text-gray-400">({{ group.rows.length }})</span>
-          <span class="ml-auto font-mono tabular-nums">{{ group.totalDecks }} decks / {{ group.totalWins }} wins</span>
+          <span class="ml-auto font-mono tabular-nums">
+            {{ group.totalDecks }} decks / {{ group.totalWins }} wins
+          </span>
         </div>
         <TierCardItem
           v-for="row in group.rows"

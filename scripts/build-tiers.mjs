@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import * as ss from 'simple-statistics'
 import { WINNER, TOP4, COLOR_HEX, TYPE_ORDER, TYPE_PICK_ORDER } from './constants.mjs'
 
@@ -884,7 +884,12 @@ function processSeries(series) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 // Load scraped data, process each series, write outputs
-const tournaments = loadJSON('data/tournaments-all.json')
+// Merge official (tournaments-all.json) + Bandai+ (tournaments-bandai-all.json) series
+const tournaments = [...loadJSON('data/tournaments-all.json')]
+
+if (existsSync('data/tournaments-bandai-all.json')) {
+  tournaments.push(...loadJSON('data/tournaments-bandai-all.json'))
+}
 
 mkdirSync('data-processed/archetypes', { recursive: true })
 
@@ -897,6 +902,8 @@ for (const series of tournaments) {
   tierData.push(result.tierEntry)
   manifest.push(result.manifestEntry)
 }
+
+tierData.sort((a, b) => (b.eventMaxDate || '').localeCompare(a.eventMaxDate || ''))
 
 writeFileSync('data-processed/tiers.json', JSON.stringify(tierData, null, 2))
 console.log(

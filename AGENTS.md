@@ -3,6 +3,7 @@
 ## CRITICAL RULES — READ BEFORE WRITING ANY CODE
 
 **NEVER add explicit imports for auto-imported APIs:**
+
 - `vue` APIs (`ref`, `computed`, `watch`, `onMounted`, etc.)
 - `vue-router` APIs (`useRouter`, `useRoute`, etc.)
 - Components in `src/components/` (use namespaced name: `UiDarkToggle`, `ChartDistributionBars`, etc.)
@@ -10,6 +11,7 @@
 - `tw` template tag from `src/utils/tw.js`
 
 **ONLY add explicit imports for:**
+
 - `@vueuse/core` (NOT auto-imported)
 - npm packages
 - `$data/*` path aliases
@@ -26,20 +28,20 @@ source ~/.nvm/nvm.sh && nvm use
 
 ## Commands
 
-| Command                     | What it does                                                               |
-| --------------------------- | -------------------------------------------------------------------------- |
-| `npm run dev`               | Vite dev server                                                            |
-| `npm run build`             | Vite production build → `dist/`                                            |
-| `npm run preview`           | Preview production build                                                   |
-| `npm run lint`              | ESLint (flat config: `eslint.config.js`)                                   |
-| `npm run lint:fix`          | ESLint auto-fix + Prettier format                                          |
-| `npm run format`            | Prettier (`.prettierrc` + `prettier-plugin-tailwindcss`)                   |
-| `npm run format:check`      | Prettier check-only                                                        |
+| Command                     | What it does                                                                     |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| `npm run dev`               | Vite dev server                                                                  |
+| `npm run build`             | Vite production build → `dist/`                                                  |
+| `npm run preview`           | Preview production build                                                         |
+| `npm run lint`              | ESLint (flat config: `eslint.config.js`)                                         |
+| `npm run lint:fix`          | ESLint auto-fix + Prettier format                                                |
+| `npm run format`            | Prettier (`.prettierrc` + `prettier-plugin-tailwindcss`)                         |
+| `npm run format:check`      | Prettier check-only                                                              |
 | `npm run data`              | Full pipeline: scrape products → scrape cards → scrape tournaments → build tiers |
-| `npm run scrape:products`   | Scrape product data from `gundam-gcg.com` (→ `data/products.json`)         |
-| `npm run scrape:cards`      | Scrape card database from `gundam-gcg.com` (→ `data/cards.json`)           |
-| `npm run scrape:tournament` | Scrape tournament results (→ `data/tournaments-all.json`)                  |
-| `npm run build:tiers`       | Rebuild tier data from existing scraped data → `data-processed/tiers.json` |
+| `npm run scrape:products`   | Scrape product data from `gundam-gcg.com` (→ `data/products.json`)               |
+| `npm run scrape:cards`      | Scrape card database from `gundam-gcg.com` (→ `data/cards.json`)                 |
+| `npm run scrape:tournament` | Scrape tournament results (→ `data/tournaments-all.json`)                        |
+| `npm run build:tiers`       | Rebuild tier data from existing scraped data → `data-processed/tiers.json`       |
 
 ## Project structure
 

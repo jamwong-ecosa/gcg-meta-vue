@@ -63,7 +63,6 @@
 </template>
 
 <script setup>
-
 const props = defineProps({
   rows: { type: Array, required: true },
   seriesDecks: { type: Number, default: null },

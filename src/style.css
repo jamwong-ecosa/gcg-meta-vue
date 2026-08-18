@@ -49,5 +49,7 @@ html {
 }
 
 #nprogress .peg {
-  box-shadow: 0 0 10px var(--color-accent), 0 0 5px var(--color-accent);
+  box-shadow:
+    0 0 10px var(--color-accent),
+    0 0 5px var(--color-accent);
 }

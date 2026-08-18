@@ -6,8 +6,14 @@
 </template>
 
 <script setup>
-const { currentSeries, previousSeries, allRows, totalSeriesDecks, totalSeriesWinnerDecks, aggregationResult } =
-  inject('meta')
+const {
+  currentSeries,
+  previousSeries,
+  allRows,
+  totalSeriesDecks,
+  totalSeriesWinnerDecks,
+  aggregationResult,
+} = inject('meta')
 const { levelDist, costDist } = useDistributionData({
   currentSeries,
   previousSeries,

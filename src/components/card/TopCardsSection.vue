@@ -75,6 +75,14 @@ const {
   enlargedCard,
 } = inject('meta')
 
-const { cardTab, typeTab, colorFilter, colorTabOptions, cardMetricOptions, cardTypeOptions, filteredSigCards, filteredTopCards } =
-  useCardFiltering(aggregationResult)
+const {
+  cardTab,
+  typeTab,
+  colorFilter,
+  colorTabOptions,
+  cardMetricOptions,
+  cardTypeOptions,
+  filteredSigCards,
+  filteredTopCards,
+} = useCardFiltering(aggregationResult)
 </script>

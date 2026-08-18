@@ -72,11 +72,11 @@
 const heroCards = ['ST01-001', 'GD02-054', 'ST04-001', 'GD01-066', 'GD01-024']
 
 const heroCardClasses = [
-  tw`rotate-[-6deg] -mr-4 opacity-60`,
-  tw`rotate-[-3deg] -mr-4 opacity-75`,
-  tw`rotate-0 z-10 opacity-90`,
-  tw`rotate-[3deg] -ml-4 opacity-75`,
-  tw`rotate-[6deg] -ml-4 opacity-60`,
+  tw`-mr-4 rotate-[-6deg] opacity-60`,
+  tw`-mr-4 rotate-[-3deg] opacity-75`,
+  tw`z-10 rotate-0 opacity-90`,
+  tw`-ml-4 rotate-[3deg] opacity-75`,
+  tw`-ml-4 rotate-[6deg] opacity-60`,
 ]
 
 const features = [
