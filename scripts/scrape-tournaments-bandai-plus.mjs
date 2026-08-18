@@ -249,7 +249,7 @@ async function scrape() {
     }))
     .filter(l => l.label.includes('ニュータイプチャレンジ 2026 MISSION4'))
 
-  console.log('  Found ' + parsed.length + ' sanctioned series')
+  console.log(`  Found ${parsed.length} sanctioned series`)
   await page.close()
 
   // ── Cache setup ───────────────────────────────────────────────────────────
@@ -262,7 +262,7 @@ async function scrape() {
       cachedByUrl.set(ev.url, ev)
     }
   }
-  console.log('  Loaded ' + cachedByUrl.size + ' cached events')
+  console.log(`  Loaded ${cachedByUrl.size} cached events`)
 
   // ── Level 2: For each series, find event links ────────────────────────────
   let fetchedCount = 0
@@ -285,20 +285,12 @@ async function scrape() {
       allSeries.push(cachedSeries)
       skippedCount++
       console.log(
-        '  [' +
-          (i + 1) +
-          '/' +
-          parsed.length +
-          '] SKIP ' +
-          s.label +
-          ' (' +
-          cachedSeries.events.length +
-          ' events cached)',
+        `  [${i + 1}/${parsed.length}] SKIP ${s.label} (${cachedSeries.events.length} events cached)`,
       )
       continue
     }
 
-    console.log('  [' + (i + 1) + '/' + parsed.length + '] Fetching series: ' + s.label + '...')
+    console.log(`  [${i + 1}/${parsed.length}] Fetching series: ${s.label}...`)
 
     const series = { label: cleanLabel, value: seriesValue, url: s.href, events: [] }
 
@@ -330,7 +322,7 @@ async function scrape() {
       await sp.close()
 
       const eventLinks = shopLinks.filter(l => /\/sanctioned\/[^/]+\/[^/]+/.test(l.href))
-      console.log('    Found ' + eventLinks.length + ' shop events in series')
+      console.log(`    Found ${eventLinks.length} shop events in series`)
 
       if (eventLinks.length === 0) {
         allSeries.push(series)
@@ -343,7 +335,7 @@ async function scrape() {
         if (cachedByUrl.get(ev.href)?.players?.length > 0) {
           series.events.push(cachedByUrl.get(ev.href))
           console.log(
-            '      [' + series.events.length + '/' + eventLinks.length + '] SKIP (cached)',
+            `      [${series.events.length}/${eventLinks.length}] SKIP (cached)`,
           )
         } else {
           uncached.push(ev)
@@ -353,7 +345,7 @@ async function scrape() {
       // Scrape uncached events in parallel
       if (uncached.length > 0) {
         console.log(
-          '    Scraping ' + uncached.length + ' events (concurrency ' + CONCURRENCY + ')...',
+          `    Scraping ${uncached.length} events (concurrency ${CONCURRENCY})...`,
         )
         const results = await mapConcurrenly(
           uncached,
@@ -427,11 +419,11 @@ async function scrape() {
           }
         }
         console.log(
-          '      Scraped ' + results.filter(Boolean).length + '/' + uncached.length + ' events',
+          `      Scraped ${results.filter(Boolean).length}/${uncached.length} events`,
         )
       }
     } catch (err) {
-      console.log('    Error: ' + err.message)
+      console.log(`    Error: ${err.message}`)
     }
 
     allSeries.push(series)
@@ -441,7 +433,7 @@ async function scrape() {
 
   // ── Save ──────────────────────────────────────────────────────────────────
   console.log('')
-  console.log('Done. ' + fetchedCount + ' fetched, ' + skippedCount + ' cached')
+  console.log(`Done. ${fetchedCount} fetched, ${skippedCount} cached`)
 
   if (allSeries.length === 0) {
     console.log('No series to save.')
@@ -454,16 +446,16 @@ async function scrape() {
 
   if (existsSync(dataFile)) {
     copyFileSync(dataFile, dataFile + '.bak')
-    console.log('Backed up to ' + dataFile + '.bak')
+    console.log(`Backed up to ${dataFile}.bak`)
   }
   writeFileSync(dataFile, JSON.stringify(merged, null, 2))
-  console.log('Saved to ' + dataFile)
+  console.log(`Saved to ${dataFile}`)
 
   mkdirSync('data/tournaments', { recursive: true })
   for (const s of allSeries) {
     if (s.events.length > 0) {
-      writeFileSync('data/tournaments/' + s.value + '.json', JSON.stringify(s, null, 2))
-      console.log('Saved data/tournaments/' + s.value + '.json')
+      writeFileSync(`data/tournaments/${s.value}.json`, JSON.stringify(s, null, 2))
+      console.log(`Saved data/tournaments/${s.value}.json`)
     }
   }
 }
