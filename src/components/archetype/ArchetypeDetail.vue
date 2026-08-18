@@ -205,9 +205,7 @@
           >
             Deck {{ i + 1 }}
           </a>
-          <span v-else class="text-xs text-gray-500 dark:text-gray-400">
-            Deck {{ i + 1 }}
-          </span>
+          <span v-else class="text-xs text-gray-500 dark:text-gray-400">Deck {{ i + 1 }}</span>
           <span
             class="rounded bg-yellow-100 px-1 text-xxs font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300/70"
           >
@@ -241,9 +239,7 @@
           >
             Deck {{ i + 1 }}
           </a>
-          <span v-else class="text-xs text-gray-500 dark:text-gray-400">
-            Deck {{ i + 1 }}
-          </span>
+          <span v-else class="text-xs text-gray-500 dark:text-gray-400">Deck {{ i + 1 }}</span>
         </UiDeckPopover>
       </div>
     </UiCollapsibleSection>
