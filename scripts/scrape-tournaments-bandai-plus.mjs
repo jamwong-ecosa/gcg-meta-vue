@@ -192,22 +192,41 @@ async function scrape() {
   // ── Level 1: Find series links ────────────────────────────────────────────
   console.log('1. Navigating to tournament listing (sanctioned tab)...')
   const page = await context.newPage()
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' })
-  await page.waitForSelector('button', { timeout: 10000 })
+  await page.goto(BASE_URL, { waitUntil: 'load', timeout: 30000 })
+  await page.waitForTimeout(3000)
 
   console.log('2. Clicking sanctioned tab...')
-  // Dismiss cookie banner if present
-  await page
-    .evaluate(() => {
-      for (const b of document.querySelectorAll('button')) {
-        if (b.textContent.includes('Accept All')) {
-          b.click()
-          break
+  // Dismiss cookie banners (may have multiple layers)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await page
+      .evaluate(() => {
+        for (const b of document.querySelectorAll('button')) {
+          const t = b.textContent.trim()
+          if (t.includes('Accept All') || t === 'Allow All' || t === 'Reject All Cookies') {
+            b.click()
+            break
+          }
         }
-      }
-    })
+      })
+      .catch(() => {})
+    await page.waitForTimeout(500)
+  }
+
+  // Wait for SPA tab buttons to appear
+  await page
+    .waitForFunction(
+      () => {
+        for (const b of document.querySelectorAll('button')) {
+          if (b.textContent.includes('公認大会')) {
+            return true
+          }
+        }
+        return false
+      },
+      { timeout: 15000 },
+    )
     .catch(() => {})
-  await page.waitForTimeout(300)
+
   await page.evaluate(() => {
     for (const b of document.querySelectorAll('button')) {
       if (b.textContent.includes('公認大会')) {
@@ -216,7 +235,7 @@ async function scrape() {
       }
     }
   })
-  await page.waitForTimeout(1000)
+  await page.waitForTimeout(2000)
 
   console.log('3. Scrolling to load all series...')
   for (let i = 0; i < 20; i++) {
@@ -241,13 +260,11 @@ async function scrape() {
     })),
   )
 
-  const parsed = links
-    .map(l => ({
-      href: l.href,
-      label: l.text,
-      id: (l.href.match(/\/sanctioned\/([^/]+)/) || [])[1] ?? '',
-    }))
-    .filter(l => l.label.includes('ニュータイプチャレンジ 2026 MISSION4'))
+  const parsed = links.map(l => ({
+    href: l.href,
+    label: l.text,
+    id: (l.href.match(/\/sanctioned\/([^/]+)/) || [])[1] ?? '',
+  }))
 
   console.log(`  Found ${parsed.length} sanctioned series`)
   await page.close()
@@ -255,9 +272,7 @@ async function scrape() {
   // ── Cache setup ───────────────────────────────────────────────────────────
   const cached = loadCached()
   const cachedByUrl = new Map()
-  const cachedByValue = new Map()
   for (const t of cached) {
-    cachedByValue.set(t.value, t)
     for (const ev of t.events ?? []) {
       cachedByUrl.set(ev.url, ev)
     }
@@ -266,7 +281,6 @@ async function scrape() {
 
   // ── Level 2: For each series, find event links ────────────────────────────
   let fetchedCount = 0
-  let skippedCount = 0
   const allSeries = []
 
   for (let i = 0; i < parsed.length; i++) {
@@ -276,30 +290,30 @@ async function scrape() {
       .trim()
     const seriesValue = cleanLabel.replace(/[^a-zA-Z0-9\u3000-\u9fff]/g, '_')
 
-    const cachedSeries = cachedByValue.get(seriesValue)
-    if (
-      cachedSeries &&
-      cachedSeries.events?.length > 0 &&
-      cachedSeries.events.filter(e => e.players?.length > 0).length > 0
-    ) {
-      allSeries.push(cachedSeries)
-      skippedCount++
-      console.log(
-        `  [${i + 1}/${parsed.length}] SKIP ${s.label} (${cachedSeries.events.length} events cached)`,
-      )
-      continue
-    }
-
     console.log(`  [${i + 1}/${parsed.length}] Fetching series: ${s.label}...`)
 
     const series = { label: cleanLabel, value: seriesValue, url: s.href, events: [] }
 
     try {
       const sp = await context.newPage()
-      await sp.goto(s.href, { waitUntil: 'domcontentloaded' })
+      await sp.goto(s.href, { waitUntil: 'load', timeout: 30000 }).catch(() => {})
+      await sp.waitForTimeout(2000)
+
+      // Dismiss cookie banner if present
+      await sp
+        .evaluate(() => {
+          for (const b of document.querySelectorAll('button')) {
+            if (b.textContent.includes('Accept All')) {
+              b.click()
+              break
+            }
+          }
+        })
+        .catch(() => {})
+      await sp.waitForTimeout(500)
 
       // Scroll to load all events
-      for (let j = 0; j < 15; j++) {
+      for (let j = 0; j < 20; j++) {
         const prev = await sp.evaluate(
           () => document.querySelectorAll('a[href*="/tournament/sanctioned/"]').length,
         )
@@ -334,9 +348,7 @@ async function scrape() {
       for (const ev of eventLinks) {
         if (cachedByUrl.get(ev.href)?.players?.length > 0) {
           series.events.push(cachedByUrl.get(ev.href))
-          console.log(
-            `      [${series.events.length}/${eventLinks.length}] SKIP (cached)`,
-          )
+          console.log(`      [${series.events.length}/${eventLinks.length}] SKIP (cached)`)
         } else {
           uncached.push(ev)
         }
@@ -344,9 +356,7 @@ async function scrape() {
 
       // Scrape uncached events in parallel
       if (uncached.length > 0) {
-        console.log(
-          `    Scraping ${uncached.length} events (concurrency ${CONCURRENCY})...`,
-        )
+        console.log(`    Scraping ${uncached.length} events (concurrency ${CONCURRENCY})...`)
         const results = await mapConcurrenly(
           uncached,
           async ev => {
@@ -418,9 +428,7 @@ async function scrape() {
             fetchedCount++
           }
         }
-        console.log(
-          `      Scraped ${results.filter(Boolean).length}/${uncached.length} events`,
-        )
+        console.log(`      Scraped ${results.filter(Boolean).length}/${uncached.length} events`)
       }
     } catch (err) {
       console.log(`    Error: ${err.message}`)
@@ -433,7 +441,7 @@ async function scrape() {
 
   // ── Save ──────────────────────────────────────────────────────────────────
   console.log('')
-  console.log(`Done. ${fetchedCount} fetched, ${skippedCount} cached`)
+  console.log(`Done. ${fetchedCount} fetched`)
 
   if (allSeries.length === 0) {
     console.log('No series to save.')
