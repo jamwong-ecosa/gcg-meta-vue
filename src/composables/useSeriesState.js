@@ -50,6 +50,18 @@ export function useSeriesState() {
     return candidates[0] || null
   })
 
+  const previousPreviousSeries = computed(() => {
+    const prev = previousSeries.value
+    if (!prev?.eventMinDate) {
+      return null
+    }
+    const candidates = tierData.value.filter(
+      s => s.value !== prev.value && s.eventMaxDate && s.eventMaxDate < prev.eventMinDate,
+    )
+    candidates.sort((a, b) => b.eventMaxDate.localeCompare(a.eventMaxDate))
+    return candidates[0] || null
+  })
+
   const eventCutoffDate = computed(() => currentSeries.value?.eventMaxDate ?? null)
   const eventMinDate = computed(() => currentSeries.value?.eventMinDate ?? null)
 
@@ -95,6 +107,7 @@ export function useSeriesState() {
     totalSeriesDecks,
     totalSeriesWinnerDecks,
     previousSeries,
+    previousPreviousSeries,
     eventCutoffDate,
     eventMinDate,
     seriesTimeline,

@@ -5,11 +5,14 @@
       isNew
         ? 'border border-green-500 dark:border-green-600'
         : 'border border-gray-500/10 dark:border-nalika-border',
-      { 'outline-2 outline-offset-1 outline-yellow-400 dark:outline-yellow-700': card.inWinner },
+      {
+        'outline-2 outline-offset-1 outline-yellow-400 dark:outline-yellow-700':
+          card.inWinner && !isRemoved,
+      },
     ]"
   >
     <div
-      v-if="card.inWinner"
+      v-if="card.inWinner && !isRemoved"
       class="gloss-overlay pointer-events-none absolute inset-0 z-10 rounded"
     />
     <div
@@ -95,7 +98,7 @@
       {{ card.name }}
     </div>
 
-    <template v-if="!isRemoved">
+    <template v-if="!isRemoved && !hideStats">
       <div class="mt-2 flex items-center justify-between text-xs">
         <span class="font-mono font-bold text-gray-600 dark:text-gray-400">
           {{ (card.inclusionRate * 100).toFixed(1) }}%
@@ -145,6 +148,7 @@ const props = defineProps({
   isSig: { type: Boolean, default: false },
   isNew: { type: Boolean, default: false },
   isRemoved: { type: Boolean, default: false },
+  hideStats: { type: Boolean, default: false },
 })
 
 const enlargedCardId = ref(null)

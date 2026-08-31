@@ -38,6 +38,8 @@
 
     <CardStateCards />
 
+    <ArchetypeShiftStatsSection />
+
     <ChartLevelCostDistribution />
 
     <CardTopCardsSection />
@@ -58,6 +60,7 @@ const {
   totalSeriesDecks,
   totalSeriesWinnerDecks,
   previousSeries,
+  previousPreviousSeries,
   eventCutoffDate,
   eventMinDate,
   seriesTimeline,
@@ -81,6 +84,7 @@ provide('meta', {
   totalSeriesDecks,
   totalSeriesWinnerDecks,
   previousSeries,
+  previousPreviousSeries,
   eventCutoffDate,
   eventMinDate,
   seriesTimeline,
