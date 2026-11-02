@@ -25,7 +25,9 @@ html {
   overflow-y: scroll;
 }
 
+/* Sticky offset below the nav; App.vue updates it to the measured height */
 :root {
+  --nav-h: 53px;
   --color-sig-white: #64748b;
   --gloss-start: rgba(189, 192, 186, 0.4);
   --gloss-mid: rgba(189, 192, 186, 0.12);

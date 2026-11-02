@@ -10,16 +10,19 @@ const routes = [
   {
     path: '/tier',
     name: 'tier',
+    meta: { series: true },
     component: () => import('@/views/ArchetypeTier.vue'),
   },
   {
     path: '/archetype-analysis',
     name: 'archetype-analysis',
+    meta: { series: true },
     component: () => import('@/views/ArchetypeAnalysis.vue'),
   },
   {
     path: '/meta',
     name: 'meta',
+    meta: { series: true },
     component: () => import('@/views/MetaOverview.vue'),
   },
 ]
@@ -27,8 +30,8 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
-    return { top: 0 }
+  scrollBehavior(to, from, savedPosition) {
+    return savedPosition ?? { top: 0 }
   },
 })
 

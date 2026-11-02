@@ -1,42 +1,57 @@
 <template>
   <div class="min-h-screen font-display dark:bg-nalika-bg dark:text-nalika-text-muted">
     <nav
-      class="sticky top-0 z-999 flex w-full items-center border-b border-gray-500/10 bg-white px-4 py-2 dark:bg-nalika-surface"
+      ref="navRef"
+      class="sticky top-0 z-999 w-full border-b border-gray-500/10 bg-white px-4 py-2 dark:bg-nalika-surface"
     >
-      <div class="md:flex-1" />
-      <div class="flex gap-6 md:gap-16">
-        <RouterLink
-          :to="{ path: '/' }"
-          class="max-sm:text-sm"
-          :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
-        >
-          Home
-        </RouterLink>
-        <RouterLink
-          :to="{ path: '/tier', query: { series: $route.query.series } }"
-          class="max-sm:text-sm"
-          :active-class="tw`font-bold text-ruri dark:text-sora`"
-        >
-          Tier
-        </RouterLink>
-        <RouterLink
-          :to="{ path: '/archetype-analysis', query: { series: $route.query.series } }"
-          class="max-sm:text-sm"
-          :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
-        >
-          Analysis
-        </RouterLink>
-        <RouterLink
-          :to="{ path: '/meta', query: { series: $route.query.series } }"
-          class="max-sm:text-sm"
-          :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
-        >
-          Meta
-        </RouterLink>
+      <div class="flex items-center">
+        <div class="md:flex-1" />
+        <div class="flex gap-6 md:gap-16">
+          <RouterLink
+            :to="{ path: '/' }"
+            class="max-sm:text-sm"
+            :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
+          >
+            Home
+          </RouterLink>
+          <RouterLink
+            :to="{ path: '/tier', query: { series: $route.query.series } }"
+            class="max-sm:text-sm"
+            :active-class="tw`font-bold text-ruri dark:text-sora`"
+          >
+            Tier
+          </RouterLink>
+          <RouterLink
+            :to="{ path: '/archetype-analysis', query: { series: $route.query.series } }"
+            class="max-sm:text-sm"
+            :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
+          >
+            Analysis
+          </RouterLink>
+          <RouterLink
+            :to="{ path: '/meta', query: { series: $route.query.series } }"
+            class="max-sm:text-sm"
+            :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
+          >
+            Meta
+          </RouterLink>
+        </div>
+        <div class="flex flex-1 items-center justify-end gap-4">
+          <UiGeneralDropdown
+            v-if="showSeries"
+            v-model="seriesKey"
+            class="max-w-sm min-w-0 flex-1 max-lg:hidden"
+            :options="seriesOptions"
+          />
+          <UiDarkToggle />
+        </div>
       </div>
-      <div class="flex flex-1 justify-end">
-        <UiDarkToggle />
-      </div>
+      <UiGeneralDropdown
+        v-if="showSeries"
+        v-model="seriesKey"
+        class="mt-2 lg:hidden"
+        :options="seriesOptions"
+      />
     </nav>
 
     <RouterView v-slot="{ Component }">
@@ -51,7 +66,26 @@
 </template>
 
 <script setup>
+import { useElementSize } from '@vueuse/core'
+
 const { finish } = useLoadingBar()
+
+const route = useRoute()
+const { loadTierData } = useTierData()
+const { seriesOptions, seriesKey } = useSelectedSeries({ pin: false })
+const showSeries = computed(() => !!route.meta.series)
+
+loadTierData()
+
+// Pages offset their sticky bars by the nav height, which grows when the
+// series dropdown wraps to its own row on smaller screens
+const navRef = useTemplateRef('navRef')
+const { height: navHeight } = useElementSize(navRef, undefined, { box: 'border-box' })
+watchEffect(() => {
+  if (navHeight.value) {
+    document.documentElement.style.setProperty('--nav-h', `${navHeight.value}px`)
+  }
+})
 
 function onResolve() {
   finish()

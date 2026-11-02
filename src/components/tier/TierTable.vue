@@ -16,7 +16,7 @@
         <col class="w-16" />
         <col class="w-8" />
       </colgroup>
-      <thead class="sticky top-[53px] z-1">
+      <thead class="sticky top-(--nav-h) z-1">
         <tr class="bg-ruri text-stone-100 dark:bg-nalika-header dark:text-nalika-text">
           <th class="rounded-tl-lg px-4 py-2 font-semibold">Archetype</th>
           <th class="px-4 py-2 text-right font-semibold">Decks</th>

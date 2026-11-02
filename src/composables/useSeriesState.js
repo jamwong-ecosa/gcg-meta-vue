@@ -1,38 +1,6 @@
 export function useSeriesState() {
-  const router = useRouter()
-  const route = useRoute()
-  const { tierData, tierDataLoaded } = useTierData()
-
-  const seriesOptions = computed(() =>
-    tierData.value.map(s => ({
-      value: s.value,
-      label: s.label,
-    })),
-  )
-
-  const validSeries = computed(() => tierData.value.map(s => s.value))
-  const initial = computed(() => {
-    if (!tierData.value.length) {
-      return ''
-    }
-    return validSeries.value.includes(route.query.series)
-      ? route.query.series
-      : tierData.value[0]?.value
-  })
-  const selectedKey = ref(initial.value ?? '')
-
-  watch(selectedKey, val => {
-    router.replace({ query: { series: val } })
-  })
-
-  watch(tierDataLoaded, val => {
-    if (val && !selectedKey.value && tierData.value.length) {
-      const valid = tierData.value.map(s => s.value)
-      selectedKey.value = valid.includes(route.query.series)
-        ? route.query.series
-        : tierData.value[0].value
-    }
-  })
+  const { tierData } = useTierData()
+  const { seriesOptions, seriesKey: selectedKey } = useSelectedSeries()
 
   const currentSeries = computed(() => tierData.value.find(s => s.value === selectedKey.value))
   const totalSeriesDecks = computed(() => currentSeries.value?.totalDecks ?? 0)
@@ -68,8 +36,6 @@ export function useSeriesState() {
     return `${min} → ${max}`
   })
 
-  const { hideFilter } = useScrollHide()
-
   const allRows = computed(() => currentSeries.value?.rows ?? [])
   const totalArchetypes = computed(() => allRows.value.length)
 
@@ -98,7 +64,6 @@ export function useSeriesState() {
     eventCutoffDate,
     eventMinDate,
     seriesTimeline,
-    hideFilter,
     allRows,
     totalArchetypes,
     quadrantData,

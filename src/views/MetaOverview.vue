@@ -9,17 +9,6 @@
       :archetypes="allRows.length"
     />
 
-    <div
-      class="sticky top-12 z-40 -mx-3 mb-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
-      :class="hideFilter ? '-translate-y-full' : 'translate-y-0'"
-    >
-      <UiGeneralDropdown
-        v-model="selectedKey"
-        class="ml-auto w-fit md:max-w-md"
-        :options="seriesOptions"
-      />
-    </div>
-
     <CardStatsSection />
 
     <ChartDistributionsGrid />
@@ -61,7 +50,6 @@ const {
   eventCutoffDate,
   eventMinDate,
   seriesTimeline,
-  hideFilter,
   allRows,
   totalArchetypes,
   quadrantData,

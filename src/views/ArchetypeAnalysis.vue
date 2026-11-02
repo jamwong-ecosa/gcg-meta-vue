@@ -4,28 +4,15 @@
       title="Archetype Analysis"
       :visible="!!currentSeriesData"
       :events="currentSeriesData?.events ?? 0"
-      :wins="totalWins"
+      :wins="currentSeriesData?.winDecks ?? 0"
       :decks="currentSeriesData?.totalDecks ?? 0"
       :archetypes="seriesManifest?.archetypes.length ?? 0"
     />
     <div
-      class="sticky top-12 z-40 -mx-3 mb-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
+      class="sticky top-(--nav-h) z-40 -mx-3 mb-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
       :class="hideFilter ? '-translate-y-full' : 'translate-y-0'"
     >
-      <div
-        class="flex flex-col items-end gap-2 md:flex-row md:items-start md:justify-between md:gap-8"
-      >
-        <UiGeneralDropdown
-          v-model="seriesKey"
-          class="w-fit md:order-2 md:max-w-md md:shrink-0"
-          :options="seriesOptions"
-        />
-        <ArchetypeDropdown
-          v-model="archKey"
-          class="max-w-full md:order-1 md:flex-1"
-          :options="archOptions"
-        />
-      </div>
+      <ArchetypeDropdown v-model="archKey" :options="archOptions" />
     </div>
 
     <template v-if="selectedArchetype">
@@ -65,31 +52,13 @@ const { start, finish } = useLoadingBar()
 
 await loadTierData()
 
-const seriesOptions = computed(() =>
-  tierData.value.map(s => ({
-    value: s.value,
-    label: s.label,
-  })),
-)
-
-const validSeries = computed(() => tierData.value.map(s => s.value))
-const seriesInitial = computed(() => {
-  if (!tierData.value.length) {
-    return ''
-  }
-  return validSeries.value.includes(route.query.series)
-    ? route.query.series
-    : (tierData.value[0]?.value ?? '')
-})
-const seriesKey = ref(seriesInitial.value)
+const { seriesKey } = useSelectedSeries()
 
 const seriesManifest = computed(() => manifest.find(s => s.value === seriesKey.value))
 
 const currentSeriesData = computed(() => tierData.value.find(s => s.value === seriesKey.value))
 
 const { hideFilter } = useScrollHide(180)
-
-const totalWins = computed(() => currentSeriesData.value?.winDecks ?? 0)
 
 function normalizeCombo(s) {
   return s.replace(/[（）]/g, c => (c === '（' ? '(' : ')')).replace(/\s*\(/g, '(')
@@ -115,10 +84,22 @@ const archOptions = computed(() => {
 })
 
 const validArchKeys = computed(() => archOptions.value.map(o => o.value))
-const archInitial = validArchKeys.value.includes(route.query.arch) ? route.query.arch : '0'
-const archKey = ref(archInitial)
+// Like seriesKey, the archetype lives in the URL and is pinned to this page
+let lastArch = ''
+const archKey = computed({
+  get() {
+    if (route.name !== 'archetype-analysis') {
+      return lastArch
+    }
+    const valid = validArchKeys.value
+    lastArch = valid.includes(route.query.arch) ? route.query.arch : valid.length ? '0' : ''
+    return lastArch
+  },
+  set(val) {
+    router.replace({ query: { series: seriesKey.value, arch: val } })
+  },
+})
 
-let suppressArchReset = false
 const selectedArchetype = ref(null)
 const prevCardIds = ref(null)
 const prevCards = ref(null)
@@ -171,9 +152,7 @@ const removedCards = computed(() => {
 })
 
 function onTimelineNavigate({ seriesKey: s, archIndex }) {
-  suppressArchReset = true
-  seriesKey.value = s
-  archKey.value = archIndex
+  router.replace({ query: { series: s, arch: archIndex } })
 }
 
 async function loadArchetype(seriesVal, archIdx) {
@@ -195,20 +174,6 @@ async function loadArchetype(seriesVal, archIdx) {
     finish()
   }
 }
-
-watch(archKey, val => {
-  router.replace({ query: { series: seriesKey.value, arch: val } })
-})
-
-watch(seriesKey, val => {
-  if (suppressArchReset) {
-    suppressArchReset = false
-    return
-  }
-  const newArch = archOptions.value.length ? '0' : ''
-  archKey.value = newArch
-  router.replace({ query: { series: val, arch: newArch } })
-})
 
 watch([seriesKey, archKey], async ([s, a]) => {
   await loadArchetype(s, a)

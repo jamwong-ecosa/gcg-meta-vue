@@ -50,8 +50,9 @@ source ~/.nvm/nvm.sh && nvm use
 - `src/main.js` — mount point
 - `src/style.css` — Tailwind v4 entry + `@custom-variant dark`
 - `src/composables/useDarkMode.js` — VueUse `useDark()` wrapper
+- `src/composables/useSelectedSeries.js` — selected series from `?series=`, shared by the nav dropdown and every page (no per-page series dropdowns)
 - `src/components/` — auto-imported components grouped by feature:
-  - `archetype/` — archetype detail, dropdown, modal, timeline, quadrant charts
+  - `archetype/` — archetype detail, dropdown, timeline, quadrant charts
   - `card/` — card display, meta card sections, top cards, newcomers
   - `chart/` — distribution charts, quadrant charts, pie chart
   - `tier/` — tier table, mobile tier card

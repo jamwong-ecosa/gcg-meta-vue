@@ -68,7 +68,7 @@ const props = defineProps({
   zeroWinRows: { type: Array, default: () => [] },
   showZeroWins: { type: Boolean, default: false },
   groupByColor: { type: Boolean, default: false },
-  groupTop: { type: String, default: '53px' },
+  groupTop: { type: String, default: 'var(--nav-h)' },
 })
 defineEmits(['detail', 'toggleZeroWins'])
 

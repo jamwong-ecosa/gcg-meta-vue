@@ -11,11 +11,11 @@
 
     <div
       ref="filterBarRef"
-      class="sticky top-12 z-40 -mx-3 flex flex-col items-start gap-2 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:flex-row md:items-center md:gap-3 md:px-8 dark:bg-nalika-bg"
+      class="sticky top-(--nav-h) z-40 -mx-3 flex items-center gap-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
       :class="hideFilter ? '-translate-y-full' : 'translate-y-0'"
     >
       <button
-        class="order-2 flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors md:order-1"
+        class="flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
         :class="
           groupByColor
             ? 'bg-ruri text-white'
@@ -29,11 +29,6 @@
         />
         Group by color
       </button>
-      <UiGeneralDropdown
-        v-model="selectedKey"
-        class="order-1 w-full md:order-2 md:ml-auto md:max-w-md"
-        :options="seriesOptions"
-      />
     </div>
 
     <ChartSigPieChart
@@ -128,13 +123,6 @@
         </UiDeckPopover>
       </div>
     </UiCollapsibleSection>
-
-    <ArchetypeModal
-      v-if="detailArch"
-      :archetype="detailArch"
-      :tier="detailTier"
-      @close="closeDetail"
-    />
   </div>
 </template>
 
@@ -150,42 +138,11 @@ function normalizeName(name) {
 }
 
 const router = useRouter()
-const route = useRoute()
-const { tierData, tierDataLoaded, loadTierData } = useTierData()
-const { start, finish } = useLoadingBar()
+const { tierData, loadTierData } = useTierData()
 
 await loadTierData()
 
-const seriesOptions = computed(() =>
-  tierData.value.map(s => ({
-    value: s.value,
-    label: s.label,
-  })),
-)
-
-const validSeries = computed(() => tierData.value.map(s => s.value))
-const initial = computed(() => {
-  if (!tierData.value.length) {
-    return ''
-  }
-  return validSeries.value.includes(route.query.series)
-    ? route.query.series
-    : tierData.value[0]?.value
-})
-const selectedKey = ref(initial.value ?? '')
-
-watch(selectedKey, val => {
-  router.replace({ query: { series: val } })
-})
-
-watch(tierDataLoaded, val => {
-  if (val && !selectedKey.value && tierData.value.length) {
-    const valid = tierData.value.map(s => s.value)
-    selectedKey.value = valid.includes(route.query.series)
-      ? route.query.series
-      : tierData.value[0].value
-  }
-})
+const { seriesKey: selectedKey } = useSelectedSeries()
 
 const currentSeries = computed(() => tierData.value.find(s => s.value === selectedKey.value))
 
@@ -193,7 +150,9 @@ const { hideFilter } = useScrollHide()
 
 const filterBarRef = ref(null)
 const filterBarH = computed(() => filterBarRef.value?.offsetHeight ?? 0)
-const groupTop = computed(() => (hideFilter.value ? '53px' : `calc(53px + ${filterBarH.value}px)`))
+const groupTop = computed(() =>
+  hideFilter.value ? 'var(--nav-h)' : `calc(var(--nav-h) + ${filterBarH.value}px)`,
+)
 
 const totalWins = computed(() => currentSeries.value?.winDecks ?? 0)
 
@@ -241,35 +200,16 @@ const unassignedDeckPreviews = computed(() => {
   })
 })
 
-const detailArch = ref(null)
-const detailTier = ref(null)
-
-function closeDetail() {
-  detailArch.value = null
-  detailTier.value = null
-}
-
-async function openDetail(row) {
+function openDetail(row) {
   const entry = manifest.find(s => s.value === selectedKey.value)
-  if (!entry) {
-    return
-  }
-  const idx = entry.archetypes.findIndex(
-    a => normalizeName(a.combo) === normalizeName(row.archetype),
-  )
+  const idx =
+    entry?.archetypes.findIndex(a => normalizeName(a.combo) === normalizeName(row.archetype)) ?? -1
   if (idx === -1) {
     return
   }
-  start()
-  const path = `/data-processed/archetypes/${selectedKey.value}/${idx}.json`
-  try {
-    const mod = await archModules[path]?.()
-    detailArch.value = mod?.default ?? null
-    detailTier.value = row.tier ?? null
-  } catch {
-    // import failed — reset silently
-  } finally {
-    finish()
-  }
+  router.push({
+    name: 'archetype-analysis',
+    query: { series: selectedKey.value, arch: String(idx) },
+  })
 }
 </script>
