@@ -262,46 +262,38 @@ const ARCHETYPES_PER_TIER = 4
 // Results only cover each event's top 8, so both inputs are performance measures:
 //   win share  = event wins ÷ events (%)
 //   top-8 share = top-8 appearances ÷ all top-8 decks (%)
-// Score = their average × 10. Rates such as wins per deck or top-4 per deck are
-// left out: they are noisy for small archetypes and did not predict the next
-// series' results.
-function archetypeScore({ wins, archDecks, totalDecks, totalEvents }) {
+// Strength = √(average of the two). Rates such as wins per deck or top-4 per deck
+// are left out: they are noisy for small archetypes and did not predict the next
+// series' results. Shares are heavily skewed (a few archetypes hold most top-8
+// slots), so the square root spreads the long tail for tiering and display.
+function archetypeStrength({ wins, archDecks, totalDecks, totalEvents }) {
   const winShare = (wins / totalEvents) * 100
   const top8Share = (archDecks / totalDecks) * 100
-  return Math.round((winShare * 0.5 + top8Share * 0.5) * 10)
+  return Math.sqrt(winShare * 0.5 + top8Share * 0.5)
 }
 
-// ckmeans clustering on √score → tier cutoffs (T1 → T3). Shares are heavily
-// skewed (a few archetypes hold most top-8 slots), so clustering the raw score
-// puts nearly everything in the bottom tier; the square root spreads the tail.
-// Falls back to equal-sized buckets if ckmeans fails (e.g. all scores identical).
-function computeTierThresholds(series) {
-  const allScores = series.archetypes
-    .map(a =>
-      archetypeScore({
-        wins: a.winnerDeckCount,
-        archDecks: a.deckCount,
-        totalDecks: series.totalDecks,
-        totalEvents: series.totalEvents,
-      }),
-    )
-    .sort((a, b) => b - a)
+// Displayed score: strength as 0–100 of the series' strongest archetype
+function strengthIndex(strength, maxStrength) {
+  return maxStrength > 0 ? Math.round((strength / maxStrength) * 100) : 0
+}
 
-  const k = Math.max(1, Math.min(5, Math.floor(allScores.length / ARCHETYPES_PER_TIER)))
-  const roots = allScores.map(Math.sqrt)
+// ckmeans clustering on strength → tier cutoffs (T1 → T3).
+// Falls back to equal-sized buckets if ckmeans fails (e.g. all scores identical).
+function computeTierThresholds(strengths) {
+  const sorted = [...strengths].sort((a, b) => a - b)
+  const k = Math.max(1, Math.min(5, Math.floor(sorted.length / ARCHETYPES_PER_TIER)))
   let clusters
   try {
-    clusters = ss.ckmeans(roots, k)
+    clusters = ss.ckmeans(sorted, k)
   } catch {
     clusters = Array.from({ length: k }, (_, i) => {
-      const start = Math.floor((i * roots.length) / k)
-      const end = Math.floor(((i + 1) * roots.length) / k)
-      return roots.slice(start, end)
+      const start = Math.floor((i * sorted.length) / k)
+      const end = Math.floor(((i + 1) * sorted.length) / k)
+      return sorted.slice(start, end)
     })
   }
 
-  // Scores are integers, so rounding undoes floating-point drift from the square root
-  const clusterMins = clusters.map(cluster => Math.round(cluster[0] ** 2)).reverse()
+  const clusterMins = clusters.map(cluster => cluster[0]).reverse()
   const allTierIds = ['1', '1-5', '2', '2-5', '3']
 
   return clusterMins.map((val, idx) => ({
@@ -311,9 +303,9 @@ function computeTierThresholds(series) {
   }))
 }
 
-// Highest threshold the score meets; falls back to lowest tier
-function getDeckTier(score, thresholds) {
-  return thresholds.find(t => score >= t.min) || thresholds.at(-1)
+// Highest threshold the strength meets; falls back to lowest tier
+function getDeckTier(strength, thresholds) {
+  return thresholds.find(t => strength >= t.min) || thresholds.at(-1)
 }
 
 // ── Output formatting ────────────────────────────────────────────────────────
@@ -325,10 +317,11 @@ function colorDots(colors) {
 
 // Formats archetype data into display rows for tiers.json.
 // Converts ASCII parens in combo keys to fullwidth for Japanese display.
-// Sorted by tier rank then score descending.
+// Sorted by strength descending, which also orders the tiers.
 function formatTierRows(series) {
   return series.archetypes
     .filter(a => a.deckCount > 0)
+    .sort((a, b) => b.tierStrength - a.tierStrength)
     .map(a => {
       const useRate = (a.deckCount / series.totalDecks) * 100
       const winRateEvent = (a.winnerDeckCount / series.totalEvents) * 100
@@ -356,11 +349,6 @@ function formatTierRows(series) {
         tier: a.tierLabel,
         darkHorse: a.darkHorse ?? false,
       }
-    })
-    .sort((a, b) => {
-      const tA = a.tier === '--' ? 99 : parseFloat(a.tier.slice(1))
-      const tB = b.tier === '--' ? 99 : parseFloat(b.tier.slice(1))
-      return tA - tB || b.score - a.score
     })
 }
 
@@ -741,17 +729,21 @@ function processSeries(series) {
     archetypes: mainDetails,
   }
 
-  seriesProcessed.tierThresholds = computeTierThresholds(seriesProcessed)
-
   // Score each archetype and assign a tier label
   for (const a of seriesProcessed.archetypes) {
-    a.tierScore = archetypeScore({
+    a.tierStrength = archetypeStrength({
       wins: a.winnerDeckCount,
       archDecks: a.deckCount,
       totalDecks: allPlayers.length,
       totalEvents: series.events.length,
     })
-    a.tierLabel = getDeckTier(a.tierScore, seriesProcessed.tierThresholds).label
+  }
+  const strengths = seriesProcessed.archetypes.map(a => a.tierStrength)
+  const maxStrength = Math.max(0, ...strengths)
+  seriesProcessed.tierThresholds = computeTierThresholds(strengths)
+  for (const a of seriesProcessed.archetypes) {
+    a.tierScore = strengthIndex(a.tierStrength, maxStrength)
+    a.tierLabel = getDeckTier(a.tierStrength, seriesProcessed.tierThresholds).label
   }
 
   // Mark dark horses: under-the-radar archetypes (< 2% of top-8 slots) that convert
