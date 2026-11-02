@@ -97,7 +97,7 @@ function normalizeCombo(s) {
 
 const archOptions = computed(() => {
   const rows = currentSeriesData.value?.rows ?? []
-  const rowOrder = (combo) => {
+  const rowOrder = combo => {
     const normalized = normalizeCombo(combo)
     const idx = rows.findIndex(r => normalizeCombo(r.archetype) === normalized)
     return idx === -1 ? Number.MAX_SAFE_INTEGER : idx
@@ -131,7 +131,9 @@ async function loadPrevArchetype(seriesVal, combo) {
     return
   }
   const prevEntry = manifest
-    .filter(s => s.value !== seriesVal && s.eventMaxDate && s.eventMaxDate < currentEntry.eventMinDate)
+    .filter(
+      s => s.value !== seriesVal && s.eventMaxDate && s.eventMaxDate < currentEntry.eventMinDate,
+    )
     .sort((a, b) => b.eventMaxDate.localeCompare(a.eventMaxDate))[0]
   if (!prevEntry) {
     return

@@ -16,9 +16,7 @@ const IMAGE_BASE = 'https://www.gundam-gcg.com/jp/images/cards/card'
 const BASE_URL = 'https://d.bandai-tcg-plus.com/gcgja/tournament'
 const fromEnv = Number(process.env.BANDAI_CONCURRENCY)
 const CONCURRENCY =
-  Number.isInteger(fromEnv) && fromEnv > 0
-    ? fromEnv
-    : Math.min(4, Math.max(1, cpus().length - 1))
+  Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : Math.min(4, Math.max(1, cpus().length - 1))
 const FORCE = process.env.BANDAI_FORCE === '1'
 
 // ── Chrome binary detection ──────────────────────────────────────────────────

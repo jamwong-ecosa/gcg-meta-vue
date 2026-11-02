@@ -1,15 +1,18 @@
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
   "[vue]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[tailwindcss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+  "oxc.disableNestedConfig": true,
+  "oxc.fmt.disableNestedConfig": true,
   "tailwindCSS.lint.suggestCanonicalClasses": "ignore",
   "tailwindCSS.experimental.classRegex": [
     "tw`(.*?)`",
@@ -20,8 +23,7 @@
   "files.associations": {
     "*.css": "tailwindcss"
   },
-  "eslint.validate": ["vue", "javascript"],
   "editor.codeActionsOnSave": {
-    "source.fixAll": "always"
+    "source.fixAll.oxc": "explicit"
   }
 }

@@ -1,6 +1,6 @@
 # GCG Meta Vue
 
-Vue 3 + Vite 8 frontend for Gundam Card Game meta analysis.
+Vue 3 + Vite+ (Vite 8) frontend for Gundam Card Game meta analysis.
 
 ## Data
 

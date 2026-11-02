@@ -18,7 +18,7 @@
 
 **Component naming:** Use the namespaced name from the component folder structure (e.g. `TierMobileTierCard`, `CardMetaCardItem`, `ChartDistributionBars`). The plugin auto-imports by folder name + filename with duplicate prefix collapsing.
 
-Vue 3 + Vite 8 + Tailwind CSS 4 frontend.
+Vue 3 + Vite+ (VoidZero toolchain: Vite 8/Rolldown, Oxlint, Oxfmt) + Tailwind CSS 4 frontend. Requires Node ≥ 22.18 (`.nvmrc`).
 
 ## Prerequisites
 
@@ -30,13 +30,14 @@ source ~/.nvm/nvm.sh && nvm use
 
 | Command                     | What it does                                                                     |
 | --------------------------- | -------------------------------------------------------------------------------- |
-| `npm run dev`               | Vite dev server                                                                  |
-| `npm run build`             | Vite production build → `dist/`                                                  |
+| `npm run dev`               | Vite dev server (`vp dev`)                                                       |
+| `npm run build`             | Vite production build → `dist/` (`vp build`)                                     |
 | `npm run preview`           | Preview production build                                                         |
-| `npm run lint`              | ESLint (flat config: `eslint.config.js`)                                         |
-| `npm run lint:fix`          | ESLint auto-fix + Prettier format                                                |
-| `npm run format`            | Prettier (`.prettierrc` + `prettier-plugin-tailwindcss`)                         |
-| `npm run format:check`      | Prettier check-only                                                              |
+| `npm run lint`              | Oxlint (`vp lint`, config in `lint` block of `vite.config.js`)                   |
+| `npm run lint:fix`          | Oxlint auto-fix + Oxfmt format                                                   |
+| `npm run format`            | Oxfmt (`vp fmt`, config in `fmt` block of `vite.config.js`)                      |
+| `npm run format:check`      | Oxfmt check-only                                                                 |
+| `npx vp check`              | Format check + lint + type-aware checks in one pass                              |
 | `npm run data`              | Full pipeline: scrape products → scrape cards → scrape tournaments → build tiers |
 | `npm run scrape:products`   | Scrape product data from `gundam-gcg.com` (→ `data/products.json`)               |
 | `npm run scrape:cards`      | Scrape card database from `gundam-gcg.com` (→ `data/cards.json`)                 |
@@ -63,12 +64,13 @@ source ~/.nvm/nvm.sh && nvm use
 ## Style conventions
 
 - ESM (`"type": "module"`), single quotes, no semicolons
-- Tailwind classes auto-sorted by `prettier-plugin-tailwindcss`
+- Tailwind classes auto-sorted by Oxfmt (`fmt.sortTailwindcss` in `vite.config.js`)
 - Match existing conventions in neighboring files
 - Prefer Tailwind utility classes over custom CSS classes; only create a custom class when a pattern cannot be expressed with utilities alone
 - Whenever Tailwind classes appear outside a `class` attribute (e.g. `exact-active-class`, `active-class`, transition props), wrap them with `tw`` tagged template literal (auto-imported from `src/utils/tw.js`)
 - Vue and vue-router APIs are auto-imported (`ref`, `computed`, `useRouter`, `useRoute`, etc.) — no explicit import needed
-- `curly: ['error', 'all']` — all `if`/`for`/`while` bodies use braces and are multi-line; ESLint `--fix` handles this automatically
+- `curly: ['error', 'all']` — all `if`/`for`/`while` bodies use braces and are multi-line; `npm run lint:fix` handles this automatically
+- Oxlint cannot lint Vue `<template>` blocks — template rules like self-closing tags and PascalCase component names are no longer enforced, so follow them by hand
 
 ## Dark mode
 
