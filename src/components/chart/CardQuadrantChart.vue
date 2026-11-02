@@ -35,7 +35,10 @@
 <script setup>
 import { useStorage, useWindowSize } from '@vueuse/core'
 
-import VueApexCharts from 'vue3-apexcharts'
+// Core build plus only what these charts use, instead of ApexCharts' full default bundle
+import 'apexcharts/bubble'
+import 'apexcharts/features/annotations'
+import VueApexCharts from 'vue3-apexcharts/core'
 
 const props = defineProps({
   cardItems: { type: Array, default: () => [] },
