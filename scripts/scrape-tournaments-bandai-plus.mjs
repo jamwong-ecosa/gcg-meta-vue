@@ -442,6 +442,13 @@ async function scrape() {
       }
     } catch (err) {
       console.log(`    Error: ${err.message}`)
+      // Keep previously saved events instead of overwriting them with an empty series
+      const prev = cached.find(c => c.value === seriesValue)
+      if (prev) {
+        console.log(`    Keeping ${prev.events?.length ?? 0} cached events for this series`)
+        allSeries.push(prev)
+        continue
+      }
     }
 
     allSeries.push(series)
