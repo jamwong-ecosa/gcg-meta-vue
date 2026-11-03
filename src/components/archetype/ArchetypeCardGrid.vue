@@ -31,11 +31,13 @@
         />
         <span
           v-if="item.isLast"
-          class="absolute right-1 -bottom-2 z-10 flex cursor-help items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xxs leading-4 whitespace-nowrap text-sky-700 dark:bg-nalika-bg dark:text-sky-400"
+          class="absolute right-1 -bottom-3 z-10 flex cursor-help items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xs leading-5 whitespace-nowrap text-sky-700 tabular-nums dark:bg-nalika-bg dark:text-sky-400"
           :title="item.group.title"
         >
-          <span class="font-semibold">≡ {{ item.group.pct }}%</span>
+          <!-- Same type and layout as a card's own share / WR line -->
+          <span class="font-bold">≡ {{ item.group.pct }}%</span>
           <span v-if="item.group.liftText" :class="item.group.liftClass">
+            <span class="max-sm:hidden">WR</span>
             {{ item.group.liftText }}
           </span>
         </span>
@@ -89,7 +91,7 @@ function groupInfo(g) {
   const lift = props.groupLiftOf(g)
   return {
     pct: sharePct(props.deckCount ? g.decks / props.deckCount : 0),
-    liftText: liftLabel(lift),
+    liftText: liftValue(lift),
     liftClass: liftTone(lift),
     title: [
       'Same card under different names (same effect and stats)',
