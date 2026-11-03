@@ -538,11 +538,16 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, tot
 
     // Same-effect groups: cards here that play the same under different names.
     // Each member keeps its own stats and gets `effectGroup` with the group's
-    // decks and winning decks (any version), which the UI shows them under.
+    // decks and winning decks (any version), and decks running every version,
+    // which the UI shows them under.
     const membersByKey = {}
     for (const c of allCards) {
       ;(membersByKey[functionKey(c.cardId)] ??= []).push(c.cardId)
     }
+    const deckIdSets = group.deckCardIds.map(
+      s => new Set(s.split('|').map(entry => entry.split(':')[0])),
+    )
+    const decksWithAll = ids => deckIdSets.filter(set => ids.every(id => set.has(id))).length
     for (const c of allCards) {
       const key = functionKey(c.cardId)
       const ids = membersByKey[key]
@@ -551,6 +556,7 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, tot
           id: [...ids].sort((a, b) => a.localeCompare(b)).join('+'),
           decks: group.effectAgg[key] ?? 0,
           wins: winnerInfo?.effectCounts?.[key] ?? 0,
+          allDecks: decksWithAll(ids),
         }
       }
     }

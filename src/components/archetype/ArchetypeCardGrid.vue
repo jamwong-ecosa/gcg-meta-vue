@@ -1,15 +1,20 @@
 <template>
-  <!-- One grid so rows fill the width; the type label sits in the row gap over
-       the first card of each type, so rows without one don't keep an empty band.
+  <!-- One grid so rows fill the width; the type label sits over the first card
+       of each type, and only rows holding one get the room for it on top.
        Cards that play the same (same effect and stats) stay in sort order inside
        one dashed box with one win-rate change; when the group runs past the end
        of a row it breaks, and each row draws its own piece of the box -->
   <div
     ref="gridEl"
-    class="grid grid-cols-4 gap-x-3 gap-y-9 pt-7 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
+    class="grid grid-cols-4 gap-x-3 gap-y-7 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
   >
-    <div v-for="item in items" :key="item.card.cardId" class="relative min-w-0">
-      <div v-if="item.typeLabel" class="absolute inset-x-0 -top-7 flex h-5 min-w-0 items-center">
+    <div
+      v-for="item in items"
+      :key="item.card.cardId"
+      class="relative min-w-0"
+      :class="item.labelRow && tw`pt-9`"
+    >
+      <div v-if="item.typeLabel" class="absolute inset-x-0 top-0 flex h-5 min-w-0 items-center">
         <span
           class="flex shrink-0 items-center gap-1.5 border-l-2 border-gray-400 pl-1.5 text-xs font-bold tracking-wider text-gray-700 uppercase dark:border-gray-500 dark:text-nalika-text"
         >
@@ -22,35 +27,45 @@
         </span>
       </div>
 
-      <template v-if="item.group">
-        <!-- This card's piece of the box: reaches into the gap towards its
-             neighbours, closed on the sides where the group's row segment ends -->
-        <div
-          class="pointer-events-none absolute -inset-y-1 border-y-2 border-dashed border-sky-400/80 sm:-inset-y-1.5 dark:border-sky-500/60"
-          :class="item.boxClass"
+      <div class="relative">
+        <template v-if="item.group">
+          <!-- This card's piece of the box: reaches into the gap towards its
+               neighbours, closed on the sides where the group's row segment ends -->
+          <div
+            class="pointer-events-none absolute -inset-y-1 border-y-2 border-dashed border-sky-400/80 sm:-inset-y-1.5 dark:border-sky-500/60"
+            :class="item.boxClass"
+          />
+          <UiHint
+            v-if="item.isLast"
+            class="absolute right-1 -bottom-3 z-10 flex items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xs leading-5 whitespace-nowrap text-sky-700 tabular-nums dark:bg-nalika-bg dark:text-sky-400"
+            :text="item.group.title"
+          >
+            <!-- Same type and layout as a card's own share / WR line -->
+            <span class="font-bold">≡ {{ item.group.pct }}%</span>
+            <span
+              v-if="item.group.allPct != null"
+              class="text-gray-500 dark:text-nalika-text-muted"
+            >
+              <span class="text-gray-300 dark:text-gray-600">·</span>
+              {{ item.group.allLabel }}
+              <b class="font-bold text-sky-700 dark:text-sky-400">{{ item.group.allPct }}%</b>
+            </span>
+            <span v-if="item.group.liftText" :class="item.group.liftClass">
+              <span class="max-sm:hidden">WR</span>
+              {{ item.group.liftText }}
+            </span>
+          </UiHint>
+        </template>
+        <ArchetypeCardThumb
+          class="w-full"
+          :card="item.card"
+          :lift="removed || item.group ? null : liftOf(item.card)"
+          :is-sig="sigIds.has(item.card.cardId)"
+          :is-new="!removed && isNew(item.card.cardId)"
+          :is-removed="removed"
+          @zoom="emit('zoom', $event)"
         />
-        <UiHint
-          v-if="item.isLast"
-          class="absolute right-1 -bottom-3 z-10 flex items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xs leading-5 whitespace-nowrap text-sky-700 tabular-nums dark:bg-nalika-bg dark:text-sky-400"
-          :text="item.group.title"
-        >
-          <!-- Same type and layout as a card's own share / WR line -->
-          <span class="font-bold">≡ {{ item.group.pct }}%</span>
-          <span v-if="item.group.liftText" :class="item.group.liftClass">
-            <span class="max-sm:hidden">WR</span>
-            {{ item.group.liftText }}
-          </span>
-        </UiHint>
-      </template>
-      <ArchetypeCardThumb
-        class="w-full"
-        :card="item.card"
-        :lift="removed || item.group ? null : liftOf(item.card)"
-        :is-sig="sigIds.has(item.card.cardId)"
-        :is-new="!removed && isNew(item.card.cardId)"
-        :is-removed="removed"
-        @zoom="emit('zoom', $event)"
-      />
+      </div>
     </div>
   </div>
 </template>
@@ -89,15 +104,25 @@ useResizeObserver(gridEl, () => {
 
 function groupInfo(g) {
   const lift = props.groupLiftOf(g)
+  // Every version the archetype plays, which may be more than this grid shows
+  const size = g.id.split('+').length
+  const allLabel = size === 2 ? 'both' : `all ${size}`
+  // Older tier data has no allDecks
+  const hasAll = g.allDecks != null
   return {
     pct: sharePct(props.deckCount ? g.decks / props.deckCount : 0),
+    allLabel,
+    allPct: hasAll ? sharePct(props.deckCount ? g.allDecks / props.deckCount : 0) : null,
     liftText: liftValue(lift),
     liftClass: liftTone(lift),
     title: [
       'Same card under different names (same effect and stats)',
       `In ${g.decks} decks in any version, ${g.wins} of them won`,
+      hasAll && `${g.allDecks} decks run ${size === 2 ? 'both versions' : `all ${size} versions`}`,
       liftNote(lift) || 'WR: win rate of decks running any version vs none',
-    ].join('\n'),
+    ]
+      .filter(Boolean)
+      .join('\n'),
   }
 }
 
@@ -144,11 +169,16 @@ const items = computed(() => {
     }))
   })
   // Every card takes one column, so its column is its position mod the count
+  // and its row the position divided by it
+  const rowOf = i => Math.floor(i / cols.value)
+  const labelRows = new Set(ordered.flatMap((e, i) => (e.typeLabel ? [rowOf(i)] : [])))
   return ordered.map((e, i) => {
+    const labelRow = labelRows.has(rowOf(i))
     if (!e.group) {
-      return e
+      return { ...e, labelRow }
     }
-    return { ...e, boxClass: boxClass({ first: e.first, last: e.isLast, col: i % cols.value }) }
+    const box = boxClass({ first: e.first, last: e.isLast, col: i % cols.value })
+    return { ...e, labelRow, boxClass: box }
   })
 })
 </script>
