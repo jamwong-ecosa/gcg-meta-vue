@@ -13,7 +13,6 @@
         <col class="w-16" />
         <col class="w-16" />
         <col class="w-16" />
-        <col class="w-16" />
         <col class="w-8" />
       </colgroup>
       <thead class="sticky top-(--nav-h) z-1">
@@ -25,7 +24,6 @@
           <th class="px-4 py-2 text-right font-semibold">Use%</th>
           <th class="px-4 py-2 text-right font-semibold">Win/Ev</th>
           <th class="px-4 py-2 text-right font-semibold">Win/Dk</th>
-          <th class="px-4 py-2 text-right font-semibold">T4/Dk</th>
           <th class="px-4 py-2 text-right font-semibold">Score</th>
           <th class="px-4 py-2 text-right font-semibold">Tier</th>
           <th class="rounded-tr-lg px-1 py-2" />
@@ -36,7 +34,7 @@
           <tr
             class="bg-gray-300/40 text-xs font-semibold text-gray-500 dark:bg-white/15 dark:text-gray-400"
           >
-            <td colspan="11" class="px-4 py-1.5">
+            <td colspan="10" class="px-4 py-1.5">
               <div class="flex items-center gap-2">
                 <div class="flex items-center gap-0.5">
                   <div
@@ -98,9 +96,6 @@
             </td>
             <td class="px-4 py-2 text-right">
               <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.t4PerDk }}</div>
             </td>
             <td class="px-4 py-2 text-right">
               <div class="font-mono tabular-nums">{{ row.score }}</div>
@@ -179,9 +174,6 @@
               <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
             </td>
             <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.t4PerDk }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
               <div class="font-mono tabular-nums">{{ row.score }}</div>
             </td>
             <td class="px-4 py-2 text-right">
@@ -209,7 +201,7 @@
           class="cursor-pointer text-center text-xs font-medium text-ruri hover:bg-gray-100/50 dark:hover:bg-white/10"
           @click="$emit('toggleZeroWins')"
         >
-          <td :colspan="11" class="px-4 py-3">
+          <td :colspan="10" class="px-4 py-3">
             0 Wins（{{ zeroWinRows.length }}）{{ showZeroWins ? '−' : '+' }}
           </td>
         </tr>
@@ -257,9 +249,6 @@
             </td>
             <td class="px-4 py-2 text-right">
               <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.t4PerDk }}</div>
             </td>
             <td class="px-4 py-2 text-right">
               <div class="font-mono tabular-nums">{{ row.score }}</div>

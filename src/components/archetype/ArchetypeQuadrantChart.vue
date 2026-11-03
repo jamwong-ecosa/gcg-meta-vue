@@ -71,16 +71,6 @@ const MODES = [
     yIsPercent: true,
   },
   {
-    key: 'usage-t4',
-    label: 'Usage - Top4',
-    xKey: 'usePct',
-    yKey: 't4PerDk',
-    xLabel: 'Usage Rate (%)',
-    yLabel: 'Top 4 / Deck (%)',
-    xIsPercent: true,
-    yIsPercent: true,
-  },
-  {
     key: 'usage-score',
     label: 'Usage - Score',
     xKey: 'usePct',
@@ -104,6 +94,10 @@ const MODES = [
 ]
 
 const chartMode = useStorage('gcg-quadrant-mode', 'usage-winEv')
+// A stored mode may have been removed (e.g. the old Top4/Dk mode)
+if (!MODES.some(m => m.key === chartMode.value)) {
+  chartMode.value = MODES[0].key
+}
 
 const config = computed(() => MODES.find(m => m.key === chartMode.value))
 
@@ -170,7 +164,6 @@ const chartSeries = computed(() => {
         usePct: item.usePct,
         winPerDk: item.winPerDk,
         winPerEv: item.winPerEv,
-        t4PerDk: item.t4PerDk,
         decks: item.decks,
         wins: item.wins,
         top4: item.top4,
@@ -267,7 +260,6 @@ const chartOptions = computed(() => {
           Use: ${d.meta.usePct}<br/>
           Win/Dk: ${d.meta.winPerDk}<br/>
           Win/Ev: ${d.meta.winPerEv}<br/>
-          Top4/Dk: ${d.meta.t4PerDk}<br/>
           Score: ${d.meta.score}<br/>
           Decks: ${d.meta.decks}<br/>
           Wins: ${d.meta.wins}<br/>
