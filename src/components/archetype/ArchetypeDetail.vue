@@ -1,158 +1,138 @@
 <template>
   <div>
-    <!-- Type counts -->
-    <div class="mb-4 flex gap-3 text-xs text-gray-500 dark:text-nalika-text-muted">
-      <span v-if="unitCards.length">
-        UNIT:
-        <span class="font-mono font-bold text-gray-700 dark:text-nalika-text">
-          {{ unitCards.length }}
+    <!-- Average deck: copies per type across all of this archetype's decks -->
+    <div
+      class="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-nalika-text-muted"
+    >
+      <span class="font-semibold tracking-wider text-gray-400 uppercase">Avg deck</span>
+      <span v-for="t in avgDeck" :key="t.type">
+        <span class="font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text">
+          {{ t.copies }}
         </span>
-      </span>
-      <span v-if="pilotCards.length">
-        PILOT:
-        <span class="font-mono font-bold text-gray-700 dark:text-nalika-text">
-          {{ pilotCards.length }}
-        </span>
-      </span>
-      <span v-if="commandCards.length">
-        COMMAND:
-        <span class="font-mono font-bold text-gray-700 dark:text-nalika-text">
-          {{ commandCards.length }}
-        </span>
-      </span>
-      <span v-if="baseCards.length">
-        BASE:
-        <span class="font-mono font-bold text-gray-700 dark:text-nalika-text">
-          {{ baseCards.length }}
-        </span>
+        {{ t.label }}
       </span>
     </div>
 
-    <!-- Card grid: Units + Pilots/Commands/Bases -->
-    <div class="grid gap-4 md:grid-cols-2">
-      <!-- Left: Units -->
-      <div class="space-y-4">
-        <div>
-          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
-            Unit: Core
-          </h4>
-          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <ArchetypeCardItem
-              v-for="card in coreUnits"
-              :key="card.cardId"
-              :card="card"
-              :is-sig="sigCardIds.has(card.cardId)"
-              :is-new="isNewCard(card.cardId)"
-            />
-          </div>
-          <p v-if="!coreUnits.length" class="text-xs text-gray-400 dark:text-gray-500">No cards</p>
-        </div>
-        <div class="border-t border-gray-200 pt-3 dark:border-gray-700">
-          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
-            Unit: Other
-          </h4>
-          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <ArchetypeCardItem
-              v-for="card in otherUnits"
-              :key="card.cardId"
-              :card="card"
-              :is-sig="sigCardIds.has(card.cardId)"
-              :is-new="isNewCard(card.cardId)"
-            />
-          </div>
-          <p v-if="!otherUnits.length" class="text-xs text-gray-400 dark:text-gray-500">No cards</p>
-        </div>
-      </div>
-
-      <!-- Right: Pilots, Commands, Bases -->
-      <div class="space-y-4">
-        <div v-if="pilotCards.length">
-          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
-            Pilot
-          </h4>
-          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <ArchetypeCardItem
-              v-for="card in pilotCards"
-              :key="card.cardId"
-              :card="card"
-              :is-sig="sigCardIds.has(card.cardId)"
-              :is-new="isNewCard(card.cardId)"
-            />
-          </div>
-        </div>
-        <div v-if="commandCards.length" class="border-t border-gray-200 pt-3 dark:border-gray-700">
-          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
-            Command
-          </h4>
-          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <ArchetypeCardItem
-              v-for="card in commandCards"
-              :key="card.cardId"
-              :card="card"
-              :is-sig="sigCardIds.has(card.cardId)"
-              :is-new="isNewCard(card.cardId)"
-            />
-          </div>
-        </div>
-        <div v-if="baseCards.length" class="border-t border-gray-200 pt-3 dark:border-gray-700">
-          <h4 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
-            Base
-          </h4>
-          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <ArchetypeCardItem
-              v-for="card in baseCards"
-              :key="card.cardId"
-              :card="card"
-              :is-sig="sigCardIds.has(card.cardId)"
-              :is-new="isNewCard(card.cardId)"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Feature badges -->
-    <div v-if="archetype.featureBadges?.length" class="mt-4 flex flex-wrap gap-1.5">
-      <span
-        v-for="[feat, count] in archetype.featureBadges"
-        :key="feat"
-        class="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+    <!-- Staples and flex share one layout: compact cards in one width-filling grid
+         per section. Hover a card for its numbers, click to enlarge -->
+    <section v-for="sec in cardSections" :key="sec.key" class="mb-5">
+      <h4 class="mb-1 flex flex-wrap items-baseline gap-x-2">
+        <span class="text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
+          {{ sec.title }}
+        </span>
+        <span class="text-xs text-gray-400 dark:text-gray-500">{{ sec.subtitle }}</span>
+      </h4>
+      <!-- Legend, once, under the first heading -->
+      <p
+        v-if="sec === cardSections[0]"
+        class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xxs text-gray-400 dark:text-gray-500"
       >
-        <span class="mr-1 text-xxs">{{ feat.replace(/[〔〕]/g, '') }}:</span>
-        <span class="font-mono text-gray-500 dark:text-gray-400">{{ count }}</span>
-      </span>
+        <span>
+          <b class="font-semibold text-gray-500 dark:text-gray-400">×</b>
+          copies per deck that runs it
+        </span>
+        <span>
+          <b class="font-semibold text-gray-500 dark:text-gray-400">WR ±</b>
+          win rate with the card vs without, in points; grey when it could be chance, hidden when
+          either side has under 20 decks
+        </span>
+        <span class="flex items-center gap-1">
+          <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">★ SIG</span>
+          signature card
+        </span>
+        <span class="flex items-center gap-1">
+          <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">TECH</span>
+          top tech pick
+        </span>
+        <span v-if="prevCardIds?.size" class="flex items-center gap-1">
+          <span class="rounded-sm bg-green-600 px-1 font-bold text-white">NEW</span>
+          new this series
+        </span>
+        <span class="flex items-center gap-1">
+          <span
+            class="rounded-sm border-2 border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
+          >
+            ≡ %
+          </span>
+          same card, other name: decks running either, and one WR for both
+        </span>
+      </p>
+      <div v-else class="mb-3" />
+      <ArchetypeCardGrid
+        :cards="sec.cards"
+        :lift-of="winLift"
+        :group-lift-of="groupWinLift"
+        :deck-count="archetype.deckCount"
+        :sig-ids="sigCardIds"
+        :is-new="isNewCard"
+        @zoom="enlargedCardId = $event"
+      />
+    </section>
+
+    <CardImageOverlay v-model="enlargedCardId" :z-index="1100" />
+
+    <!-- Deck curve: copies per average deck at each level and cost, by type -->
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+      <ArchetypeDeckCurve
+        title="Level"
+        field="level"
+        :cards="allCards"
+        :deck-count="archetype.deckCount"
+      />
+      <ArchetypeDeckCurve
+        title="Cost"
+        field="cost"
+        :cards="allCards"
+        :deck-count="archetype.deckCount"
+      />
     </div>
 
-    <!-- Level & Cost Distribution -->
-    <div class="mt-4 grid gap-4 md:grid-cols-2">
-      <ChartDistributionBars title="Level Distribution" :items="levelDist" color="#005caf" />
-      <ChartDistributionBars title="Cost Distribution" :items="costDist" color="#0b346e" />
+    <!-- Traits: copies per average deck carrying each trait -->
+    <div v-if="traits.length" class="mt-4">
+      <h4 class="mb-1.5 flex flex-wrap items-baseline gap-x-2">
+        <span
+          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        >
+          Traits
+        </span>
+        <span class="text-xxs text-gray-400 dark:text-gray-500">
+          cards with the trait, among those in {{ FEATURED_MIN * 100 }}%+ of decks
+        </span>
+      </h4>
+      <div class="flex flex-wrap gap-1.5">
+        <span
+          v-for="t in traits"
+          :key="t.name"
+          class="flex items-baseline gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+          :title="t.title"
+        >
+          {{ t.name }}
+          <b class="font-mono text-gray-900 tabular-nums dark:text-nalika-text">
+            {{ t.names.length }}
+          </b>
+        </span>
+      </div>
     </div>
 
     <!-- Other Cards (collapsible) -->
     <UiCollapsibleSection
-      v-if="filteredByType.length"
+      v-if="otherCards.length"
       :show="showOther"
-      :count="archetype.filteredCards.length"
+      :count="otherCards.length"
       title="Other Cards"
       content-class="space-y-4"
       root-class="mt-6"
       @toggle="showOther = !showOther"
     >
-      <div v-for="[type, cards] in filteredByType" :key="type">
-        <h5 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
-          {{ typeLabel[type] || type }}
-        </h5>
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-8">
-          <ArchetypeCardItem
-            v-for="card in cards"
-            :key="card.cardId"
-            :card="card"
-            :is-sig="sigCardIds.has(card.cardId)"
-            :is-new="isNewCard(card.cardId)"
-          />
-        </div>
-      </div>
+      <ArchetypeCardGrid
+        :cards="otherCards"
+        :lift-of="winLift"
+        :group-lift-of="groupWinLift"
+        :deck-count="archetype.deckCount"
+        :sig-ids="sigCardIds"
+        :is-new="isNewCard"
+        @zoom="enlargedCardId = $event"
+      />
     </UiCollapsibleSection>
 
     <!-- Removed Cards (collapsible) -->
@@ -164,14 +144,7 @@
       content-class="space-y-4"
       @toggle="showRemoved = !showRemoved"
     >
-      <div v-for="[type, cards] in removedGrouped" :key="type">
-        <h5 class="mb-2 text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
-          {{ typeLabel[type] || type }}
-        </h5>
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-8">
-          <ArchetypeCardItem v-for="card in cards" :key="card.cardId" :card="card" is-removed />
-        </div>
-      </div>
+      <ArchetypeCardGrid :cards="removedCards" removed @zoom="enlargedCardId = $event" />
     </UiCollapsibleSection>
 
     <!-- Decks (hidden, toggle) -->
@@ -268,36 +241,115 @@ const deckPreviews = computed(() =>
   }),
 )
 
-const unitCards = computed(() => props.archetype.cards.filter(c => c.type === 'UNIT'))
-const coreUnits = computed(() => unitCards.value.filter(c => (c.inclusionRate ?? 0) >= 0.75))
-const otherUnits = computed(() => unitCards.value.filter(c => (c.inclusionRate ?? 0) < 0.75))
-const pilotCards = computed(() => props.archetype.cards.filter(c => c.type === 'PILOT'))
-const commandCards = computed(() => props.archetype.cards.filter(c => c.type === 'COMMAND'))
-const baseCards = computed(() => props.archetype.cards.filter(c => c.type === 'BASE'))
+const enlargedCardId = ref(null)
 
-const filteredCards = computed(() => props.archetype.filteredCards || [])
+// Featured cards are those in more than FEATURED_MIN of decks (see build-tiers);
+// at STAPLE_MIN and up a card is a given, so it only gets a thumbnail
+const FEATURED_MIN = 0.1
+const STAPLE_MIN = 0.9
+const TYPES = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
 
-const filteredByType = computed(() => {
-  const byType = {}
-  for (const card of filteredCards.value) {
-    if (!byType[card.type]) {
-      byType[card.type] = []
+// Same-effect versions (effectGroup, see build-tiers) stay together: each card
+// is placed by its group's most-played member, so a 5% version shows beside its
+// 85% twin instead of under Other Cards
+const allCards = computed(() => [
+  ...(props.archetype.cards ?? []),
+  ...(props.archetype.filteredCards ?? []),
+])
+const featuredIds = computed(() => new Set((props.archetype.cards ?? []).map(c => c.cardId)))
+const groupLeader = computed(() => {
+  const map = new Map()
+  for (const c of allCards.value) {
+    const id = c.effectGroup?.id
+    if (id && (c.inclusionRate ?? 0) > (map.get(id)?.inclusionRate ?? -1)) {
+      map.set(id, c)
     }
-    byType[card.type].push(card)
   }
-  return Object.entries(byType)
+  return map
+})
+const anchorOf = card => groupLeader.value.get(card.effectGroup?.id) ?? card
+const featured = computed(() =>
+  allCards.value.filter(c => featuredIds.value.has(anchorOf(c).cardId)),
+)
+const otherCards = computed(() =>
+  allCards.value.filter(c => !featuredIds.value.has(anchorOf(c).cardId)),
+)
+const staples = computed(() =>
+  featured.value.filter(c => (anchorOf(c).inclusionRate ?? 0) >= STAPLE_MIN),
+)
+const flex = computed(() =>
+  featured.value.filter(c => (anchorOf(c).inclusionRate ?? 0) < STAPLE_MIN),
+)
+const cardSections = computed(() =>
+  [
+    {
+      key: 'staples',
+      title: 'Staples',
+      subtitle: `in ${STAPLE_MIN * 100}%+ of decks · ${staples.value.length} cards`,
+      cards: staples.value,
+    },
+    {
+      key: 'flex',
+      title: 'Flex & tech',
+      subtitle: `in ${FEATURED_MIN * 100}–${STAPLE_MIN * 100}% of decks · ${flex.value.length} cards`,
+      cards: flex.value,
+    },
+  ].filter(sec => sec.cards.length),
+)
+
+const avgDeck = computed(() => {
+  const decks = props.archetype.deckCount || 1
+  const all = [...(props.archetype.cards ?? []), ...(props.archetype.filteredCards ?? [])]
+  return TYPES.map(type => ({
+    type,
+    label: typeLabel[type],
+    copies: Math.round(
+      all.filter(c => c.type === type).reduce((n, c) => n + (c.totalQty ?? 0), 0) / decks,
+    ),
+  })).filter(t => t.copies > 0)
 })
 
-const removedGrouped = computed(() => {
-  const byType = {}
-  for (const card of props.removedCards) {
-    if (!byType[card.type]) {
-      byType[card.type] = []
-    }
-    byType[card.type].push(card)
+// Win rate of this archetype's decks with the card minus those without, in
+// points, as { value, significant } or { value: null, note }.
+// - Both sides are shrunk toward the archetype's rate as if they had
+//   LIFT_PRIOR_DECKS more decks, so small samples lean toward 0.
+// - Under LIFT_MIN_SIDE decks on either side there's nothing to compare (a 96%
+//   staple's "without" side is a few odd builds), so no value, just a note.
+// - `significant`: the raw gap is beyond chance (two-proportion z-test, 95%);
+//   otherwise the UI greys it out.
+// Null when the archetype has too few wins to compare at all.
+const LIFT_PRIOR_DECKS = 10
+const LIFT_MIN_WINS = 3
+const LIFT_MIN_SIDE = 20
+const LIFT_Z = 1.96
+function liftFor(withDecks, withWins) {
+  const decks = props.archetype.deckCount ?? 0
+  const wins = props.archetype.winnerDeckCount ?? 0
+  const withoutDecks = decks - withDecks
+  if (wins < LIFT_MIN_WINS || !withDecks) {
+    return null
   }
-  return Object.entries(byType)
-})
+  if (withoutDecks === 0) {
+    return { value: null, note: 'Every deck runs it: nothing to compare' }
+  }
+  if (withoutDecks < LIFT_MIN_SIDE) {
+    return { value: null, note: `Only ${withoutDecks} decks without it: too few to compare` }
+  }
+  if (withDecks < LIFT_MIN_SIDE) {
+    return { value: null, note: `Only ${withDecks} decks with it: too few to compare` }
+  }
+  const base = wins / decks
+  const withoutWins = wins - withWins
+  const rate = (w, d) => (w + LIFT_PRIOR_DECKS * base) / (d + LIFT_PRIOR_DECKS)
+  const value = +((rate(withWins, withDecks) - rate(withoutWins, withoutDecks)) * 100).toFixed(1)
+  const se = Math.sqrt(base * (1 - base) * (1 / withDecks + 1 / withoutDecks))
+  const gap = withWins / withDecks - withoutWins / withoutDecks
+  return { value, significant: se > 0 && Math.abs(gap) / se >= LIFT_Z }
+}
+const winLift = card => liftFor(card.decksIncluded ?? 0, card.winnerDeckCount ?? 0)
+// For a same-effect group: decks running any version vs decks running none.
+// Per card it would compare against decks running the other version instead.
+const groupWinLift = g => liftFor(g.decks, g.wins)
 
 const typeLabel = {
   UNIT: 'Unit',
@@ -306,39 +358,31 @@ const typeLabel = {
   BASE: 'Base',
 }
 
-const levelDist = computed(() => {
-  const cards = props.archetype.cards ?? []
-  const counts = {}
-  const qtySums = {}
-  for (const card of cards) {
-    const lv = parseInt(card.level)
-    if (lv >= 1 && lv <= 9) {
-      counts[lv] = (counts[lv] || 0) + 1
-      qtySums[lv] = (qtySums[lv] || 0) + (card.avgQty || 0)
+// Traits by how many different cards carry them, among the featured cards
+// (staples and flex); ties go to the trait with more copies per deck
+const traits = computed(() => {
+  const decks = props.archetype.deckCount || 1
+  const map = new Map()
+  for (const c of featured.value) {
+    const names = (c.features ?? '')
+      .split(/\s+/)
+      .map(f => f.replace(/[〔〕]/g, ''))
+      .filter(f => f && f !== '-')
+    for (const name of new Set(names)) {
+      const t = map.get(name) ?? { name, copies: 0, names: [] }
+      t.copies += (c.totalQty ?? 0) / decks
+      t.names.push(c.name)
+      map.set(name, t)
     }
   }
-  return Array.from({ length: 9 }, (_, i) => ({
-    label: i + 1,
-    count: counts[i + 1] || 0,
-    sumAvgQty: Math.round(qtySums[i + 1] || 0),
-  }))
-})
-
-const costDist = computed(() => {
-  const cards = props.archetype.cards ?? []
-  const counts = {}
-  const qtySums = {}
-  for (const card of cards) {
-    const c = parseInt(card.cost)
-    if (c >= 1 && c <= 9) {
-      counts[c] = (counts[c] || 0) + 1
-      qtySums[c] = (qtySums[c] || 0) + (card.avgQty || 0)
-    }
-  }
-  return Array.from({ length: 9 }, (_, i) => ({
-    label: i + 1,
-    count: counts[i + 1] || 0,
-    sumAvgQty: Math.round(qtySums[i + 1] || 0),
-  }))
+  return [...map.values()]
+    .sort((a, b) => b.names.length - a.names.length || b.copies - a.copies)
+    .map(t => ({
+      ...t,
+      title: [
+        `${t.name}: ${t.names.length} card${t.names.length === 1 ? '' : 's'}, ${t.copies.toFixed(1)} copies per deck`,
+        ...t.names,
+      ].join('\n'),
+    }))
 })
 </script>

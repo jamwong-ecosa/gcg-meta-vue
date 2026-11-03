@@ -64,6 +64,7 @@ function createCardLookups(cardsRaw) {
       features: card.features,
       rarity: card.rarity,
       effect: card.effect,
+      link: card.link,
     }
     vanillaGroup[key] = card.effect === '-'
   }
@@ -82,12 +83,27 @@ function createCardLookups(cardsRaw) {
       effect: '?',
     }
 
-  return { lookup, vanillaGroup }
+  // Cards that play the same: same type, colour, level, cost, AP, HP, effect and
+  // pilot link (GD01-008 ガンタンク / GD05-015 M1アストレイ); cards with no effect
+  // only need the same type, level, cost, AP and HP. Name and traits don't count.
+  // Cards keep their own stats; the key groups them in the UI and keeps a
+  // version of a common effect from looking like a rare tech pick.
+  const functionKey = cardId => {
+    const c = cardMap[cardId]
+    if (!c) {
+      return cardId
+    }
+    return c.effect === '-'
+      ? ['vanilla', c.type, c.level, c.cost, c.ap, c.hp].join('|')
+      : [c.type, c.color, c.level, c.cost, c.ap, c.hp, c.effect, c.link].join('|')
+  }
+
+  return { lookup, vanillaGroup, functionKey }
 }
 
 const cardsRaw = loadJSON('data/cards.json')
 const baseCards = cardsRaw.filter(c => !c.id.includes('_p'))
-const { lookup, vanillaGroup } = createCardLookups(baseCards)
+const { lookup, vanillaGroup, functionKey } = createCardLookups(baseCards)
 
 // Write lean card metadata for the meta page
 function writeCardMeta() {
@@ -180,6 +196,13 @@ function accumulateCardAgg(cardAgg, deck) {
   }
 }
 
+// Decks running each effect in any version (functionKey); a deck counts once
+function accumulateEffectAgg(effectAgg, deck) {
+  for (const key of new Set(deck.map(card => functionKey(card.cardId)))) {
+    effectAgg[key] = (effectAgg[key] ?? 0) + 1
+  }
+}
+
 // Serializes a deck to "ID:qty|ID:qty" for deck preview dedup comparison
 function serializeDeckCards(deck) {
   const cardQty = deck.reduce((acc, card) => {
@@ -217,6 +240,7 @@ function buildArchetypeMaps(allPlayers, winners, top4Players) {
       sigCardIds,
       count: 0,
       cardAgg: {},
+      effectAgg: {},
       deckCardIds: [],
       deckUrls: [],
       deckWinnerFlags: [],
@@ -226,6 +250,7 @@ function buildArchetypeMaps(allPlayers, winners, top4Players) {
       entry.count++
       entry.deckCardIds.push(serializeDeckCards(player.deck))
       accumulateCardAgg(entry.cardAgg, player.deck)
+      accumulateEffectAgg(entry.effectAgg, player.deck)
       entry.deckWinnerFlags.push(isWinner(player))
       entry.deckUrls.push(player.deckUrl || player.eventUrl || '')
       entry.deckMeta.push(deckMeta(player))
@@ -234,12 +259,13 @@ function buildArchetypeMaps(allPlayers, winners, top4Players) {
   })
 
   const winnersByCombo = groupByCombo(winners, {
-    init: () => ({ count: 0, cardCounts: {} }),
+    init: () => ({ count: 0, cardCounts: {}, effectCounts: {} }),
     accumulate: (entry, winner) => {
       entry.count++
       for (const card of winner.deck) {
         entry.cardCounts[card.cardId] = (entry.cardCounts[card.cardId] ?? 0) + 1
       }
+      accumulateEffectAgg(entry.effectCounts, winner.deck)
       return entry
     },
   })
@@ -414,12 +440,21 @@ function formatTierRows(series) {
 
 // Rewards cards with moderate inclusion (15–40%) and strong winner association (≥2 wins).
 // Higher win/deck ratio with lower inclusion = more "techy".
-function calculateTechScore(wins, decks, totalArchetypeDecks, isVanilla = false) {
+// `effectDecks`: decks running this card's effect in any version. A rarely-used
+// version of a common effect (11% M1アストレイ beside 85% ガンタンク) isn't a
+// tech choice, so the upper bound checks the effect, not just this printing.
+function calculateTechScore(
+  wins,
+  decks,
+  totalArchetypeDecks,
+  isVanilla = false,
+  effectDecks = decks,
+) {
   if (isVanilla) {
     return 0
   }
   const inclusionRate = decks / totalArchetypeDecks
-  if (inclusionRate > 0.4 || inclusionRate <= 0.1) {
+  if (effectDecks / totalArchetypeDecks > 0.4 || inclusionRate <= 0.1) {
     return 0
   }
   if (wins < 2) {
@@ -428,48 +463,14 @@ function calculateTechScore(wins, decks, totalArchetypeDecks, isVanilla = false)
   return Math.round((wins / decks) * (1 - inclusionRate) * 1000) / 1000
 }
 
-// Two-pass featured-card selection:
-//   1) Guarantee type coverage (4 each of UNIT/PILOT/COMMAND/BASE)
-//   2) Fill remaining slots with cards above 10% inclusion, capped at 8 per COMMAND, 4 per other non-UNIT type
+// Featured cards: everything in more than 10% of the archetype's decks. Rarer
+// cards go to "Other Cards" — no per-type quota, so a pilot in 3 decks isn't
+// featured beside the staples just to fill a slot.
+const FEATURED_MIN_INCLUSION = 0.1
 function selectTopCards(allCards) {
-  const perType = {}
-  for (const card of allCards) {
-    perType[card.type] ??= []
-    perType[card.type].push(card)
-  }
-
-  const selectedIds = new Set()
-  const selected = []
-
-  // First pass: guarantee minimum cards per type regardless of inclusion rate
-  for (const type of TYPE_PICK_ORDER) {
-    const sliceSize = 4
-    for (const card of (perType[type] || []).slice(0, sliceSize)) {
-      selected.push(card)
-      selectedIds.add(card.cardId)
-    }
-  }
-
-  // Second pass: fill with high-inclusion cards up to 4 per non-UNIT type
-  // up to 8 for COMMAND
-  for (const card of allCards) {
-    if (!TYPE_PICK_ORDER.includes(card.type) || selectedIds.has(card.cardId)) {
-      continue
-    }
-    if (card.type !== 'UNIT') {
-      const typeCount = selected.filter(tc => tc.type === card.type).length
-      if (typeCount >= (card.type === 'COMMAND' ? 8 : 4)) {
-        continue
-      }
-    }
-    if (card.inclusionRate <= 0.1) {
-      continue
-    }
-    selected.push(card)
-    selectedIds.add(card.cardId)
-  }
-
-  return selected
+  return allCards.filter(
+    c => TYPE_PICK_ORDER.includes(c.type) && c.inclusionRate > FEATURED_MIN_INCLUSION,
+  )
 }
 
 // Counts feature keyword frequency across featured cards for UI badges
@@ -529,9 +530,29 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, tot
           cardData.decksIncluded,
           count,
           isVanilla,
+          group.effectAgg[functionKey(cardId)] ?? cardData.decksIncluded,
         ),
       }
     })
+
+    // Same-effect groups: cards here that play the same under different names.
+    // Each member keeps its own stats and gets `effectGroup` with the group's
+    // decks and winning decks (any version), which the UI shows them under.
+    const membersByKey = {}
+    for (const c of allCards) {
+      ;(membersByKey[functionKey(c.cardId)] ??= []).push(c.cardId)
+    }
+    for (const c of allCards) {
+      const key = functionKey(c.cardId)
+      const ids = membersByKey[key]
+      if (ids.length > 1) {
+        c.effectGroup = {
+          id: [...ids].sort((a, b) => a.localeCompare(b)).join('+'),
+          decks: group.effectAgg[key] ?? 0,
+          wins: winnerInfo?.effectCounts?.[key] ?? 0,
+        }
+      }
+    }
 
     // Top 3 tech cards get the winner ribbon in the UI
     const topTechCards = allCards
