@@ -213,7 +213,7 @@ const timeline = computed(() => {
         archIndex,
         label: series.label,
         eventMaxDate: series.eventMaxDate,
-        rank: archIndex + 1,
+        rank: arch.rank ?? archIndex + 1,
         rankTotal: series.archetypes.length,
         deckCount: arch.deckCount,
         winnerDeckCount: arch.winnerDeckCount,

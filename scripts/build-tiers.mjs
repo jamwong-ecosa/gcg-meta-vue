@@ -261,6 +261,7 @@ function getSeriesEventDateRange(series) {
 const MIN_EVENTS_FOR_TIERS = 50
 // Aim for at least this many archetypes per tier when choosing the tier count
 const ARCHETYPES_PER_TIER = 4
+const TIER_LABELS = ['S', 'A', 'B', 'C', 'D']
 
 // Wins per placed deck, shrunk toward the series average as if every archetype
 // had this many extra placed decks at the average rate
@@ -275,16 +276,15 @@ function smoothedConversion(wins, archDecks, avgConversion) {
 // is itself a performance measure, and it is stable from one series to the next.
 // 9th–16th places count like 1st–8th: dropping them barely changed tiers and
 // backtested slightly worse. How well an archetype converts placements into wins
-// barely carries over, so it only nudges the result: placement share ×
-// √(smoothed conversion ÷ series average). Converting at 60% of average costs
-// ~20%; 130% gains ~14%. Strength is the square root of that, because shares are
+// carries over less, but placing without winning should still cost: placement
+// share × (smoothed conversion ÷ series average). Converting at 60% of average
+// costs 40%; 15 placed decks with no wins keep 40%. Strength is the square root
+// of that, because shares are
 // heavily skewed (a few archetypes hold most placements) and the root spreads the
 // long tail for tiering and display.
 function archetypeStrength({ wins, archDecks, totalDecks, avgConversion }) {
   const placementShare = (archDecks / totalDecks) * 100
-  const conversionFactor = Math.sqrt(
-    smoothedConversion(wins, archDecks, avgConversion) / avgConversion,
-  )
+  const conversionFactor = smoothedConversion(wins, archDecks, avgConversion) / avgConversion
   return Math.sqrt(placementShare * conversionFactor)
 }
 
@@ -295,9 +295,14 @@ function strengthIndex(strength, maxStrength) {
 
 // ckmeans clustering on strength → tier cutoffs (S → D).
 // Falls back to equal-sized buckets if ckmeans fails (e.g. all scores identical).
-function computeTierThresholds(strengths) {
+// The tier count comes from every archetype in the series (`archetypeCount`), so
+// leaving some out of the clustering doesn't drop tiers.
+function computeTierThresholds(strengths, archetypeCount = strengths.length) {
   const sorted = [...strengths].sort((a, b) => a - b)
-  const k = Math.max(1, Math.min(5, Math.floor(sorted.length / ARCHETYPES_PER_TIER)))
+  const k = Math.max(
+    1,
+    Math.min(5, sorted.length, Math.floor(archetypeCount / ARCHETYPES_PER_TIER)),
+  )
   let clusters
   try {
     clusters = ss.ckmeans(sorted, k)
@@ -310,13 +315,20 @@ function computeTierThresholds(strengths) {
   }
 
   const clusterMins = clusters.map(cluster => cluster[0]).reverse()
-  const tierLabels = ['S', 'A', 'B', 'C', 'D']
 
   return clusterMins.map((val, idx) => ({
-    id: tierLabels[idx].toLowerCase(),
+    id: TIER_LABELS[idx].toLowerCase(),
     min: val,
-    label: tierLabels[idx],
+    label: TIER_LABELS[idx],
   }))
+}
+
+// Tier order, then strength: the order of the tier list, and so the rank
+function compareTierRank(a, b) {
+  return (
+    TIER_LABELS.indexOf(a.tierLabel) - TIER_LABELS.indexOf(b.tierLabel) ||
+    b.tierStrength - a.tierStrength
+  )
 }
 
 // Highest threshold the strength meets; falls back to lowest tier
@@ -333,11 +345,11 @@ function colorDots(colors) {
 
 // Formats archetype data into display rows for tiers.json.
 // Converts ASCII parens in combo keys to fullwidth for Japanese display.
-// Sorted by strength descending, which also orders the tiers.
+// Sorted by tier, then strength (see compareTierRank).
 function formatTierRows(series) {
   return series.archetypes
     .filter(a => a.deckCount > 0)
-    .sort((a, b) => b.tierStrength - a.tierStrength)
+    .sort(compareTierRank)
     .map(a => {
       const useRate = (a.deckCount / series.totalDecks) * 100
       const winRateEvent = (a.winnerDeckCount / series.totalEvents) * 100
@@ -769,11 +781,30 @@ function processSeries(series) {
   }
   const strengths = seriesProcessed.archetypes.map(a => a.tierStrength)
   const maxStrength = Math.max(0, ...strengths)
-  seriesProcessed.tierThresholds = computeTierThresholds(strengths)
+  // Cluster only archetypes that won: 0-win ones go to D regardless (below), and
+  // their placement-only strengths would otherwise pull the cutoffs around
+  const winnerStrengths = seriesProcessed.archetypes
+    .filter(a => a.winnerDeckCount > 0)
+    .map(a => a.tierStrength)
+  seriesProcessed.tierThresholds = computeTierThresholds(
+    winnerStrengths.length ? winnerStrengths : strengths,
+    strengths.length,
+  )
   for (const a of seriesProcessed.archetypes) {
     a.tierScore = strengthIndex(a.tierStrength, maxStrength)
-    a.tierLabel = getDeckTier(a.tierStrength, seriesProcessed.tierThresholds).label
+    // No wins means no tier above D, even in small series whose clustering
+    // only produces S–B: placing alone isn't enough to call a deck good
+    a.tierLabel =
+      a.winnerDeckCount === 0
+        ? 'D'
+        : getDeckTier(a.tierStrength, seriesProcessed.tierThresholds).label
   }
+  const rankOf = new Map(
+    seriesProcessed.archetypes
+      .filter(a => a.deckCount > 0)
+      .sort(compareTierRank)
+      .map((a, i) => [a.combo, i + 1]),
+  )
 
   // Mark dark horses: under-the-radar archetypes (< 2% of placed decks) that convert
   // placements into wins well above the series average. The smoothing keeps a
@@ -809,6 +840,7 @@ function processSeries(series) {
       percent: a.percent,
       winnerDeckCount: a.winnerDeckCount,
       tier: a.tierLabel,
+      rank: rankOf.get(a.combo) ?? null,
       darkHorse: a.darkHorse ?? false,
     })),
   }
