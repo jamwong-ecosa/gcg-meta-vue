@@ -293,7 +293,7 @@ function strengthIndex(strength, maxStrength) {
   return maxStrength > 0 ? Math.round((strength / maxStrength) * 100) : 0
 }
 
-// ckmeans clustering on strength → tier cutoffs (T1 → T3).
+// ckmeans clustering on strength → tier cutoffs (S → D).
 // Falls back to equal-sized buckets if ckmeans fails (e.g. all scores identical).
 function computeTierThresholds(strengths) {
   const sorted = [...strengths].sort((a, b) => a - b)
@@ -310,12 +310,12 @@ function computeTierThresholds(strengths) {
   }
 
   const clusterMins = clusters.map(cluster => cluster[0]).reverse()
-  const allTierIds = ['1', '1-5', '2', '2-5', '3']
+  const tierLabels = ['S', 'A', 'B', 'C', 'D']
 
   return clusterMins.map((val, idx) => ({
-    id: allTierIds[idx],
+    id: tierLabels[idx].toLowerCase(),
     min: val,
-    label: `T${allTierIds[idx].replace('-', '.')}`,
+    label: tierLabels[idx],
   }))
 }
 

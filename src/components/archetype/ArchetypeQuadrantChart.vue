@@ -44,7 +44,7 @@ const props = defineProps({
   items: { type: Array, default: () => [] },
 })
 
-const TIER_ORDER = ['T1', 'T1.5', 'T2', 'T2.5', 'T3', '--']
+const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
 const TIER_COLORS = ['#fca5a5', '#fdba74', '#fbbf24', '#86efac', '#93c5fd', '#d1d5db']
 const TIER_COLORS_DARK = ['#c53030', '#dd6b20', '#d69e2e', '#2f855a', '#2b6cb0', '#4b5563']
 

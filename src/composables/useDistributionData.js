@@ -1,4 +1,4 @@
-const TIER_ORDER = ['T1', 'T1.5', 'T2', 'T2.5', 'T3', '--']
+const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
 
 export function useDistributionData({
   currentSeries,
