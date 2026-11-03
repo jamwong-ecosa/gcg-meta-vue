@@ -155,7 +155,7 @@
       title="Decks"
       @toggle="showDeckUrls = !showDeckUrls"
     >
-      <ArchetypeDeckList :decks="deckPreviews" />
+      <ArchetypeDeckList :decks="deckPreviews" :sig-ids="sigCardIds" :is-new="isNewCard" />
     </UiCollapsibleSection>
   </div>
 </template>

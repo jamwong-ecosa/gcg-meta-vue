@@ -32,23 +32,34 @@
             gap: `${GAP}px`,
           }"
         >
-          <div
-            v-for="card in sortedCards"
-            :key="card.cardId"
-            class="relative aspect-[3/4] overflow-hidden rounded-md"
-            :class="{ 'outline-2 outline-akabeni': isCoreUnit(card) }"
-          >
-            <img
-              :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
-              :alt="card.name"
-              class="w-full object-cover"
-            />
-            <span
-              class="absolute top-0 right-0 rounded-bl-md bg-black/65 px-1.5 leading-tight font-bold text-white select-none"
-              :class="pos.cardW >= 80 ? 'text-xl' : 'text-sm'"
-            >
-              {{ card.qty }}
-            </span>
+          <div v-for="card in sortedCards" :key="card.cardId" class="relative">
+            <span v-if="card.ring" class="absolute -inset-[3px] rounded-lg" :class="card.ring" />
+            <div class="relative aspect-[3/4] overflow-hidden rounded-md">
+              <img
+                :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
+                :alt="card.name"
+                class="w-full object-cover"
+              />
+              <span
+                class="absolute top-0 right-0 rounded-bl-md bg-black/65 px-1.5 leading-tight font-bold text-white select-none"
+                :class="pos.cardW >= 80 ? 'text-xl' : 'text-sm'"
+              >
+                {{ card.qty }}
+              </span>
+              <div
+                v-if="card.badges.length"
+                class="absolute bottom-0 left-0 flex max-w-full flex-wrap-reverse items-end gap-px"
+              >
+                <span
+                  v-for="b in card.badges"
+                  :key="b.key"
+                  class="rounded-r px-1 text-xxs leading-tight font-bold"
+                  :class="b.class"
+                >
+                  {{ b.text }}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -105,24 +116,39 @@
                 </button>
               </div>
             </div>
-            <div class="grid grid-cols-4 gap-1.5">
-              <div
-                v-for="card in sortedCards"
-                :key="card.cardId"
-                class="relative aspect-[3/4] overflow-hidden rounded-lg"
-                :class="{ 'outline-2 outline-akabeni': isCoreUnit(card) }"
-              >
-                <img
-                  :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
-                  :alt="card.name"
-                  class="w-full object-cover"
-                  loading="lazy"
-                />
+            <div class="grid grid-cols-4 gap-2">
+              <div v-for="card in sortedCards" :key="card.cardId" class="relative">
                 <span
-                  class="absolute top-0 right-0 rounded-bl-lg bg-black/60 px-1.5 text-2xl leading-tight font-bold text-white select-none"
-                >
-                  {{ card.qty }}
-                </span>
+                  v-if="card.ring"
+                  class="absolute -inset-[3px] rounded-[10px]"
+                  :class="card.ring"
+                />
+                <div class="relative aspect-[3/4] overflow-hidden rounded-lg">
+                  <img
+                    :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
+                    :alt="card.name"
+                    class="w-full object-cover"
+                    loading="lazy"
+                  />
+                  <span
+                    class="absolute top-0 right-0 rounded-bl-lg bg-black/60 px-1.5 text-2xl leading-tight font-bold text-white select-none"
+                  >
+                    {{ card.qty }}
+                  </span>
+                  <div
+                    v-if="card.badges.length"
+                    class="absolute bottom-0 left-0 flex max-w-full flex-wrap-reverse items-end gap-px"
+                  >
+                    <span
+                      v-for="b in card.badges"
+                      :key="b.key"
+                      class="rounded-r px-1 text-xxs leading-tight font-bold"
+                      :class="b.class"
+                    >
+                      {{ b.text }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -139,6 +165,8 @@ const props = defineProps({
   cards: { type: Array, required: true },
   url: { type: String, default: '' },
   label: { type: String, default: '' },
+  // (card) => { sig, tech, new, flex }: tags drawn like on the archetype cards
+  tagsOf: { type: Function, default: null },
 })
 
 const open = ref(false)
@@ -151,21 +179,26 @@ const TYPE_ORDER = { UNIT: 0, PILOT: 1, COMMAND: 2, BASE: 3 }
 const TYPE_SHORT = { UNIT: 'U', PILOT: 'P', COMMAND: 'C', BASE: 'B' }
 
 const sortedCards = computed(() =>
-  [...props.cards].sort((a, b) => {
-    const ta = TYPE_ORDER[a.type] ?? 99
-    const tb = TYPE_ORDER[b.type] ?? 99
-    if (ta !== tb) {
-      return ta - tb
-    }
-    if (a.color !== b.color) {
-      return (a.color ?? '').localeCompare(b.color ?? '')
-    }
-    const levelDiff = (b.level ?? 0) - (a.level ?? 0)
-    if (levelDiff !== 0) {
-      return levelDiff
-    }
-    return (b.cost ?? 0) - (a.cost ?? 0)
-  }),
+  [...props.cards]
+    .map(card => {
+      const tags = props.tagsOf?.(card) ?? {}
+      return { ...card, badges: tagBadges(tags), ring: tagRingClass(tags) }
+    })
+    .sort((a, b) => {
+      const ta = TYPE_ORDER[a.type] ?? 99
+      const tb = TYPE_ORDER[b.type] ?? 99
+      if (ta !== tb) {
+        return ta - tb
+      }
+      if (a.color !== b.color) {
+        return (a.color ?? '').localeCompare(b.color ?? '')
+      }
+      const levelDiff = (b.level ?? 0) - (a.level ?? 0)
+      if (levelDiff !== 0) {
+        return levelDiff
+      }
+      return (b.cost ?? 0) - (a.cost ?? 0)
+    }),
 )
 
 // "50 cards · U 24 · P 10 · C 12 · B 4" (copies, not distinct cards)
@@ -181,10 +214,6 @@ const summary = computed(() => {
     .map(t => `${TYPE_SHORT[t]} ${byType[t]}`)
   return [`${total} cards`, ...parts].join(' · ')
 })
-
-function isCoreUnit(card) {
-  return card.type === 'UNIT' && (card.inclusionRate ?? 0) >= 0.75
-}
 
 const MAX_COLS = 8
 const MAX_CARD_W = 100

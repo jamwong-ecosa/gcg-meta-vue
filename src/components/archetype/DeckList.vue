@@ -16,8 +16,8 @@
     </div>
 
     <p v-if="showTech" class="mb-2 text-xxs text-gray-400 dark:text-gray-500">
-      Tech: cards in that deck that fewer than {{ TECH_SHARE * 100 }}% of these decks play. Hover a
-      deck to see its list; tap on phones.
+      Flex: cards in that deck that {{ TECH_SHARE * 100 }}–{{ STAPLE_SHARE * 100 }}% of these decks
+      play. Tech: under {{ TECH_SHARE * 100 }}%. Hover a deck to see its list; tap on phones.
     </p>
 
     <!-- Columns fill top to bottom so a sorted list reads down, not across -->
@@ -27,7 +27,7 @@
         :key="d.idx"
         class="break-inside-avoid border-b border-gray-500/8 dark:border-white/5"
       >
-        <UiDeckPopover :cards="d.cards" :url="d.url" :label="d.popoverLabel">
+        <UiDeckPopover :cards="d.cards" :url="d.url" :label="d.popoverLabel" :tags-of="tagsOf">
           <component
             :is="d.url ? 'a' : 'div'"
             :href="d.url || undefined"
@@ -57,8 +57,17 @@
               {{ d.shop || 'Unknown event' }}
             </span>
             <span
-              v-if="showTech && d.tech"
-              class="shrink-0 rounded bg-sora/10 px-1.5 font-mono text-xxs text-ruri tabular-nums dark:bg-sora/15 dark:text-sora"
+              v-if="showTech"
+              :class="{ invisible: !d.flex }"
+              class="w-14 shrink-0 rounded bg-gray-100 px-1.5 text-center font-mono text-xxs text-gray-500 tabular-nums dark:bg-white/5 dark:text-gray-400"
+              :title="d.flexNames.join('\n')"
+            >
+              {{ d.flex }} flex
+            </span>
+            <span
+              v-if="showTech"
+              :class="{ invisible: !d.tech }"
+              class="w-14 shrink-0 rounded bg-sora/10 px-1.5 text-center font-mono text-xxs text-ruri tabular-nums dark:bg-sora/15 dark:text-sora"
               :title="d.techNames.join('\n')"
             >
               +{{ d.tech }} tech
@@ -93,10 +102,16 @@ const props = defineProps({
   decks: { type: Array, required: true },
   // Off for mixed lists (unassigned decks), where "uncommon" means nothing
   showTech: { type: Boolean, default: true },
+  // Signature cards of the archetype and (cardId) => played this series only,
+  // for the tags in the deck popover
+  sigIds: { type: Set, default: () => new Set() },
+  isNew: { type: Function, default: () => false },
 })
 
 const PAGE = 20
 const TECH_SHARE = 0.25
+// Below this share a card is flex rather than a staple (as on the archetype cards)
+const STAPLE_SHARE = 0.9
 
 // Open on Winners; a list without any (0-win archetypes) opens on All
 const defaultFilter = () => (props.decks.some(d => d.isWinner) ? 'winners' : 'all')
@@ -126,6 +141,18 @@ const cardShare = computed(() => {
   return new Map([...counts].map(([id, k]) => [id, k / n]))
 })
 
+// Tags for a card in a deck's popover, matching the archetype cards. TECH and
+// FLEX here mean the same as the chips in the list
+function tagsOf(card) {
+  const share = cardShare.value.get(card.cardId) ?? 0
+  return {
+    sig: props.sigIds.has(card.cardId),
+    tech: props.showTech && share < TECH_SHARE,
+    new: props.isNew(card.cardId),
+    flex: props.showTech && share >= TECH_SHARE && share < STAPLE_SHARE,
+  }
+}
+
 function placeLabel(place) {
   if (!place) {
     return '—'
@@ -138,8 +165,10 @@ function placeLabel(place) {
 
 const rows = computed(() =>
   props.decks.map(d => {
-    const techCards = props.showTech
-      ? d.cards.filter(c => (cardShare.value.get(c.cardId) ?? 0) < TECH_SHARE)
+    const shareOf = c => cardShare.value.get(c.cardId) ?? 0
+    const techCards = props.showTech ? d.cards.filter(c => shareOf(c) < TECH_SHARE) : []
+    const flexCards = props.showTech
+      ? d.cards.filter(c => shareOf(c) >= TECH_SHARE && shareOf(c) < STAPLE_SHARE)
       : []
     const placeText = placeLabel(d.place)
     // Event names often end with the date ("…定員64名2026/11/2"); the date has its own column
@@ -150,6 +179,8 @@ const rows = computed(() =>
       placeLabel: d.isWinner && d.place === 1 ? '🏆 1st' : placeText,
       tech: techCards.length,
       techNames: techCards.map(c => c.name),
+      flex: flexCards.length,
+      flexNames: flexCards.map(c => c.name),
       popoverLabel: [placeText, d.date, shop].filter(Boolean).join(' · '),
     }
   }),

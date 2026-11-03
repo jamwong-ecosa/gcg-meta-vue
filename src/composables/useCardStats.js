@@ -93,3 +93,38 @@ export function sharePct(rate) {
   const pct = (rate ?? 0) * 100
   return pct > 0 && pct < 1 ? pct.toFixed(1) : String(Math.round(pct))
 }
+
+// Card tags, styled the same on archetype cards and in deck popovers:
+// `tags` is { sig, tech, new, flex } (booleans); `titles` overrides the tooltips
+const TAG_BADGES = [
+  { key: 'sig', text: '★ SIG', title: 'Signature card', class: tw`bg-black/75 text-yellow-300` },
+  {
+    key: 'tech',
+    text: 'TECH',
+    title: 'Top tech pick: uncommon, but its decks win well',
+    class: tw`bg-yellow-400 text-yellow-950`,
+  },
+  {
+    key: 'new',
+    text: 'NEW',
+    title: 'Not played by this archetype last series',
+    class: tw`bg-green-600 text-white`,
+  },
+  { key: 'flex', text: 'FLEX', title: 'Flex slot', class: tw`bg-sky-600 text-white` },
+]
+
+export function tagBadges(tags, titles = {}) {
+  return TAG_BADGES.filter(b => tags[b.key]).map(b => ({ ...b, title: titles[b.key] ?? b.title }))
+}
+
+// Ring drawn behind the card: TECH yellow, NEW green, both split on the diagonal
+// (yellow top-left, green bottom-right); '' for neither
+export function tagRingClass(tags) {
+  if (tags.tech && tags.new) {
+    return tw`bg-[linear-gradient(135deg,var(--color-yellow-400)_50%,var(--color-green-500)_50%)]`
+  }
+  if (tags.tech) {
+    return tw`bg-yellow-400 dark:bg-yellow-500`
+  }
+  return tags.new ? tw`bg-green-500` : ''
+}

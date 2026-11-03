@@ -563,13 +563,15 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, tot
       card.inWinner = true
     }
 
-    // Sort: type order, then inclusion rate, rarity, card ID, color
+    // Sort: type order, then inclusion rate, signature cards, rarity, card ID, color
     const rarityScore = rarity =>
       rarity?.startsWith('LR') ? 100 : rarity?.startsWith('R') ? 50 : 0
+    const sigSet = new Set(group.sigCardIds ?? [])
     allCards.sort(
       (a, b) =>
         (TYPE_ORDER[a.type.toLowerCase()] ?? 9) - (TYPE_ORDER[b.type.toLowerCase()] ?? 9) ||
         b.inclusionRate - a.inclusionRate ||
+        sigSet.has(b.cardId) - sigSet.has(a.cardId) ||
         rarityScore(b.rarity) - rarityScore(a.rarity) ||
         a.cardId.localeCompare(b.cardId) ||
         a.color.localeCompare(b.color),

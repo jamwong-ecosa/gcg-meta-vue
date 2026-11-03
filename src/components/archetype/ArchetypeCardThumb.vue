@@ -86,40 +86,12 @@ const { copies, liftText, liftClass, statsTitle } = useCardStats(
   () => props.card,
   () => props.lift,
 )
-const badges = computed(() =>
-  [
-    props.isSig && {
-      key: 'sig',
-      text: '★ SIG',
-      title: 'Signature card',
-      class: tw`bg-black/75 text-yellow-300`,
-    },
-    !props.isRemoved &&
-      props.card.inWinner && {
-        key: 'tech',
-        text: 'TECH',
-        title: 'Top tech pick: uncommon, but its decks win well',
-        class: tw`bg-yellow-400 text-yellow-950`,
-      },
-    !props.isRemoved &&
-      props.isNew && {
-        key: 'new',
-        text: 'NEW',
-        title: 'Not played by this archetype last series',
-        class: tw`bg-green-600 text-white`,
-      },
-  ].filter(Boolean),
-)
-const ringClass = computed(() => {
-  const tech = !props.isRemoved && props.card.inWinner
-  const isNewCard = !props.isRemoved && props.isNew
-  if (tech && isNewCard) {
-    return tw`bg-[linear-gradient(135deg,var(--color-yellow-400)_50%,var(--color-green-500)_50%)]`
-  }
-  if (tech) {
-    return tw`bg-yellow-400 dark:bg-yellow-500`
-  }
-  return isNewCard ? tw`bg-green-500` : ''
-})
+const tags = computed(() => ({
+  sig: props.isSig,
+  tech: !props.isRemoved && props.card.inWinner,
+  new: !props.isRemoved && props.isNew,
+}))
+const badges = computed(() => tagBadges(tags.value))
+const ringClass = computed(() => tagRingClass(tags.value))
 const barClass = computed(() => inclusionBarClass(props.card.inclusionRate))
 </script>
