@@ -90,9 +90,12 @@ writeCardMeta()
 
 // ── Deck analysis ────────────────────────────────────────────────────────────
 
-// Sorted unique colors in a deck, used for combo key prefix
+// Sorted unique colors in a deck, used for combo key prefix. Plain code-unit
+// order (not localeCompare) so existing archetype keys stay the same.
 function getDeckColors(deck) {
-  return [...new Set(deck.map(card => lookup(card.cardId).color))].sort()
+  return [...new Set(deck.map(card => lookup(card.cardId).color))].sort((a, b) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  )
 }
 
 // Identifies 1–2 signature LR UNIT cards per archetype.

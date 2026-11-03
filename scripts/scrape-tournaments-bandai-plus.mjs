@@ -171,7 +171,7 @@ function extractPlayersAndDecksJS() {
 
 // ── Concurrency helper ───────────────────────────────────────────────────────
 async function mapConcurrenly(items, fn, limit) {
-  const results = new Array(items.length)
+  const results = Array.from({ length: items.length })
   let nextIdx = 0
   async function worker() {
     while (nextIdx < items.length) {
