@@ -41,14 +41,23 @@
             :content="item.group.hint"
           >
             <!-- Same type and layout as a card's own share / WR line -->
-            <span class="font-bold">≡ {{ item.group.pct }}%</span>
+            <!-- Number first, then what it counts: "≡ 100% any · 4% all" -->
+            <span>
+              <b class="font-bold">≡ {{ item.group.pct }}%</b>
+              <span
+                v-if="item.group.allPct != null"
+                class="ml-1 text-gray-500 dark:text-nalika-text-muted"
+              >
+                any
+              </span>
+            </span>
             <span
               v-if="item.group.allPct != null"
               class="text-gray-500 dark:text-nalika-text-muted"
             >
               <span class="text-gray-300 dark:text-gray-600">·</span>
-              {{ item.group.allLabel }}
               <b class="font-bold text-sky-700 dark:text-sky-400">{{ item.group.allPct }}%</b>
+              all
             </span>
             <span v-if="item.group.liftText" :class="item.group.liftClass">
               <span class="mr-1.5 text-gray-300 dark:text-gray-600">·</span>
@@ -107,12 +116,10 @@ function groupInfo(g) {
   const lift = props.groupLiftOf(g)
   // Every version the archetype plays, which may be more than this grid shows
   const size = g.id.split('+').length
-  const allLabel = size === 2 ? 'both' : `all ${size}`
   // Older tier data has no allDecks
   const hasAll = g.allDecks != null
   return {
     pct: sharePct(props.deckCount ? g.decks / props.deckCount : 0),
-    allLabel,
     allPct: hasAll ? sharePct(props.deckCount ? g.allDecks / props.deckCount : 0) : null,
     liftText: liftValue(lift),
     liftClass: liftTone(lift),
@@ -123,7 +130,7 @@ function groupInfo(g) {
         { label: 'Decks', value: g.decks, note: 'any version' },
         { label: 'Wins', value: g.wins, note: 'events won' },
         hasAll && {
-          label: allLabel,
+          label: 'All',
           value: g.allDecks,
           note: size === 2 ? 'decks run both versions' : `decks run all ${size} versions`,
         },

@@ -55,7 +55,7 @@
         </UiHint>
         <UiHint
           class="flex items-center gap-1"
-          text="Same card under another name: decks running either, and one WR for both"
+          text="Same card under another name. “any”: decks running any version; “all”: decks running every version. One WR for the group"
         >
           <span
             class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
