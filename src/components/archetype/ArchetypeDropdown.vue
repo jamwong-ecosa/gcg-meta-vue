@@ -11,12 +11,12 @@
           <div
             v-for="h in selectedColors"
             :key="h"
-            class="h-2.5 w-2.5 shrink-0 rounded-full md:h-3 md:w-3"
+            class="h-2.5 w-2.5 shrink-0 rounded-full md:h-2.5 md:w-2.5"
             :style="{ background: h }"
           />
 
           <div
-            class="ml-1 text-sm leading-snug font-bold text-sumi sm:text-base md:text-2xl dark:text-nalika-text"
+            class="ml-1 text-sm leading-snug font-bold text-sumi sm:text-base md:text-lg dark:text-nalika-text"
           >
             <template v-for="(seg, si) in selectedSegments" :key="si">
               <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
