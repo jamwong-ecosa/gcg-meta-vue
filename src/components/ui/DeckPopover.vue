@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative"
+    class="deck-popover-trigger relative"
     @mouseenter="onEnter"
     @mouseleave="onLeave"
     @contextmenu.prevent
@@ -8,44 +8,51 @@
   >
     <slot />
 
-    <!-- Desktop hover popover -->
-    <div
-      v-if="open && cards.length"
-      class="absolute z-1000 rounded-lg border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-600 dark:bg-gray-800"
-      :class="[
-        anchor === 'top' ? 'bottom-full mb-1' : 'top-full mt-1',
-        hPos === 'right' ? 'right-0' : 'left-0',
-      ]"
-      :style="{ minWidth: popoverWidth + 'px' }"
-    >
-      <div class="flex flex-col gap-2">
+    <!-- Desktop hover popover: teleported and fixed so a scrolling modal or an
+         overflow-hidden parent can't clip it; sized to fit the viewport -->
+    <Teleport to="body">
+      <div
+        v-if="open && cards.length"
+        class="pointer-events-none fixed z-1200 rounded-lg border border-gray-200 bg-white p-2.5 shadow-lg dark:border-gray-600 dark:bg-gray-800"
+        :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"
+      >
         <div
-          v-for="(row, ri) in cardRows"
-          :key="ri"
-          class="grid gap-2"
-          :style="{ gridTemplateColumns: `repeat(${maxCols}, 100px)` }"
+          class="mb-2 flex items-baseline justify-between gap-4"
+          :style="{ height: `${HEADER_H - 8}px` }"
+        >
+          <span v-if="label" class="truncate text-xs font-medium text-gray-600 dark:text-gray-300">
+            {{ label }}
+          </span>
+          <span class="shrink-0 font-mono text-xxs text-gray-400 tabular-nums">{{ summary }}</span>
+        </div>
+        <div
+          class="grid"
+          :style="{
+            gridTemplateColumns: `repeat(${pos.cols}, ${pos.cardW}px)`,
+            gap: `${GAP}px`,
+          }"
         >
           <div
-            v-for="card in row"
+            v-for="card in sortedCards"
             :key="card.cardId"
-            class="relative aspect-[3/4] overflow-hidden rounded-lg"
+            class="relative aspect-[3/4] overflow-hidden rounded-md"
             :class="{ 'outline-2 outline-akabeni': isCoreUnit(card) }"
           >
             <img
-              :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=100&auto=format,compress`"
+              :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
               :alt="card.name"
               class="w-full object-cover"
-              loading="lazy"
             />
             <span
-              class="absolute top-0 right-0 rounded-bl-lg bg-black/60 px-1.5 text-2xl leading-tight font-bold text-white select-none"
+              class="absolute top-0 right-0 rounded-bl-md bg-black/65 px-1.5 leading-tight font-bold text-white select-none"
+              :class="pos.cardW >= 80 ? 'text-xl' : 'text-sm'"
             >
               {{ card.qty }}
             </span>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <!-- Mobile fullscreen overlay -->
     <Teleport to="body">
@@ -57,15 +64,23 @@
         >
           <div
             class="mx-2 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-2 shadow-2xl select-none dark:bg-gray-800"
+            @click.stop
           >
-            <div class="mb-2 flex items-center justify-between gap-4">
-              <span v-if="label" class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                {{ label }}
-              </span>
-              <div class="flex gap-4">
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div
+                  v-if="label"
+                  class="truncate text-xs font-medium text-gray-600 dark:text-gray-300"
+                >
+                  {{ label }}
+                </div>
+                <div class="font-mono text-xxs text-gray-400 tabular-nums">{{ summary }}</div>
+              </div>
+              <div class="flex shrink-0 gap-2">
                 <button
-                  class="flex h-7 w-14 items-center justify-center rounded-lg bg-ruri/10 text-ruri dark:bg-sora/15"
-                  aria-label="Open in new tab"
+                  v-if="url"
+                  class="flex h-8 w-12 items-center justify-center rounded-lg bg-ruri/10 text-ruri dark:bg-sora/15 dark:text-sora"
+                  aria-label="Open deck page in new tab"
                   @click="openUrl"
                 >
                   <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -78,7 +93,7 @@
                   </svg>
                 </button>
                 <button
-                  class="flex h-7 w-14 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                  class="flex h-8 w-12 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
                   aria-label="Close"
                   @click="closeMobile"
                 >
@@ -118,6 +133,8 @@
 </template>
 
 <script setup>
+import { onKeyStroke, useEventListener } from '@vueuse/core'
+
 const props = defineProps({
   cards: { type: Array, required: true },
   url: { type: String, default: '' },
@@ -126,13 +143,12 @@ const props = defineProps({
 
 const open = ref(false)
 const mobileOpen = ref(false)
-const anchor = ref('bottom')
-const hPos = ref('left')
-const popoverWidth = ref(0)
+const pos = ref({ top: 0, left: 0, cols: 8, cardW: 100 })
 
 let showTimer = null
 
 const TYPE_ORDER = { UNIT: 0, PILOT: 1, COMMAND: 2, BASE: 3 }
+const TYPE_SHORT = { UNIT: 'U', PILOT: 'P', COMMAND: 'C', BASE: 'B' }
 
 const sortedCards = computed(() =>
   [...props.cards].sort((a, b) => {
@@ -152,41 +168,65 @@ const sortedCards = computed(() =>
   }),
 )
 
+// "50 cards · U 24 · P 10 · C 12 · B 4" (copies, not distinct cards)
+const summary = computed(() => {
+  const byType = {}
+  let total = 0
+  for (const c of props.cards) {
+    byType[c.type] = (byType[c.type] ?? 0) + c.qty
+    total += c.qty
+  }
+  const parts = Object.keys(TYPE_ORDER)
+    .filter(t => byType[t])
+    .map(t => `${TYPE_SHORT[t]} ${byType[t]}`)
+  return [`${total} cards`, ...parts].join(' · ')
+})
+
 function isCoreUnit(card) {
   return card.type === 'UNIT' && (card.inclusionRate ?? 0) >= 0.75
 }
 
 const MAX_COLS = 8
-const CARD_W = 100
-const GAP = 8
-const PAD = 20
-const BORDER = 2
-const ROW_H = 133
+const MAX_CARD_W = 100
+const MIN_CARD_W = 56
+const GAP = 6
+const PAD = 10
+const BORDER = 1
+const HEADER_H = 24
+const MARGIN = 16
+const OFFSET = 4
 
-// Max grid columns, recalculated on hover to fit viewport
-const cols = ref(MAX_COLS)
-
-const cardRows = computed(() => {
-  const sc = sortedCards.value
-  const n = sc.length
-  if (n <= MAX_COLS) {
-    return [sc]
+function popoverSize(cols, rows, cardW) {
+  return {
+    width: cols * cardW + (cols - 1) * GAP + 2 * (PAD + BORDER),
+    height: HEADER_H + (rows * (cardW * 4)) / 3 + (rows - 1) * GAP + 2 * (PAD + BORDER),
   }
-  const perRow = Math.min(cols.value, Math.ceil(n / 3))
-  const rows = []
-  let remaining = n
-  for (let i = 0; i < 3; i++) {
-    const size = Math.min(perRow, remaining)
-    if (size <= 0) {
-      break
-    }
-    rows.push(sc.slice(n - remaining, n - remaining + size))
-    remaining -= size
-  }
-  return rows
-})
+}
 
-const maxCols = computed(() => cardRows.value.reduce((m, r) => Math.max(m, r.length), 0))
+// Every card is shown: columns fill the viewport width, rows grow as needed, and
+// cards shrink when the rows wouldn't fit above or below the trigger
+function place(rect) {
+  const n = props.cards.length
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const fitCols = Math.floor((vw - 2 * MARGIN - 2 * (PAD + BORDER) + GAP) / (MAX_CARD_W + GAP))
+  let cols = Math.max(2, Math.min(MAX_COLS, fitCols, n))
+  const rows = Math.ceil(n / cols)
+  cols = Math.ceil(n / rows)
+
+  const below = vh - rect.bottom - OFFSET - MARGIN
+  const above = rect.top - OFFSET - MARGIN
+  const full = popoverSize(cols, rows, MAX_CARD_W).height
+  const side = full <= below || below >= above ? 'below' : 'above'
+  const space = side === 'below' ? below : above
+  const fitW = ((space - HEADER_H - (rows - 1) * GAP - 2 * (PAD + BORDER)) / rows) * (3 / 4)
+  const cardW = Math.floor(Math.max(MIN_CARD_W, Math.min(MAX_CARD_W, fitW)))
+  const { width, height } = popoverSize(cols, rows, cardW)
+
+  const left = Math.min(Math.max(rect.left, MARGIN), vw - width - MARGIN)
+  const top = side === 'below' ? rect.bottom + OFFSET : rect.top - OFFSET - height
+  pos.value = { top: Math.max(MARGIN, top), left: Math.max(MARGIN, left), cols, cardW }
+}
 
 function closeMobile() {
   mobileOpen.value = false
@@ -199,21 +239,13 @@ function openUrl() {
   mobileOpen.value = false
 }
 
+// On phones a tap anywhere on the trigger opens the overlay instead of the link
 function onClick(event) {
-  if (window.innerWidth >= 768 || !event.target.closest('a')) {
+  if (window.innerWidth >= 768 || !props.cards.length) {
     return
   }
   event.preventDefault()
   mobileOpen.value = true
-}
-
-// Max columns that fit viewport with 16px margin each side
-function calcFitCols() {
-  const maxAvail = window.innerWidth - 32
-  return Math.max(
-    2,
-    Math.min(MAX_COLS, Math.floor((maxAvail - PAD - BORDER + GAP) / (CARD_W + GAP))),
-  )
 }
 
 function onEnter(event) {
@@ -223,44 +255,28 @@ function onEnter(event) {
   const el = event.currentTarget
   clearTimeout(showTimer)
   showTimer = setTimeout(() => {
-    const viewportCols = calcFitCols()
-    cols.value = viewportCols
-    const rect = el.getBoundingClientRect()
-    const n = props.cards.length
-    const perRow = n <= viewportCols ? n : Math.min(viewportCols, Math.ceil(n / 3))
-    const rows = n <= viewportCols ? 1 : 3
-    const estimatedWidth = perRow * CARD_W + (perRow - 1) * GAP + PAD + BORDER
-    const estimatedHeight = rows * ROW_H + PAD + BORDER
-    popoverWidth.value = estimatedWidth
-
-    const spaceBelow = window.innerHeight - rect.bottom
-    const spaceAbove = rect.top
-    if (estimatedHeight <= spaceBelow) {
-      anchor.value = 'bottom'
-    } else if (estimatedHeight <= spaceAbove) {
-      anchor.value = 'top'
-    } else {
-      anchor.value = spaceBelow >= spaceAbove ? 'bottom' : 'top'
-    }
-
-    const canLeft = rect.left + estimatedWidth <= window.innerWidth
-    const canRight = rect.right >= estimatedWidth
-    if (!canLeft && canRight) {
-      hPos.value = 'right'
-    } else if (!canRight && canLeft) {
-      hPos.value = 'left'
-    } else if (!canLeft && !canRight) {
-      hPos.value = rect.left + rect.right < window.innerWidth ? 'left' : 'right'
-    }
-
+    place(el.getBoundingClientRect())
     open.value = true
-  }, 300)
+  }, 250)
 }
 
 function onLeave() {
   clearTimeout(showTimer)
   open.value = false
 }
+
+// Fixed coordinates go stale once the page or a modal scrolls. Listen only while
+// open: a deck list renders hundreds of these
+useEventListener(() => (open.value ? window : null), 'scroll', onLeave, {
+  capture: true,
+  passive: true,
+})
+onKeyStroke('Escape', () => {
+  if (open.value || mobileOpen.value) {
+    onLeave()
+    closeMobile()
+  }
+})
 
 onUnmounted(() => clearTimeout(showTimer))
 </script>
@@ -275,8 +291,9 @@ onUnmounted(() => clearTimeout(showTimer))
   opacity: 0;
 }
 
-.relative a {
+/* No long-press link callout on phones; still lets the list scroll */
+.deck-popover-trigger :deep(a) {
   -webkit-touch-callout: none;
-  touch-action: none;
+  touch-action: manipulation;
 }
 </style>

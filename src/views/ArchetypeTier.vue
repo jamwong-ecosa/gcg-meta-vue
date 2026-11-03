@@ -172,64 +172,7 @@
       title="Unassigned Decks"
       @toggle="showUnassigned = !showUnassigned"
     >
-      <div
-        class="mb-1 text-sm font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
-      >
-        Winner Decks
-      </div>
-      <div class="flex flex-wrap gap-x-5 gap-y-2.5">
-        <UiDeckPopover
-          v-for="(d, i) in unassignedDeckPreviews.filter(d => d.isWinner)"
-          :key="d.url"
-          :cards="d.cards"
-          :url="d.url"
-          :label="'Deck ' + (i + 1)"
-          class="flex items-center gap-2"
-        >
-          <a
-            :href="d.url"
-            target="_blank"
-            rel="noopener"
-            class="text-xs break-all text-ruri hover:underline dark:text-sora/65"
-          >
-            Deck {{ i + 1 }}
-          </a>
-          <span
-            class="rounded bg-yellow-100 px-1 text-xxs font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300/70"
-          >
-            W
-          </span>
-        </UiDeckPopover>
-      </div>
-      <div
-        v-if="!unassignedDeckPreviews.filter(d => d.isWinner).length"
-        class="text-xs text-gray-400 dark:text-gray-500"
-      >
-        No winner decks
-      </div>
-      <div
-        class="mt-3 mb-1 text-sm font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
-      >
-        Other Decks
-      </div>
-      <div class="flex flex-wrap gap-x-5 gap-y-2.5">
-        <UiDeckPopover
-          v-for="(d, i) in unassignedDeckPreviews.filter(d => !d.isWinner)"
-          :key="d.url"
-          :cards="d.cards"
-          :url="d.url"
-          :label="'Deck ' + (i + 1)"
-        >
-          <a
-            :href="d.url"
-            target="_blank"
-            rel="noopener"
-            class="text-xs break-all text-ruri hover:underline dark:text-sora/65"
-          >
-            Deck {{ i + 1 }}
-          </a>
-        </UiDeckPopover>
-      </div>
+      <ArchetypeDeckList :decks="unassignedDeckPreviews" :show-tech="false" />
     </UiCollapsibleSection>
   </div>
 </template>
@@ -313,7 +256,16 @@ const unassignedDeckPreviews = computed(() => {
           inclusionRate: 0,
         }
       })
-    return { url, idx: i, isWinner: ud.deckWinnerFlags?.[i] ?? false, cards }
+    const meta = ud.deckMeta?.[i] ?? {}
+    return {
+      url,
+      idx: i,
+      isWinner: ud.deckWinnerFlags?.[i] ?? false,
+      cards,
+      date: meta.date ?? null,
+      shop: meta.shop ?? '',
+      place: meta.place ?? null,
+    }
   })
 })
 

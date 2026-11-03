@@ -182,66 +182,7 @@
       title="Decks"
       @toggle="showDeckUrls = !showDeckUrls"
     >
-      <div
-        class="mb-1 text-sm font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
-      >
-        Winner Decks
-      </div>
-      <div class="flex flex-wrap gap-x-5 gap-y-2.5">
-        <UiDeckPopover
-          v-for="(d, i) in winnerDeckPreviews"
-          :key="i"
-          :cards="d.cards"
-          :url="d.url"
-          :label="'Deck ' + (i + 1)"
-          class="flex items-center gap-2"
-        >
-          <a
-            v-if="d.url"
-            :href="d.url"
-            target="_blank"
-            rel="noopener"
-            class="text-xs break-all text-ruri hover:underline dark:text-sora/65"
-          >
-            Deck {{ i + 1 }}
-          </a>
-          <span v-else class="text-xs text-gray-500 dark:text-gray-400">Deck {{ i + 1 }}</span>
-          <span
-            class="rounded bg-yellow-100 px-1 text-xxs font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300/70"
-          >
-            W
-          </span>
-        </UiDeckPopover>
-      </div>
-      <div v-if="!winnerDeckPreviews.length" class="text-xs text-gray-400 dark:text-gray-500">
-        No winner decks
-      </div>
-      <div
-        class="mt-3 mb-1 text-sm font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500"
-      >
-        Other Decks
-      </div>
-
-      <div class="flex flex-wrap gap-x-5 gap-y-2.5">
-        <UiDeckPopover
-          v-for="(d, i) in otherDeckPreviews"
-          :key="i"
-          :cards="d.cards"
-          :url="d.url"
-          :label="'Deck ' + (i + 1)"
-        >
-          <a
-            v-if="d.url"
-            :href="d.url"
-            target="_blank"
-            rel="noopener"
-            class="text-xs break-all text-ruri hover:underline dark:text-sora/65"
-          >
-            Deck {{ i + 1 }}
-          </a>
-          <span v-else class="text-xs text-gray-500 dark:text-gray-400">Deck {{ i + 1 }}</span>
-        </UiDeckPopover>
-      </div>
+      <ArchetypeDeckList :decks="deckPreviews" />
     </UiCollapsibleSection>
   </div>
 </template>
@@ -314,7 +255,16 @@ const deckPreviews = computed(() =>
           inclusionRate: info?.inclusionRate ?? 0,
         }
       })
-    return { url, idx: i, isWinner: props.archetype.deckWinnerFlags?.[i] ?? false, cards }
+    const meta = props.archetype.deckMeta?.[i] ?? {}
+    return {
+      url,
+      idx: i,
+      isWinner: props.archetype.deckWinnerFlags?.[i] ?? false,
+      cards,
+      date: meta.date ?? null,
+      shop: meta.shop ?? '',
+      place: meta.place ?? null,
+    }
   }),
 )
 
@@ -355,9 +305,6 @@ const typeLabel = {
   COMMAND: 'Command',
   BASE: 'Base',
 }
-
-const winnerDeckPreviews = computed(() => deckPreviews.value.filter(d => d.isWinner))
-const otherDeckPreviews = computed(() => deckPreviews.value.filter(d => !d.isWinner))
 
 const levelDist = computed(() => {
   const cards = props.archetype.cards ?? []

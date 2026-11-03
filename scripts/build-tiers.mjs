@@ -9,6 +9,26 @@ function isWinner(player) {
   return player.rank === WINNER || (player.eventPlayerCount >= 16 && player.rank === TOP2)
 }
 
+// 優勝 → 1, 準優勝 → 2, '5位' → 5
+function placeNumber(rank) {
+  if (rank === WINNER) {
+    return 1
+  }
+  if (rank === TOP2) {
+    return 2
+  }
+  return parseInt(rank) || null
+}
+
+// Per-deck details for the deck lists: event date, shop and placement
+function deckMeta(player) {
+  return {
+    date: player.eventDate ?? null,
+    shop: player.eventShop ?? '',
+    place: placeNumber(player.rank),
+  }
+}
+
 function loadJSON(path) {
   return JSON.parse(readFileSync(path, 'utf8'))
 }
@@ -200,6 +220,7 @@ function buildArchetypeMaps(allPlayers, winners, top4Players) {
       deckCardIds: [],
       deckUrls: [],
       deckWinnerFlags: [],
+      deckMeta: [],
     }),
     accumulate: (entry, player) => {
       entry.count++
@@ -207,6 +228,7 @@ function buildArchetypeMaps(allPlayers, winners, top4Players) {
       accumulateCardAgg(entry.cardAgg, player.deck)
       entry.deckWinnerFlags.push(isWinner(player))
       entry.deckUrls.push(player.deckUrl || player.eventUrl || '')
+      entry.deckMeta.push(deckMeta(player))
       return entry
     },
   })
@@ -237,7 +259,13 @@ function getSeriesMetadata(series) {
   const allPlayers = series.events.flatMap(e =>
     e.players
       .filter(p => p.deck.length > 0)
-      .map(p => ({ ...p, eventPlayerCount: e.players.length, eventUrl: e.url })),
+      .map(p => ({
+        ...p,
+        eventPlayerCount: e.players.length,
+        eventUrl: e.url,
+        eventDate: e.date,
+        eventShop: e.shop,
+      })),
   )
   const winners = allPlayers.filter(isWinner)
   const top4Players = allPlayers.filter(p => TOP4.includes(p.rank))
@@ -553,6 +581,7 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, tot
       featureBadges,
       deckUrls: group.deckUrls,
       deckWinnerFlags: group.deckWinnerFlags,
+      deckMeta: group.deckMeta,
       deckCardIds,
     }
   })
@@ -637,6 +666,7 @@ function processSeries(series) {
       deckUrl: p.deckUrl || p.eventUrl,
       isWinner: isWinner(p),
       deckCardIds: serializeDeckCards(p.deck),
+      meta: deckMeta(p),
     }))
 
   // Aggregate all decks by color combo for the pie chart
@@ -865,6 +895,7 @@ function processSeries(series) {
       deckUrls: unassignedDeckData.map(d => d.deckUrl),
       deckCardIds: unassignedDeckData.map(d => d.deckCardIds),
       deckWinnerFlags: unassignedDeckData.map(d => d.isWinner),
+      deckMeta: unassignedDeckData.map(d => d.meta),
     },
     colorComboData,
   }
