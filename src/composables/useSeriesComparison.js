@@ -18,26 +18,23 @@ export function useSeriesComparison({ currentSeries, previousSeries }) {
       return null
     }
     const topColor = currentTopColor.value
-    const makeMetric = (label, currentVal, previousVal, format = v => v) => ({
+    const makeMetric = (label, currentVal, previousVal, format = v => v.toLocaleString()) => ({
       label,
       current: currentVal,
       previous: previousVal,
       diff: currentVal - previousVal,
       format,
     })
-    const currentT1Share =
-      (current.rows.filter(r => r.tier === 'T1' || r.tier === 'T1.5').length /
-        current.rows.length) *
-      100
-    const prevT1Share =
-      (prev.rows.filter(r => r.tier === 'T1' || r.tier === 'T1.5').length / prev.rows.length) * 100
+    const isTopTier = r => r.tier === 'S' || r.tier === 'A'
+    const currentTopTierShare = (current.rows.filter(isTopTier).length / current.rows.length) * 100
+    const prevTopTierShare = (prev.rows.filter(isTopTier).length / prev.rows.length) * 100
     return {
       metrics: [
         makeMetric('Events', current.events, prev.events),
         makeMetric('Total decks', current.totalDecks, prev.totalDecks),
         makeMetric('Win decks', current.winDecks, prev.winDecks),
         makeMetric('Archetypes', current.rows.length, prev.rows.length),
-        makeMetric('T1 + T1.5%', currentT1Share, prevT1Share, v => `${v.toFixed(1)}%`),
+        makeMetric('S + A%', currentTopTierShare, prevTopTierShare, v => `${v.toFixed(1)}%`),
       ],
       topColor: { current: topColor, previous: previousTopColor.value },
     }
@@ -51,7 +48,7 @@ export function useSeriesComparison({ currentSeries, previousSeries }) {
     }
     const currentState = current.cardState
     const prevState = prev.cardState
-    const makeMetric = (label, currentVal, previousVal, format = v => v) => ({
+    const makeMetric = (label, currentVal, previousVal, format = v => v.toLocaleString()) => ({
       label,
       current: currentVal,
       previous: previousVal,

@@ -45,7 +45,6 @@ export function useSeriesState() {
       usePct: r.usePct,
       winPerDk: r.winPerDk,
       winPerEv: r.winPerEv,
-      t4PerDk: r.t4PerDk,
       score: r.score,
       decks: r.decks,
       wins: r.wins,

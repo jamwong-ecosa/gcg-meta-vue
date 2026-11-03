@@ -44,7 +44,7 @@ const props = defineProps({
   items: { type: Array, default: () => [] },
 })
 
-const TIER_ORDER = ['T1', 'T1.5', 'T2', 'T2.5', 'T3', '--']
+const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
 const TIER_COLORS = ['#fca5a5', '#fdba74', '#fbbf24', '#86efac', '#93c5fd', '#d1d5db']
 const TIER_COLORS_DARK = ['#c53030', '#dd6b20', '#d69e2e', '#2f855a', '#2b6cb0', '#4b5563']
 
@@ -67,16 +67,6 @@ const MODES = [
     yKey: 'winPerDk',
     xLabel: 'Usage Rate (%)',
     yLabel: 'Win Rate / Deck (%)',
-    xIsPercent: true,
-    yIsPercent: true,
-  },
-  {
-    key: 'usage-t4',
-    label: 'Usage - Top4',
-    xKey: 'usePct',
-    yKey: 't4PerDk',
-    xLabel: 'Usage Rate (%)',
-    yLabel: 'Top 4 / Deck (%)',
     xIsPercent: true,
     yIsPercent: true,
   },
@@ -104,6 +94,10 @@ const MODES = [
 ]
 
 const chartMode = useStorage('gcg-quadrant-mode', 'usage-winEv')
+// A stored mode may have been removed (e.g. the old Top4/Dk mode)
+if (!MODES.some(m => m.key === chartMode.value)) {
+  chartMode.value = MODES[0].key
+}
 
 const config = computed(() => MODES.find(m => m.key === chartMode.value))
 
@@ -170,7 +164,6 @@ const chartSeries = computed(() => {
         usePct: item.usePct,
         winPerDk: item.winPerDk,
         winPerEv: item.winPerEv,
-        t4PerDk: item.t4PerDk,
         decks: item.decks,
         wins: item.wins,
         top4: item.top4,
@@ -267,7 +260,6 @@ const chartOptions = computed(() => {
           Use: ${d.meta.usePct}<br/>
           Win/Dk: ${d.meta.winPerDk}<br/>
           Win/Ev: ${d.meta.winPerEv}<br/>
-          Top4/Dk: ${d.meta.t4PerDk}<br/>
           Score: ${d.meta.score}<br/>
           Decks: ${d.meta.decks}<br/>
           Wins: ${d.meta.wins}<br/>

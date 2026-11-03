@@ -57,7 +57,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-4 gap-2 px-3 pb-2">
+    <div class="grid grid-cols-3 gap-2 px-3 pb-2">
       <div class="flex flex-col">
         <div class="text-xxs font-semibold tracking-widest text-gray-400 uppercase">Decks</div>
         <div
@@ -74,7 +74,7 @@
           {{ row.wins }}
         </div>
       </div>
-      <div class="col-start-4 flex flex-col">
+      <div class="flex flex-col">
         <div class="text-xxs font-semibold tracking-widest text-gray-400 uppercase">Top4</div>
         <div
           class="mt-px font-mono text-sm font-bold text-aisumicha tabular-nums dark:text-nalika-text-muted"
@@ -84,7 +84,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-4 gap-2 px-3 pb-4">
+    <div class="grid grid-cols-3 gap-2 px-3 pb-4">
       <div class="flex flex-col">
         <span class="block text-xxs font-semibold tracking-widest text-gray-400 uppercase">
           Use%
@@ -111,14 +111,6 @@
           class="mt-px font-mono text-sm font-bold text-aisumicha tabular-nums dark:text-nalika-text-muted"
         >
           {{ row.winPerDk }}
-        </div>
-      </div>
-      <div class="flex flex-col">
-        <div class="text-xxs font-semibold tracking-widest text-gray-400 uppercase">T4/Dk</div>
-        <div
-          class="mt-px font-mono text-sm font-bold text-aisumicha tabular-nums dark:text-nalika-text-muted"
-        >
-          {{ row.t4PerDk }}
         </div>
       </div>
     </div>

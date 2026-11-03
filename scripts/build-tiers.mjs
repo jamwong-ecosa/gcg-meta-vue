@@ -90,9 +90,12 @@ writeCardMeta()
 
 // ── Deck analysis ────────────────────────────────────────────────────────────
 
-// Sorted unique colors in a deck, used for combo key prefix
+// Sorted unique colors in a deck, used for combo key prefix. Plain code-unit
+// order (not localeCompare) so existing archetype keys stay the same.
 function getDeckColors(deck) {
-  return [...new Set(deck.map(card => lookup(card.cardId).color))].sort()
+  return [...new Set(deck.map(card => lookup(card.cardId).color))].sort((a, b) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  )
 }
 
 // Identifies 1–2 signature LR UNIT cards per archetype.
@@ -254,145 +257,71 @@ function getSeriesEventDateRange(series) {
 
 // ── Scoring / tiers ──────────────────────────────────────────────────────────
 
-// Average win rate across winning archetypes, used as Bayesian prior.
-function getSeriesAvgDeckWinRate(series) {
-  const rates = series.archetypes
-    .filter(a => a.winnerDeckCount > 0)
-    .map(a => (a.winnerDeckCount / a.deckCount) * 100)
-  if (rates.length === 0) {
-    return 25
-  }
-  return rates.reduce((a, b) => a + b, 0) / rates.length
+// Series with fewer events get tiers flagged as preliminary in the UI
+const MIN_EVENTS_FOR_TIERS = 50
+// Aim for at least this many archetypes per tier when choosing the tier count
+const ARCHETYPES_PER_TIER = 4
+
+// Wins per placed deck, shrunk toward the series average as if every archetype
+// had this many extra placed decks at the average rate
+const CONVERSION_PRIOR_DECKS = 10
+
+function smoothedConversion(wins, archDecks, avgConversion) {
+  return (wins + CONVERSION_PRIOR_DECKS * avgConversion) / (archDecks + CONVERSION_PRIOR_DECKS)
 }
 
-// Average top-4 rate across winning archetypes, used as Bayesian prior
-function getSeriesAvgDeckTop4Rate(series) {
-  const archs = series.archetypes.filter(a => a.winnerDeckCount > 0)
-  if (archs.length === 0) {
-    return 40
-  }
-  const totalTop4 = archs.reduce((s, a) => s + (a.top4 ?? 0), 0)
-  const totalDecks = archs.reduce((s, a) => s + a.deckCount, 0)
-  return totalDecks > 0 ? (totalTop4 / totalDecks) * 100 : 40
+// Results only list each event's placed decks (top 8, or top 16 for larger
+// events), so placement share (an archetype's placed decks ÷ all placed decks)
+// is itself a performance measure, and it is stable from one series to the next.
+// 9th–16th places count like 1st–8th: dropping them barely changed tiers and
+// backtested slightly worse. How well an archetype converts placements into wins
+// barely carries over, so it only nudges the result: placement share ×
+// √(smoothed conversion ÷ series average). Converting at 60% of average costs
+// ~20%; 130% gains ~14%. Strength is the square root of that, because shares are
+// heavily skewed (a few archetypes hold most placements) and the root spreads the
+// long tail for tiering and display.
+function archetypeStrength({ wins, archDecks, totalDecks, avgConversion }) {
+  const placementShare = (archDecks / totalDecks) * 100
+  const conversionFactor = Math.sqrt(
+    smoothedConversion(wins, archDecks, avgConversion) / avgConversion,
+  )
+  return Math.sqrt(placementShare * conversionFactor)
 }
 
-// Bayesian smoothing with dynamic K:
-//   K = baseK × (1 + deviation × 0.6) ÷ (1 + √total / 5), clamped to [4, 22]
-//   more data → less shrinkage; larger deviation → more shrinkage
-function bayesianRate(observed, total, avgRate, baseK = 15) {
-  if (total <= 0) {
-    return 0
-  }
-
-  const observedRate = (observed / total) * 100
-  const deviation = avgRate > 0 ? Math.abs(observedRate - avgRate) / avgRate : 0
-
-  let dynamicK = baseK * (1 + deviation * 0.6)
-  dynamicK = dynamicK / (1 + Math.sqrt(total) / 5)
-  dynamicK = Math.max(4, Math.min(22, dynamicK))
-
-  return ((observed + (dynamicK * avgRate) / 100) / (total + dynamicK)) * 100
+// Displayed score: strength as 0–100 of the series' strongest archetype
+function strengthIndex(strength, maxStrength) {
+  return maxStrength > 0 ? Math.round((strength / maxStrength) * 100) : 0
 }
 
-// Confidence multiplier: requires more deck evidence when an archetype's
-// performance deviates from the series average. Baseline 10 decks, deviation
-// penalty reduced by divisor /3.
-function computeConfidence(archDecks, smoothedRate, avgRate) {
-  const deviation = avgRate > 0 ? Math.abs(smoothedRate - avgRate) / avgRate : 0
-  return Math.min(1, archDecks / (10 * (1 + deviation / 3)))
-}
-
-// Penalty: usageRate × gap × 0.15 — penalizes archetypes with high usage rate
-// AND low win rate relative to the cap (capMultiplier × series average). Losses
-// are proportional to both popularity and performance gap.
-// Self-regulates: strong archetypes get gap≈0 → penalty≈0.
-function computePenalty(usageRate, archWinRate, seriesAvgDeckWinRate, capMultiplier = 1.5) {
-  const deckWinRateCap = seriesAvgDeckWinRate * capMultiplier
-  const gap = Math.max(0, 1 - archWinRate / deckWinRateCap)
-  return usageRate * gap * 0.15
-}
-
-// Weighted composite score: event win share (0.5), usage rate (0.3),
-// Bayesian-smoothed win rate (0.1), Bayesian-smoothed top-4 bonus (0.1).
-// K=15 smoothing with prior = series avg deck win rate / top-4 rate.
-function archetypeScore({
-  wins,
-  archDecks,
-  totalDecks,
-  totalEvents,
-  top4,
-  seriesAvgDeckWinRate,
-  seriesAvgDeckTop4Rate,
-}) {
-  if (wins === 0) {
-    return 0
-  }
-
-  const eventWinShare = (wins / totalEvents) * 100
-  const usageRate = (archDecks / totalDecks) * 100
-  const archWinRate = bayesianRate(wins, archDecks, seriesAvgDeckWinRate)
-  const top4Bonus = bayesianRate(top4, archDecks, seriesAvgDeckTop4Rate)
-
-  const raw = eventWinShare * 0.5 + usageRate * 0.3 + archWinRate * 0.1 + top4Bonus * 0.1
-  const penalty = computePenalty(usageRate, archWinRate, seriesAvgDeckWinRate)
-  const confidence = computeConfidence(archDecks, archWinRate, seriesAvgDeckWinRate)
-
-  return Math.round((raw - penalty) * 10 * confidence)
-}
-
-// ckmeans clustering on archetype scores → tier cutoffs (T1 → T3).
+// ckmeans clustering on strength → tier cutoffs (S → D).
 // Falls back to equal-sized buckets if ckmeans fails (e.g. all scores identical).
-function computeTierThresholds(series) {
-  const seriesAvgDeckWinRate = getSeriesAvgDeckWinRate(series)
-  const seriesAvgDeckTop4Rate = getSeriesAvgDeckTop4Rate(series)
-  const allScores = series.archetypes
-    .filter(a => a.winnerDeckCount > 0)
-    .map(a =>
-      archetypeScore({
-        wins: a.winnerDeckCount,
-        archDecks: a.deckCount,
-        totalDecks: series.totalDecks,
-        totalEvents: series.totalEvents,
-        top4: a.top4 ?? 0,
-        seriesAvgDeckWinRate,
-        seriesAvgDeckTop4Rate,
-      }),
-    )
-    .sort((a, b) => b - a)
-
-  const k = Math.min(5, allScores.length)
+function computeTierThresholds(strengths) {
+  const sorted = [...strengths].sort((a, b) => a - b)
+  const k = Math.max(1, Math.min(5, Math.floor(sorted.length / ARCHETYPES_PER_TIER)))
   let clusters
   try {
-    clusters = ss.ckmeans(allScores, Math.max(1, k))
+    clusters = ss.ckmeans(sorted, k)
   } catch {
-    const n = Math.max(1, k)
-    clusters = Array.from({ length: n }, (_, i) => {
-      const start = Math.floor((i * allScores.length) / n)
-      const end = Math.floor(((i + 1) * allScores.length) / n)
-      return allScores.slice(start, end)
+    clusters = Array.from({ length: k }, (_, i) => {
+      const start = Math.floor((i * sorted.length) / k)
+      const end = Math.floor(((i + 1) * sorted.length) / k)
+      return sorted.slice(start, end)
     })
   }
 
   const clusterMins = clusters.map(cluster => cluster[0]).reverse()
-  const allTierIds = ['1', '1-5', '2', '2-5', '3']
-  const usedTierIds = allTierIds.slice(0, clusterMins.length)
+  const tierLabels = ['S', 'A', 'B', 'C', 'D']
 
-  const thresholds = clusterMins.map((val, idx) => ({
-    id: usedTierIds[idx],
+  return clusterMins.map((val, idx) => ({
+    id: tierLabels[idx].toLowerCase(),
     min: val,
-    label: `T${usedTierIds[idx].replace('-', '.')}`,
+    label: tierLabels[idx],
   }))
-
-  // Unranked archetypes (no wins) get a fallback tier below the lowest cluster
-  const fallbackId = allTierIds[clusterMins.length] || '4'
-  thresholds.push({ id: fallbackId, min: 0, label: `T${fallbackId.replace('-', '.')}` })
-
-  return thresholds
 }
 
-// Highest threshold the score meets; falls back to lowest tier
-function getDeckTier(score, thresholds) {
-  return thresholds.find(t => score >= t.min) || thresholds.at(-1)
+// Highest threshold the strength meets; falls back to lowest tier
+function getDeckTier(strength, thresholds) {
+  return thresholds.find(t => strength >= t.min) || thresholds.at(-1)
 }
 
 // ── Output formatting ────────────────────────────────────────────────────────
@@ -404,10 +333,11 @@ function colorDots(colors) {
 
 // Formats archetype data into display rows for tiers.json.
 // Converts ASCII parens in combo keys to fullwidth for Japanese display.
-// Sorted by tier rank then score descending.
+// Sorted by strength descending, which also orders the tiers.
 function formatTierRows(series) {
   return series.archetypes
     .filter(a => a.deckCount > 0)
+    .sort((a, b) => b.tierStrength - a.tierStrength)
     .map(a => {
       const useRate = (a.deckCount / series.totalDecks) * 100
       const winRateEvent = (a.winnerDeckCount / series.totalEvents) * 100
@@ -435,11 +365,6 @@ function formatTierRows(series) {
         tier: a.tierLabel,
         darkHorse: a.darkHorse ?? false,
       }
-    })
-    .sort((a, b) => {
-      const tA = a.tier === '--' ? 99 : parseFloat(a.tier.slice(1))
-      const tB = b.tier === '--' ? 99 : parseFloat(b.tier.slice(1))
-      return tA - tB || b.score - a.score
     })
 }
 
@@ -820,43 +745,37 @@ function processSeries(series) {
     archetypes: mainDetails,
   }
 
-  seriesProcessed.tierThresholds = computeTierThresholds(seriesProcessed)
-  const seriesAvgDeckWinRate = getSeriesAvgDeckWinRate(seriesProcessed)
-  const seriesAvgDeckTop4Rate = getSeriesAvgDeckTop4Rate(seriesProcessed)
-
   // Score each archetype and assign a tier label
+  const avgConversion = winners.length / allPlayers.length
   for (const a of seriesProcessed.archetypes) {
-    a.tierScore = archetypeScore({
+    a.tierStrength = archetypeStrength({
       wins: a.winnerDeckCount,
       archDecks: a.deckCount,
       totalDecks: allPlayers.length,
-      totalEvents: series.events.length,
-      top4: a.top4 ?? 0,
-      seriesAvgDeckWinRate,
-      seriesAvgDeckTop4Rate,
+      avgConversion,
     })
-    a.tierLabel =
-      a.winnerDeckCount > 0 ? getDeckTier(a.tierScore, seriesProcessed.tierThresholds).label : '--'
+  }
+  const strengths = seriesProcessed.archetypes.map(a => a.tierStrength)
+  const maxStrength = Math.max(0, ...strengths)
+  seriesProcessed.tierThresholds = computeTierThresholds(strengths)
+  for (const a of seriesProcessed.archetypes) {
+    a.tierScore = strengthIndex(a.tierStrength, maxStrength)
+    a.tierLabel = getDeckTier(a.tierStrength, seriesProcessed.tierThresholds).label
   }
 
-  // Mark dark horses: low-usage archetypes that punch above their weight into competitive tiers
-  const tierRank = { T1: 1, 'T1.5': 1.5, T2: 2 }
-  const winningArchs = seriesProcessed.archetypes.filter(a => a.winnerDeckCount > 0)
-  const medDecks = winningArchs.map(a => a.deckCount).sort((a, b) => a - b)[
-    Math.floor(winningArchs.length / 2)
-  ]
-  const medScore = winningArchs.map(a => a.tierScore).sort((a, b) => a - b)[
-    Math.floor(winningArchs.length / 2)
-  ]
-  const darkHorses = winningArchs
+  // Mark dark horses: under-the-radar archetypes (< 2% of placed decks) that convert
+  // placements into wins well above the series average. The smoothing keeps a
+  // 2-for-5 run from dominating.
+  const conversion = a => smoothedConversion(a.winnerDeckCount, a.deckCount, avgConversion)
+  const darkHorses = seriesProcessed.archetypes
     .filter(
       a =>
         a.deckCount >= 5 &&
-        a.deckCount < medDecks &&
-        a.tierScore > medScore &&
-        tierRank[a.tierLabel] !== undefined,
+        a.winnerDeckCount >= 2 &&
+        a.deckCount / allPlayers.length < 0.02 &&
+        conversion(a) >= avgConversion * 1.3,
     )
-    .sort((a, b) => b.tierScore / b.deckCount - a.tierScore / a.deckCount)
+    .sort((a, b) => conversion(b) - conversion(a))
     .slice(0, 3)
   const darkHorseSet = new Set(darkHorses.map(a => a.combo))
   for (const a of seriesProcessed.archetypes) {
@@ -890,6 +809,7 @@ function processSeries(series) {
     value: series.value,
     label: series.label,
     events: series.events.length,
+    preliminary: series.events.length < MIN_EVENTS_FOR_TIERS,
     eventMinDate,
     eventMaxDate,
     winDecks: winners.length,
@@ -935,7 +855,9 @@ const SERIES_SHORT_NAMES = [
 function getSeriesShortName(series) {
   for (const [re, short] of SERIES_SHORT_NAMES) {
     if (re.test(series.label)) {
-      return short
+      // Keep the mission number, e.g. "MISSION5" → "NTC M5"
+      const mission = series.label.match(/MISSION\s*(\d+)/i)?.[1]
+      return mission ? `${short} M${mission}` : short
     }
   }
   const cleaned = series.label
@@ -959,16 +881,19 @@ for (const series of tournaments) {
   byMonth.get(month).push(series)
 }
 
+// Every monthly entry gets a short label, e.g. "2026-11 (NTC M5)" or
+// "2026-09 (NTC M4 + Serial)". Single-series months keep their original value so
+// existing ?series= links still work.
 const mergedSeries = [...monthlessSeries]
 for (const [month, seriesList] of byMonth) {
+  const label = `${month} (${seriesList.map(getSeriesShortName).join(' + ')})`
   if (seriesList.length === 1) {
-    mergedSeries.push(seriesList[0])
+    mergedSeries.push({ ...seriesList[0], label })
     continue
   }
-  const [y, m] = month.split('-')
   mergedSeries.push({
     value: month,
-    label: `${y}-${m} (${seriesList.map(getSeriesShortName).join(' + ')})`,
+    label,
     url: '',
     events: seriesList.flatMap(s => s.events),
   })

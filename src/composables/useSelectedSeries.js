@@ -32,7 +32,7 @@ export function useSelectedSeries({ pin = true } = {}) {
       return last
     },
     set(val) {
-      router.replace({ query: { series: val } })
+      void router.replace({ query: { series: val } })
     },
   })
 

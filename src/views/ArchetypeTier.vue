@@ -9,6 +9,14 @@
       :archetypes="allRows.length"
     />
 
+    <p
+      v-if="currentSeries?.preliminary"
+      class="mb-1 rounded bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-200/80"
+    >
+      Only {{ currentSeries.events }} events so far — tiers are preliminary and will shift as more
+      results come in.
+    </p>
+
     <div
       ref="filterBarRef"
       class="sticky top-(--nav-h) z-40 -mx-3 flex items-center gap-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
