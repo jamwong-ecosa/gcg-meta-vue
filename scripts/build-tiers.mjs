@@ -855,7 +855,9 @@ const SERIES_SHORT_NAMES = [
 function getSeriesShortName(series) {
   for (const [re, short] of SERIES_SHORT_NAMES) {
     if (re.test(series.label)) {
-      return short
+      // Keep the mission number, e.g. "MISSION5" → "NTC M5"
+      const mission = series.label.match(/MISSION\s*(\d+)/i)?.[1]
+      return mission ? `${short} M${mission}` : short
     }
   }
   const cleaned = series.label
@@ -879,8 +881,8 @@ for (const series of tournaments) {
   byMonth.get(month).push(series)
 }
 
-// Every monthly entry gets a short label, e.g. "2026-11 (NTC)" or
-// "2026-09 (NTC + Serial)". Single-series months keep their original value so
+// Every monthly entry gets a short label, e.g. "2026-11 (NTC M5)" or
+// "2026-09 (NTC M4 + Serial)". Single-series months keep their original value so
 // existing ?series= links still work.
 const mergedSeries = [...monthlessSeries]
 for (const [month, seriesList] of byMonth) {
