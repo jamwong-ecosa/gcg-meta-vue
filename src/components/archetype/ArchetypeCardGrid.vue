@@ -1,13 +1,14 @@
 <template>
-  <!-- One grid so rows fill the width; the type label sits over the first card of
-       each type instead of breaking the row. Cards that play the same (same
-       effect and stats) share one cell spanning their columns, in a dashed box,
-       with one win-rate change for the group. The label sits in the row gap, so
-       rows without one don't keep an empty band -->
+  <!-- One grid so rows fill the width; the type label sits in the row gap over
+       the first card of each type, so rows without one don't keep an empty band.
+       Cards that play the same (same effect and stats) stay in sort order inside
+       one dashed box with one win-rate change; when the group runs past the end
+       of a row it breaks, and each row draws its own piece of the box -->
   <div
+    ref="gridEl"
     class="grid grid-cols-4 gap-x-3 gap-y-9 pt-7 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
   >
-    <div v-for="item in items" :key="item.key" class="relative min-w-0" :class="item.spanClass">
+    <div v-for="item in items" :key="item.card.cardId" class="relative min-w-0">
       <div v-if="item.typeLabel" class="absolute inset-x-0 -top-7 flex h-5 min-w-0 items-center">
         <span
           class="flex shrink-0 items-center gap-1.5 border-l-2 border-gray-400 pl-1.5 text-xs font-bold tracking-wider text-gray-700 uppercase dark:border-gray-500 dark:text-nalika-text"
@@ -21,42 +22,30 @@
         </span>
       </div>
 
-      <div
-        v-if="item.group"
-        class="relative grid gap-x-3 sm:gap-x-6"
-        :style="{ gridTemplateColumns: `repeat(${item.cards.length}, minmax(0, 1fr))` }"
-      >
+      <template v-if="item.group">
+        <!-- This card's piece of the box: reaches into the gap towards its
+             neighbours, closed on the sides where the group's row segment ends -->
         <div
-          class="pointer-events-none absolute -inset-1 rounded-lg border-2 border-dashed border-sky-400/80 sm:-inset-1.5 dark:border-sky-500/60"
+          class="pointer-events-none absolute -inset-y-1 border-y-2 border-dashed border-sky-400/80 sm:-inset-y-1.5 dark:border-sky-500/60"
+          :class="item.boxClass"
         />
-        <!-- Caption on the box's bottom edge, clear of the type heading above -->
         <span
-          class="absolute right-2 -bottom-2 z-10 flex cursor-help items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xxs leading-4 whitespace-nowrap text-sky-700 dark:bg-nalika-bg dark:text-sky-400"
-          :title="item.groupTitle"
+          v-if="item.isLast"
+          class="absolute right-1 -bottom-2 z-10 flex cursor-help items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xxs leading-4 whitespace-nowrap text-sky-700 dark:bg-nalika-bg dark:text-sky-400"
+          :title="item.group.title"
         >
-          <span class="font-semibold">≡ {{ item.groupPct }}%</span>
-          <span v-if="item.groupLiftText" :class="item.groupLiftClass">
-            {{ item.groupLiftText }}
+          <span class="font-semibold">≡ {{ item.group.pct }}%</span>
+          <span v-if="item.group.liftText" :class="item.group.liftClass">
+            {{ item.group.liftText }}
           </span>
         </span>
-        <ArchetypeCardThumb
-          v-for="card in item.cards"
-          :key="card.cardId"
-          class="w-full"
-          :card="card"
-          :is-sig="sigIds.has(card.cardId)"
-          :is-new="!removed && isNew(card.cardId)"
-          :is-removed="removed"
-          @zoom="emit('zoom', $event)"
-        />
-      </div>
+      </template>
       <ArchetypeCardThumb
-        v-else
         class="w-full"
-        :card="item.cards[0]"
-        :lift="removed ? null : liftOf(item.cards[0])"
-        :is-sig="sigIds.has(item.cards[0].cardId)"
-        :is-new="!removed && isNew(item.cards[0].cardId)"
+        :card="item.card"
+        :lift="removed || item.group ? null : liftOf(item.card)"
+        :is-sig="sigIds.has(item.card.cardId)"
+        :is-new="!removed && isNew(item.card.cardId)"
         :is-removed="removed"
         @zoom="emit('zoom', $event)"
       />
@@ -65,6 +54,8 @@
 </template>
 
 <script setup>
+import { useResizeObserver } from '@vueuse/core'
+
 const props = defineProps({
   cards: { type: Array, required: true },
   // Cards no longer played: no stats, dimmed
@@ -82,20 +73,25 @@ const props = defineProps({
 const emit = defineEmits(['zoom'])
 
 const TYPES = { UNIT: 'Unit', PILOT: 'Pilot', COMMAND: 'Command', BASE: 'Base' }
-// Literal class names so Tailwind generates them
-const SPAN = ['', '', 'col-span-2', 'col-span-3', 'col-span-4']
 
-function groupEntry(g, members) {
+// Columns the grid has right now (auto-fill on wider screens), to know where a
+// group's row segments start and end
+const gridEl = useTemplateRef('gridEl')
+const cols = ref(4)
+useResizeObserver(gridEl, () => {
+  const tracks = getComputedStyle(gridEl.value).gridTemplateColumns.split(' ').length
+  if (tracks !== cols.value) {
+    cols.value = tracks
+  }
+})
+
+function groupInfo(g) {
   const lift = props.groupLiftOf(g)
   return {
-    key: g.id,
-    cards: members,
-    group: g,
-    spanClass: SPAN[Math.min(members.length, 4)],
-    groupPct: sharePct(props.deckCount ? g.decks / props.deckCount : 0),
-    groupLiftText: liftLabel(lift),
-    groupLiftClass: liftTone(lift),
-    groupTitle: [
+    pct: sharePct(props.deckCount ? g.decks / props.deckCount : 0),
+    liftText: liftLabel(lift),
+    liftClass: liftTone(lift),
+    title: [
       'Same card under different names (same effect and stats)',
       `In ${g.decks} decks in any version, ${g.wins} of them won`,
       liftNote(lift) || 'WR: win rate of decks running any version vs none',
@@ -103,29 +99,54 @@ function groupEntry(g, members) {
   }
 }
 
-// Type order (unknown types last). A same-effect group sits where its first
-// (most played) member would; the first entry of each type carries its label.
+// A box piece is closed (border, rounded) only at the group's first and last
+// card, so a group broken over two rows reads as one, open at the break. It
+// reaches half the column gap towards a neighbour in the same row
+function boxClass({ first, last, col }) {
+  const toLeft = !first && col > 0
+  const toRight = !last && col < cols.value - 1
+  return [
+    toLeft ? tw`-left-1.5 sm:-left-3` : tw`-left-1 sm:-left-1.5`,
+    toRight ? tw`-right-1.5 sm:-right-3` : tw`-right-1 sm:-right-1.5`,
+    first && tw`rounded-l-lg border-l-2`,
+    last && tw`rounded-r-lg border-r-2`,
+  ]
+}
+
+// Type order (unknown types last), each type in its own sort order, except a
+// same-effect group's members are pulled together where its first (most
+// played) member sits. The first card of each type carries the type label.
 const items = computed(() => {
   const types = [...new Set([...Object.keys(TYPES), ...props.cards.map(c => c.type)])]
-  return types.flatMap(type => {
+  const ordered = types.flatMap(type => {
     const ofType = props.cards.filter(c => c.type === type)
     const placed = new Set()
-    const entries = []
+    const out = []
     for (const card of ofType) {
       const g = !props.removed && card.effectGroup
       const members = g ? ofType.filter(c => c.effectGroup?.id === g.id) : []
       if (members.length < 2) {
-        entries.push({ key: card.cardId, cards: [card] })
+        out.push({ card })
       } else if (!placed.has(g.id)) {
         placed.add(g.id)
-        entries.push(groupEntry(g, members))
+        const info = groupInfo(g)
+        members.forEach((m, i) => {
+          out.push({ card: m, group: info, first: i === 0, isLast: i === members.length - 1 })
+        })
       }
     }
-    return entries.map((e, i) => ({
+    return out.map((e, i) => ({
       ...e,
       typeLabel: i === 0 ? (TYPES[type] ?? type) : '',
       typeCount: ofType.length,
     }))
+  })
+  // Every card takes one column, so its column is its position mod the count
+  return ordered.map((e, i) => {
+    if (!e.group) {
+      return e
+    }
+    return { ...e, boxClass: boxClass({ first: e.first, last: e.isLast, col: i % cols.value }) }
   })
 })
 </script>
