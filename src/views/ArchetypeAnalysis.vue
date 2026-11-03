@@ -9,7 +9,7 @@
       :archetypes="seriesManifest?.archetypes.length ?? 0"
     />
     <div
-      class="sticky top-(--nav-h) z-40 -mx-3 mb-3 bg-white px-3 py-3 transition-transform duration-300 md:-mx-8 md:px-8 dark:bg-nalika-bg"
+      class="sticky top-(--nav-h) z-40 -mx-3 mb-3 bg-white px-3 py-2 transition-transform duration-300 md:-mx-8 md:px-8 md:py-3 dark:bg-nalika-bg"
       :class="hideFilter ? '-translate-y-full' : 'translate-y-0'"
     >
       <ArchetypeDropdown v-model="archKey" :options="archOptions" />
