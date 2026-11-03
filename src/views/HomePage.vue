@@ -1,8 +1,8 @@
 <template>
   <div class="mx-auto max-w-340 px-4 py-10 md:px-8 md:py-16">
     <!-- Hero -->
-    <section class="grid items-center gap-10 md:grid-cols-[1.1fr_1fr]">
-      <div class="max-md:order-2 max-md:text-center">
+    <section class="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
+      <div class="max-lg:order-2 max-lg:text-center">
         <p
           class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70"
         >
@@ -14,13 +14,13 @@
           GCG Decks Analysis
         </h1>
         <p
-          class="mt-3 max-w-lg text-sm leading-relaxed text-gray-600 max-md:mx-auto dark:text-nalika-text-muted"
+          class="mt-3 max-w-lg text-sm leading-relaxed text-gray-600 max-lg:mx-auto dark:text-nalika-text-muted"
         >
           Which decks are winning right now, which cards they run, and how the meta shifts from one
           series to the next — built from official tournament results.
         </p>
 
-        <div class="mt-6 flex flex-wrap gap-3 max-md:justify-center">
+        <div class="mt-6 flex flex-wrap gap-3 max-lg:justify-center">
           <RouterLink
             :to="{ name: 'tier', query: seriesQuery }"
             class="rounded-full bg-ruri px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-ruri/85 dark:bg-sora dark:text-nalika-bg dark:hover:bg-sora/85"
@@ -35,37 +35,74 @@
           </RouterLink>
         </div>
 
-        <!-- Phone: a centred 2×2 panel under the centred hero; desktop: one plain row -->
-        <dl
-          class="mt-8 grid grid-cols-2 max-md:mx-auto max-md:max-w-sm max-md:rounded-lg max-md:border max-md:border-gray-500/10 max-md:bg-shironezumi/5 md:grid-cols-4 md:gap-x-6 dark:max-md:border-nalika-border dark:max-md:bg-nalika-surface"
+        <!-- Phone and tablet: three counts side by side in one panel, the update date as its
+             footer; desktop: one plain row of all four -->
+        <div
+          class="mt-8 max-lg:mx-auto max-lg:max-w-sm max-lg:overflow-hidden max-lg:rounded-xl max-lg:border max-lg:border-gray-500/10 max-lg:bg-shironezumi/5 dark:max-lg:border-nalika-border dark:max-lg:bg-nalika-surface"
         >
-          <div
-            v-for="s in totals"
-            :key="s.label"
-            class="border-gray-500/10 max-md:px-3 max-md:py-2.5 max-md:odd:border-r dark:border-nalika-border max-md:[&:nth-child(-n+2)]:border-b"
+          <dl
+            class="grid grid-cols-3 max-lg:divide-x max-lg:divide-gray-500/10 lg:grid-cols-4 lg:gap-x-6 dark:max-lg:divide-nalika-border"
           >
-            <dt
-              class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500"
+            <div
+              v-for="s in totals"
+              :key="s.label"
+              class="max-lg:px-2 max-lg:py-3"
+              :class="{ 'max-lg:hidden': s.footer }"
             >
-              {{ s.label }}
-            </dt>
-            <dd class="mt-0.5 text-lg font-bold text-gray-700 tabular-nums dark:text-nalika-text">
-              {{ s.value }}
-            </dd>
-          </div>
-        </dl>
+              <dt
+                class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500"
+              >
+                {{ s.label }}
+              </dt>
+              <dd
+                class="mt-0.5 text-lg font-bold text-gray-700 tabular-nums max-lg:text-xl dark:text-nalika-text"
+              >
+                {{ s.value }}
+              </dd>
+            </div>
+          </dl>
+          <p
+            class="border-t border-gray-500/10 py-1.5 text-xxs text-gray-400 lg:hidden dark:border-nalika-border dark:text-gray-500"
+          >
+            Updated
+            <span class="font-mono text-gray-500 dark:text-gray-400">{{ updated }}</span>
+          </p>
+        </div>
       </div>
 
-      <div class="flex justify-center max-md:order-1">
-        <div class="flex items-end">
-          <img
-            v-for="(card, i) in heroCards"
-            :key="card"
-            :src="`https://jw-assets.imgix.net/gcg-img/${card}.webp?w=280&fit=crop&auto=format,compress`"
-            alt=""
-            class="h-28 w-20 rounded-lg object-cover shadow-lg sm:h-40 sm:w-28 lg:h-48 lg:w-32"
-            :class="heroCardClasses[i]"
-          />
+      <!-- Signature cards of the top six decks fanned on an arc, #1 in front and
+           centre; each opens its archetype, and lifts and straightens on hover -->
+      <div class="relative flex justify-center max-lg:order-1">
+        <div
+          class="pointer-events-none absolute inset-x-[10%] inset-y-[5%] rounded-full bg-ruri/15 blur-3xl dark:bg-sora/15"
+          aria-hidden="true"
+        />
+        <div class="relative flex items-end pt-4 pb-6">
+          <RouterLink
+            v-for="card in heroCards"
+            :key="card.id"
+            :to="card.to"
+            :title="`#${card.rank} ${card.name}`"
+            class="relative z-(--z) -mx-4 w-20 shrink-0 origin-bottom [transform:translateY(var(--y))_rotate(var(--r))] transition-transform duration-300 hover:z-30 hover:[transform:translateY(-14px)_rotate(0deg)_scale(1.06)] sm:-mx-5 sm:w-28 lg:-mx-4 lg:w-24 xl:-mx-6 xl:w-32"
+            :style="{ '--r': card.rotate, '--y': card.lift, '--z': card.z }"
+          >
+            <img
+              :src="`https://jw-assets.imgix.net/gcg-img/${card.id}.webp?w=320&auto=format,compress`"
+              :alt="card.name"
+              class="aspect-[5/7] w-full rounded-lg object-cover shadow-xl ring-1 shadow-black/25 ring-black/10 dark:ring-white/10"
+            />
+            <!-- On the side the neighbouring card doesn't cover -->
+            <span
+              class="absolute bottom-0 bg-black/75 px-1.5 font-mono text-xs leading-snug font-bold text-white sm:text-sm"
+              :class="
+                card.right
+                  ? 'right-0 rounded-tl-md rounded-br-lg'
+                  : 'left-0 rounded-tr-md rounded-bl-lg'
+              "
+            >
+              #{{ card.rank }}
+            </span>
+          </RouterLink>
         </div>
       </div>
     </section>
@@ -229,6 +266,9 @@ const featured = computed(() => tierData.value.find(s => !s.preliminary) ?? late
 const inProgress = computed(() => (latest.value !== featured.value ? latest.value : null))
 const seriesQuery = computed(() => (featured.value ? { series: featured.value.value } : {}))
 
+// Shown as the phone panel's footer rather than a fourth column
+const updated = computed(() => totals.value.find(t => t.footer)?.value)
+
 const totals = computed(() => {
   const series = tierData.value
   const lastDate = series
@@ -240,7 +280,7 @@ const totals = computed(() => {
     { label: 'Series', value: series.length },
     { label: 'Events', value: series.reduce((n, s) => n + s.events, 0).toLocaleString() },
     { label: 'Placed decks', value: series.reduce((n, s) => n + s.totalDecks, 0).toLocaleString() },
-    { label: 'Updated', value: lastDate ?? '—' },
+    { label: 'Updated', value: lastDate ?? '—', footer: true },
   ]
 })
 
@@ -271,23 +311,24 @@ const topRows = computed(() => {
   })
 })
 
-// Fanned hero cards: signature cards of the featured series' top decks
-const heroCards = computed(() => {
-  const ids = topRows.value
-    .map(r => r.imageCardId)
-    .filter(Boolean)
-    .slice(0, 5)
-  // Put the top deck's card in the middle of the fan
-  return ids.length === 5 ? [ids[3], ids[1], ids[0], ids[2], ids[4]] : ids
-})
-
-const heroCardClasses = [
-  tw`-mr-6 rotate-[-8deg] opacity-70`,
-  tw`-mr-6 rotate-[-4deg] opacity-85`,
-  tw`z-10 -translate-y-2 rotate-0`,
-  tw`-ml-6 rotate-[4deg] opacity-85`,
-  tw`-ml-6 rotate-[8deg] opacity-70`,
+// Fanned hero cards: signature cards of the same top six decks as the Current
+// meta blocks, ranked 5 3 1 2 4 6 from left to right so #1 and #2 sit in the
+// middle (#1 on top), on an arc
+const FAN = [
+  { rank: 5, rotate: '-15deg', lift: '28px', z: 1 },
+  { rank: 3, rotate: '-9deg', lift: '10px', z: 2 },
+  { rank: 1, rotate: '-3deg', lift: '0px', z: 4 },
+  { rank: 2, rotate: '3deg', lift: '0px', z: 3, right: true },
+  { rank: 4, rotate: '9deg', lift: '10px', z: 2, right: true },
+  { rank: 6, rotate: '15deg', lift: '28px', z: 1, right: true },
 ]
+const heroCards = computed(() => {
+  const top = topRows.value.filter(r => r.imageCardId)
+  return FAN.filter(f => top[f.rank - 1]).map(f => {
+    const row = top[f.rank - 1]
+    return { ...f, id: row.imageCardId, to: row.to, name: row.archetype }
+  })
+})
 
 const features = [
   {
