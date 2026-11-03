@@ -22,39 +22,47 @@
         </span>
         <span class="text-xs text-gray-400 dark:text-gray-500">{{ sec.subtitle }}</span>
       </h4>
-      <!-- Legend, once, under the first heading -->
+      <!-- Legend, once, under the first heading: short keys, details on hover -->
       <p
         v-if="sec === cardSections[0]"
-        class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xxs text-gray-400 dark:text-gray-500"
+        class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xxs whitespace-nowrap text-gray-400 dark:text-gray-500"
       >
-        <span>
+        <span title="Copies per deck that runs it">
           <b class="font-semibold text-gray-500 dark:text-gray-400">×</b>
-          copies per deck that runs it
+          copies
         </span>
-        <span>
+        <span
+          title="Win rate with the card vs without, in points. Grey when it could be chance; hidden when either side has under 20 decks"
+        >
           <b class="font-semibold text-gray-500 dark:text-gray-400">WR ±</b>
-          win rate with the card vs without, in points; grey when it could be chance, hidden when
-          either side has under 20 decks
+          with vs without
         </span>
-        <span class="flex items-center gap-1">
+        <span class="flex items-center gap-1" title="Signature card of the archetype">
           <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">★ SIG</span>
-          signature card
         </span>
-        <span class="flex items-center gap-1">
+        <span
+          class="flex items-center gap-1"
+          title="Top tech pick: uncommon, but its decks win well"
+        >
           <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">TECH</span>
-          top tech pick
         </span>
-        <span v-if="prevCardIds?.size" class="flex items-center gap-1">
+        <span
+          v-if="prevCardIds?.size"
+          class="flex items-center gap-1"
+          title="Not played by this archetype last series"
+        >
           <span class="rounded-sm bg-green-600 px-1 font-bold text-white">NEW</span>
-          new this series
         </span>
-        <span class="flex items-center gap-1">
+        <span
+          class="flex items-center gap-1"
+          title="Same card under another name: decks running either, and one WR for both"
+        >
           <span
-            class="rounded-sm border-2 border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
+            class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
           >
             ≡ %
           </span>
-          same card, other name: decks running either, and one WR for both
+          same card
         </span>
       </p>
       <div v-else class="mb-3" />
