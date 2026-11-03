@@ -3,7 +3,7 @@
     v-if="chartSlices.length"
     class="flex flex-col items-center justify-center gap-3 md:flex-row md:gap-4"
   >
-    <svg :viewBox="`0 0 ${SIZE} ${SIZE}`" class="h-80 w-80 shrink-0 md:h-[28rem] md:w-[28rem]">
+    <svg :viewBox="VIEWBOX" class="h-72 w-72 shrink-0 md:h-[26rem] md:w-[26rem]">
       <defs>
         <clipPath v-for="(s, i) in chartSlices" :id="`${uid}-clip-${i}`" :key="`clip-${i}`">
           <path :d="s.path" />
@@ -28,10 +28,47 @@
           :clip-path="`url(#${uid}-clip-${i})`"
           preserveAspectRatio="xMidYMid slice"
         />
-        <path :d="s.path" fill="none" stroke="#000" stroke-width="2" />
+        <path
+          :d="s.path"
+          fill="none"
+          class="stroke-white dark:stroke-nalika-surface"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
       </g>
-      <g v-for="(dot, i) in colorDots" :key="`dot-${i}`">
-        <circle :cx="dot.x" :cy="dot.y" :r="4" :fill="dot.hex" stroke="#000" stroke-width="1" />
+      <!-- Each slice carries its own colors and share, so it reads without the legend -->
+      <g v-for="(l, i) in sliceLabels" :key="`label-${i}`" class="pointer-events-none">
+        <rect
+          :x="l.x - l.w / 2"
+          :y="l.y - 8"
+          :width="l.w"
+          height="16"
+          rx="8"
+          fill="#000"
+          fill-opacity="0.65"
+        />
+        <circle
+          v-for="(hex, di) in l.dots"
+          :key="di"
+          :cx="l.x - l.w / 2 + 8 + di * 8"
+          :cy="l.y"
+          r="3"
+          :fill="hex"
+          stroke="#fff"
+          stroke-width="0.75"
+        />
+        <text
+          :x="l.x + l.w / 2 - 6"
+          :y="l.y"
+          text-anchor="end"
+          dominant-baseline="central"
+          fill="#fff"
+          font-size="9"
+          font-weight="700"
+          class="font-mono"
+        >
+          {{ l.text }}
+        </text>
       </g>
     </svg>
     <div class="w-full max-w-80 min-w-0 space-y-1 md:max-w-xs">
@@ -74,6 +111,8 @@ const CY = 120
 const OUTER_R = 100
 const SIZE = 240
 const IMG_SCALE = 0.8
+// Crop the viewBox to the circle (plus room for the stroke) so the pie fills its box
+const VIEWBOX = `${CX - OUTER_R - 2} ${CY - OUTER_R - 2} ${OUTER_R * 2 + 4} ${OUTER_R * 2 + 4}`
 const uid = `pie-${Math.random().toString(36).slice(2, 8)}`
 const hovered = ref(null)
 
@@ -211,30 +250,23 @@ const chartSlices = computed(() => {
   return slices
 })
 
-const colorDots = computed(() => {
-  const dots = []
-  const SPACING = 0.12
-  const RADIUS = OUTER_R - 8
-  const LEFT_GAP = 0.1
-
-  for (const s of chartSlices.value) {
-    if (s.label === 'Other') {
-      continue
-    }
-    const colors = s.label.split('+')
-    const count = colors.length
-    const firstAngle = s.startAngle + LEFT_GAP
-    for (let i = 0; i < count; i++) {
-      const angle = firstAngle + i * SPACING
-      const pos = polarToCartesian(RADIUS, angle)
-      const colorName = colors[i]
-      dots.push({
+const sliceLabels = computed(() =>
+  chartSlices.value
+    .filter(s => s.endAngle - s.startAngle > 0.3)
+    .map(s => {
+      const mid = (s.startAngle + s.endAngle) / 2
+      const pos = polarToCartesian(OUTER_R * 0.68, mid)
+      const colors = s.label === 'Other' ? [] : s.label.split('+')
+      const text = `${s.label === 'Other' ? 'Other ' : ''}${Math.round(s.pct)}%`
+      // pill: padding + 8 per dot + ~5.5 per glyph at font-size 9
+      const w = 12 + colors.length * 8 + text.length * 5.5
+      return {
         x: pos.x,
         y: pos.y,
-        hex: COLOR_HEX[colorName] || '#9ca3af',
-      })
-    }
-  }
-  return dots
-})
+        w,
+        text,
+        dots: colors.map(c => COLOR_HEX[c] || '#9ca3af'),
+      }
+    }),
+)
 </script>
