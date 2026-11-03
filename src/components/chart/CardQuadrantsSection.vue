@@ -7,14 +7,13 @@
     >
       Card Quadrants
     </h2>
-    <div class="mb-3 overflow-x-auto">
-      <UiMetaTabGroup v-model="cardTypeChart" :options="cardTypeOptions" />
-    </div>
     <ChartCardQuadrantChart
       :card-items="filteredCardItems"
       :card-type-chart="cardTypeChart"
       :series-key="selectedKey"
-    />
+    >
+      <UiMetaTabGroup v-model="cardTypeChart" :options="cardTypeOptions" />
+    </ChartCardQuadrantChart>
   </div>
 </template>
 
