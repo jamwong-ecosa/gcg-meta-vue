@@ -8,11 +8,15 @@
     :tooltip="tooltip"
     :note="note"
     :chart-key="`${seriesKey}-${cardTypeChart ?? 'all'}`"
-  />
+  >
+    <template v-if="$slots.default" #controls>
+      <slot />
+    </template>
+  </ChartQuadrantBubble>
 </template>
 
 <script setup>
-import { useStorage } from '@vueuse/core'
+import { useStorage, useWindowSize } from '@vueuse/core'
 
 const props = defineProps({
   // Already filtered to cardTypeChart by the parent section
@@ -36,9 +40,16 @@ const GROUPS = CARD_COLOR_ORDER.map(name => ({
   stroke: name === 'White' ? '#94a3b8' : undefined,
 }))
 
-const TOP_N = 40
+// Fewer cards and names on phones, where 40 bubbles pile on top of each other
+const { width: winWidth } = useWindowSize()
+const isMobile = computed(() => winWidth.value < 640)
+const topN = computed(() => (isMobile.value ? 20 : 40))
 // Lift is shrunk toward 0 as if each card had this many extra decks at its archetypes' rate
 const PRIOR_DECKS = 10
+// Tooltip notes only appear when they say something the main value doesn't:
+// archetype-predicted rate ≥ 0.5pp off, effective archetypes ≥ 1 below the count
+const NOTE_MIN_RATE_DIFF = 0.5
+const NOTE_MIN_ARCH_DIFF = 1
 
 const MODES = [
   {
@@ -67,7 +78,7 @@ const parsed = computed(() =>
   props.cardItems
     .filter(item => isImpact.value || item.archetypeCount > 1)
     .sort((a, b) => b.totalDecksIncluded - a.totalDecksIncluded)
-    .slice(0, TOP_N)
+    .slice(0, topN.value)
     .map(item => {
       const decks = item.totalDecksIncluded
       const expected = item.expectedWinnerDecks ?? 0
@@ -104,7 +115,12 @@ const points = computed(() => {
   const ref = axes.value.yRef ?? 0
   const byDecks = [...parsed.value].sort((a, b) => b.totalDecksIncluded - a.totalDecksIncluded)
   const byOutlier = [...parsed.value].sort((a, b) => Math.abs(b[y] - ref) - Math.abs(a[y] - ref))
-  const labeled = new Set([...byDecks.slice(0, 4), ...byOutlier.slice(0, 3)].map(c => c.cardId))
+  const labeled = new Set(
+    [
+      ...byDecks.slice(0, isMobile.value ? 2 : 4),
+      ...byOutlier.slice(0, isMobile.value ? 2 : 3),
+    ].map(c => c.cardId),
+  )
   return parsed.value.map(c => ({
     x: c.totalDecksIncluded,
     y: c[y],
@@ -116,7 +132,7 @@ const points = computed(() => {
 })
 
 const note = computed(() => {
-  const scope = `Top ${TOP_N} ${props.cardTypeChart ?? ''} cards by decks included`.replace(
+  const scope = `Top ${topN.value} ${props.cardTypeChart ?? ''} cards by decks included`.replace(
     /\s+/g,
     ' ',
   )
@@ -126,14 +142,30 @@ const note = computed(() => {
 })
 
 function tooltip(c) {
-  return `<b>${c.name}</b><br/>
-    ID: ${c.cardId}.${c.type}<br/>
-    Color: ${c.color}<br/>
-    Decks: ${c.totalDecksIncluded}<br/>
-    Winner Decks: ${c.totalWinnerDecks}<br/>
-    Winner Rate: ${c.winnerRate.toFixed(1)}% (archetype ${c.expectedRate.toFixed(1)}%)<br/>
-    Lift: ${c.lift > 0 ? '+' : ''}${c.lift.toFixed(1)}pp<br/>
-    Archetypes: ${c.archetypeCount} (effective ${c.spread})`
+  const sign = c.lift > 0 ? '+' : ''
+  return {
+    title: c.name,
+    subtitle: `${c.cardId} · ${c.type}`,
+    dots: [COLOR_HEX[c.color] ?? '#718096'],
+    rows: [
+      { label: 'Decks', value: c.totalDecksIncluded },
+      { label: 'Winner decks', value: c.totalWinnerDecks },
+      {
+        label: 'Winner rate',
+        value: `${c.winnerRate.toFixed(1)}%`,
+        note:
+          Math.abs(c.winnerRate - c.expectedRate) >= NOTE_MIN_RATE_DIFF
+            ? `arch. ${c.expectedRate.toFixed(1)}%`
+            : null,
+      },
+      { label: 'Lift', value: `${sign}${c.lift.toFixed(1)}pp` },
+      {
+        label: 'Archetypes',
+        value: c.archetypeCount,
+        note: c.archetypeCount - c.spread >= NOTE_MIN_ARCH_DIFF ? `eff. ${c.spread}` : null,
+      },
+    ],
+  }
 }
 
 function trim(v) {

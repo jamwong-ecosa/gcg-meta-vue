@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { useStorage } from '@vueuse/core'
+import { useStorage, useWindowSize } from '@vueuse/core'
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
@@ -29,7 +29,13 @@ const GROUPS = TIER_ORDER.map((name, i) => ({
 // Same prior as the tier score's smoothed conversion (scripts/build-tiers.mjs):
 // each archetype is treated as having this many extra decks at the average win rate
 const PRIOR_DECKS = 10
-const LABEL_COUNT = 6
+// Fewer archetypes and names on phones, where the small ones pile up near the origin
+const { width: winWidth } = useWindowSize()
+const isMobile = computed(() => winWidth.value < 640)
+const labelCount = computed(() => (isMobile.value ? 4 : 6))
+const MOBILE_MAX_POINTS = 20
+// Percentage points between raw and adjusted Win.Dk before the tooltip shows both
+const ADJ_NOTE_MIN_DIFF = 0.5
 const QUADRANTS = ['Meta', 'Sleeper', 'Niche', 'Trap']
 
 const MODES = [
@@ -94,6 +100,8 @@ const parsed = computed(() => {
       winDk: ((r.wins + PRIOR_DECKS * avg) / (r.decks + PRIOR_DECKS)) * 100,
     }))
     .filter(r => !isNaN(r[cfg.x]) && !isNaN(r[cfg.y]))
+    .sort((a, b) => b.decks - a.decks)
+    .slice(0, isMobile.value ? MOBILE_MAX_POINTS : undefined)
 })
 
 const axes = computed(() => {
@@ -117,7 +125,7 @@ const points = computed(() => {
   const labeled = new Set(
     [...parsed.value]
       .sort((a, b) => b.decks - a.decks)
-      .slice(0, LABEL_COUNT)
+      .slice(0, labelCount.value)
       .map(r => r.archetype),
   )
   // Archetypes can share a lead signature card; add their colors to tell them apart
@@ -139,18 +147,35 @@ const points = computed(() => {
 
 const note = computed(
   () =>
-    `Bubble size = decks. Win.Dk is shrunk toward the ${avgWinDk.value?.toFixed(1) ?? '–'}% average (${PRIOR_DECKS}-deck prior).`,
+    `${isMobile.value ? `Top ${MOBILE_MAX_POINTS} archetypes by decks. ` : ''}Bubble size = decks. Win.Dk is shrunk toward the ${avgWinDk.value?.toFixed(1) ?? '–'}% average (${PRIOR_DECKS}-deck prior).`,
 )
 
 function tooltip(r) {
-  return `<b>${r.archetype}</b><br/>
-    Use: ${r.usePct}<br/>
-    Win/Dk: ${r.winPerDk} (adj. ${r.winDk.toFixed(1)}%)<br/>
-    Win/Ev: ${r.winPerEv}<br/>
-    Score: ${r.score}<br/>
-    Decks: ${r.decks}<br/>
-    Wins: ${r.wins}<br/>
-    Top4: ${r.top4}`
+  const colors = r.archetype.split('（')[0]
+  const tierIdx = TIER_ORDER.indexOf(r.tier)
+  return {
+    title: r.archetype.match(/（(.+?)）/)?.[1] ?? colors,
+    subtitle: colors,
+    dots: colors.split('+').map(c => COLOR_HEX[c] ?? '#718096'),
+    badge: tierIdx >= 0 ? { text: r.tier, color: TIER_COLORS[tierIdx] } : null,
+    rows: [
+      { label: 'Usage', value: r.usePct },
+      {
+        label: 'Win / deck',
+        value: r.winPerDk,
+        // Only worth showing when the shrinkage moved it, i.e. for small archetypes
+        note:
+          Math.abs(r.winDk - r.rawWinDk) >= ADJ_NOTE_MIN_DIFF
+            ? `adj. ${r.winDk.toFixed(1)}%`
+            : null,
+      },
+      { label: 'Win / event', value: r.winPerEv },
+      { label: 'Tier score', value: r.score },
+      { label: 'Decks', value: r.decks },
+      { label: 'Wins', value: r.wins },
+      { label: 'Top 4', value: r.top4 },
+    ],
+  }
 }
 
 // "Red+White（マスターガンダム / シャイニングガンダム）" → "マスターガンダム"
