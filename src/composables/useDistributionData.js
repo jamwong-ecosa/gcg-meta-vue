@@ -1,5 +1,7 @@
 const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
 
+const PREVIEW_ROWS = 5
+
 export function useDistributionData({
   currentSeries,
   previousSeries,
@@ -97,7 +99,11 @@ export function useDistributionData({
     })
   })
 
-  const colorDist = computed(() => allColorDist.value.filter(i => !i.isOther).slice(0, 6))
+  // Top rows shown on the overview cards; "View All" lists the rest.
+  // Five matches the tier card's S–D rows so the three cards end level.
+  const colorDist = computed(() =>
+    allColorDist.value.filter(i => !i.isOther).slice(0, PREVIEW_ROWS),
+  )
 
   // ── Win rate by color combo ──
   const allWinRateDist = computed(() => {
@@ -167,7 +173,7 @@ export function useDistributionData({
     })
   })
 
-  const winRateDist = computed(() => allWinRateDist.value.slice(0, 6))
+  const winRateDist = computed(() => allWinRateDist.value.slice(0, PREVIEW_ROWS))
 
   // ── Level & Cost distribution ──
   const levelDist = computed(() => {

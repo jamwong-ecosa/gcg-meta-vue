@@ -7,6 +7,9 @@ function addDays(dateStr, days) {
   return d.toISOString().split('T')[0]
 }
 
+// Same card set the "released" count uses: no parallel prints (_p), playable types only
+const PRODUCT_CARD_TYPES = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
+
 function extractProductPrefix(name) {
   const match = name?.match(/\[([A-Z]{2})\d*\]/i)
   return match ? match[1].toUpperCase() : null
@@ -18,10 +21,30 @@ export function useProductGroups({
   eventMinDate,
   eventCutoffDate,
 }) {
+  // Released cards per product, so each bar can show how much of its product sees play
+  const productTotals = computed(() => {
+    const totals = {}
+    const max = eventCutoffDate.value
+    for (const card of Object.values(cardInfoById.value)) {
+      const acquisition = card.acquisitionInfo?.trim()
+      if (
+        !acquisition ||
+        card.id.includes('_p') ||
+        !PRODUCT_CARD_TYPES.includes(card.type) ||
+        (max && (!card.releaseDate || addDays(card.releaseDate, 7) > max))
+      ) {
+        continue
+      }
+      totals[acquisition] = (totals[acquisition] || 0) + 1
+    }
+    return totals
+  })
+
   const archetypeProducts = computed(() => {
     if (!aggregationResult.value?.cards?.length) {
       return []
     }
+    const totals = productTotals.value
     const map = {}
     const infoMap = cardInfoById.value
     const min = eventMinDate.value
@@ -42,7 +65,13 @@ export function useProductGroups({
         }
       }
     }
-    const entries = Object.entries(map).map(([name, { count, isNew }]) => ({ name, count, isNew }))
+    const entries = Object.entries(map).map(([name, { count, isNew }]) => ({
+      name,
+      count,
+      // Never below count, in case a used card is missing from the release data
+      total: Math.max(totals[name] ?? 0, count),
+      isNew,
+    }))
     return entries
       .sort((a, b) => {
         const prefixA = extractProductPrefix(a.name)

@@ -25,11 +25,11 @@
       @toggle-enlarge="enlargedCard = $event"
     >
       <template #tabs>
-        <div class="ml-auto flex flex-col gap-2 sm:flex-row">
-          <div class="flex justify-end overflow-x-auto">
+        <div class="flex min-w-0 flex-col gap-2 sm:ml-auto sm:flex-row">
+          <div class="overflow-x-auto sm:flex sm:justify-end">
             <UiMetaTabGroup v-model="cardTab" :options="cardMetricOptions" />
           </div>
-          <div class="flex justify-end overflow-x-auto">
+          <div class="overflow-x-auto sm:flex sm:justify-end">
             <UiMetaTabGroup v-model="typeTab" :options="cardTypeOptions" />
           </div>
         </div>
