@@ -109,42 +109,56 @@
 
     <!-- Current meta -->
     <section v-if="featured" class="mt-14 md:mt-20">
-      <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div>
-          <h2 class="text-xl font-bold text-sumi md:text-2xl dark:text-nalika-text">
-            Current meta
-          </h2>
+      <!-- The series is the heading: an eyebrow, its month large with the event
+           name beside it, one line of counts; the tier-list link sits level with
+           the heading on the right -->
+      <div class="flex items-end justify-between gap-4">
+        <div class="min-w-0">
           <p
-            class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 dark:text-gray-400"
+            class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70"
           >
-            <span
-              class="rounded-full bg-ruri/10 px-2.5 py-0.5 text-sm font-semibold text-ruri dark:bg-sora/15 dark:text-sora"
-            >
-              {{ featured.label }}
-            </span>
-            <span class="tabular-nums">
-              {{ featured.events.toLocaleString() }} events · {{ featured.eventMinDate }} →
-              {{ featured.eventMaxDate }}
-            </span>
+            Current meta
           </p>
+          <h2
+            class="mt-1 flex flex-wrap items-baseline gap-x-2 text-2xl font-bold text-sumi md:text-3xl dark:text-nalika-text"
+          >
+            {{ featuredTitle.main }}
+            <span
+              v-if="featuredTitle.sub"
+              class="text-base font-semibold text-ruri md:text-lg dark:text-sora"
+            >
+              {{ featuredTitle.sub }}
+            </span>
+          </h2>
         </div>
         <RouterLink
           :to="{ name: 'tier', query: { series: featured.value } }"
-          class="rounded-full border border-gray-500/20 px-3.5 py-1.5 text-xs font-medium text-ruri transition-colors hover:border-ruri/60 dark:border-nalika-border dark:text-sora dark:hover:border-sora/60"
+          class="mb-1 shrink-0 text-sm font-medium whitespace-nowrap text-ruri hover:underline hover:underline-offset-4 dark:text-sora"
         >
           Full tier list →
         </RouterLink>
       </div>
+      <p class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
+        {{ featured.events.toLocaleString() }} events · {{ featuredRange }}
+      </p>
 
       <RouterLink
         v-if="inProgress"
         :to="{ name: 'tier', query: { series: inProgress.value } }"
-        class="group mt-4 block rounded bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-200/80 dark:hover:bg-amber-900/45"
+        class="group mt-4 flex items-center gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/25 dark:text-amber-200/80 dark:hover:bg-amber-900/40"
       >
-        In progress:
-        <b>{{ inProgress.label }}</b>
-        — {{ inProgress.events }} events so far, tiers are preliminary.
-        <span class="font-medium underline underline-offset-2">See early tiers</span>
+        <span class="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+          <span class="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-60" />
+          <span class="relative h-2 w-2 rounded-full bg-amber-500" />
+        </span>
+        <span class="min-w-0 flex-1">
+          <b>{{ inProgress.label }}</b>
+          in progress · {{ inProgress.events }} events
+          <span class="max-sm:hidden">so far, tiers are preliminary</span>
+        </span>
+        <span class="shrink-0 font-medium whitespace-nowrap group-hover:underline">
+          Early tiers →
+        </span>
       </RouterLink>
 
       <div class="mt-4 grid gap-3 md:grid-cols-3 md:gap-4">
@@ -270,6 +284,19 @@ await loadTierData()
 // events for stable tiers, and flag a newer one that is still in progress
 const latest = computed(() => tierData.value[0] ?? null)
 const featured = computed(() => tierData.value.find(s => !s.preliminary) ?? latest.value)
+// "2026-10 (Serial)" → "2026-10" with "Serial" beside it
+const featuredTitle = computed(() => {
+  const label = featured.value?.label ?? ''
+  return { main: label.replace(/\s*\(.*\)$/, ''), sub: label.match(/\((.*)\)$/)?.[1] ?? '' }
+})
+// "2026-10-01 → 10-31": the end date drops a year it shares with the start
+const featuredRange = computed(() => {
+  const { eventMinDate: from, eventMaxDate: to } = featured.value ?? {}
+  if (!from || !to) {
+    return from ?? to ?? ''
+  }
+  return `${from} → ${to.slice(0, 4) === from.slice(0, 4) ? to.slice(5) : to}`
+})
 const inProgress = computed(() => (latest.value !== featured.value ? latest.value : null))
 const seriesQuery = computed(() => (featured.value ? { series: featured.value.value } : {}))
 
