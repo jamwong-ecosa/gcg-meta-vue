@@ -12,22 +12,33 @@ export function useCardStats(card, lift) {
   const liftText = computed(() => liftValue(lift()))
   const liftClass = computed(() => liftTone(lift()))
 
-  const statsTitle = computed(() => {
+  // Rows for UiHint's `content`
+  const statsRows = computed(() => {
     const c = card()
-    const l = lift()
-    const lines = [
-      c.name,
-      `In ${c.decksIncluded} deck${c.decksIncluded === 1 ? '' : 's'} (${(c.inclusionRate * 100).toFixed(1)}%), ${c.winnerDeckCount ?? 0} of them won`,
-      `×${copies.value} copies on average when run`,
-    ]
-    const note = liftNote(l)
-    if (note) {
-      lines.push(note)
-    }
-    return lines.join('\n')
+    return [
+      { label: 'Decks', value: c.decksIncluded, note: `${(c.inclusionRate * 100).toFixed(1)}%` },
+      { label: 'Wins', value: c.winnerDeckCount ?? 0, note: 'events won' },
+      liftRow(lift()),
+    ].filter(Boolean)
   })
 
-  return { copies, liftText, liftClass, statsTitle }
+  return { copies, liftText, liftClass, statsRows }
+}
+
+// Hint row for the win-rate change; null when there is nothing to say
+export function liftRow(lift, vs = 'with it vs without') {
+  if (!lift) {
+    return null
+  }
+  if (lift.value === null) {
+    return { label: 'WR', value: '—', note: lift.note }
+  }
+  return {
+    label: 'WR',
+    value: `${liftValue(lift)} pts`,
+    note: lift.significant ? vs : `${vs}, could be chance`,
+    class: lift.significant && lift.value ? liftTone(lift) : tw`text-gray-600 dark:text-gray-300`,
+  }
 }
 
 // Inclusion bar colour: hotter for cards more decks run
@@ -73,18 +84,6 @@ export function liftTone(lift) {
   return lift.value > 0
     ? tw`font-semibold text-green-600 dark:text-green-500`
     : tw`font-semibold text-red-600 dark:text-red-500/90`
-}
-
-// Tooltip line for the win-rate change, or '' when there is nothing to say
-export function liftNote(lift) {
-  if (!lift) {
-    return ''
-  }
-  if (lift.value === null) {
-    return lift.note ?? ''
-  }
-  const chance = lift.significant ? '' : ' (could be chance)'
-  return `Event wins ${liftValue(lift)} pts with it vs without${chance}`
 }
 
 // Share as a percentage: whole numbers, but one decimal under 1% so a card in a

@@ -2,7 +2,7 @@
   <!-- Compact card (width comes from the parent): the full card image, which
        already shows cost, level and stats; copies per deck on top; inclusion and
        win-rate change underneath. Removed cards show the image only, dimmed -->
-  <UiHint class="flex flex-col" :text="hintText">
+  <UiHint class="flex flex-col" :content="hint">
     <button
       class="group relative flex w-full cursor-zoom-in flex-col text-left"
       @click="emit('zoom', card.cardId)"
@@ -84,7 +84,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['zoom'])
 
-const { copies, liftText, liftClass, statsTitle } = useCardStats(
+const { copies, liftText, liftClass, statsRows } = useCardStats(
   () => props.card,
   () => props.lift,
 )
@@ -94,11 +94,16 @@ const tags = computed(() => ({
   new: !props.isRemoved && props.isNew,
 }))
 const badges = computed(() => tagBadges(tags.value))
-// Stats, then what each tag on the card means
-const hintText = computed(() =>
+// Name and card number, stats, then what each tag on the card means
+const hint = computed(() =>
   props.isRemoved
-    ? props.card.name
-    : [statsTitle.value, ...badges.value.map(b => `${b.text}: ${b.title}`)].join('\n'),
+    ? { title: props.card.name, subtitle: props.card.cardId }
+    : {
+        title: props.card.name,
+        subtitle: props.card.cardId,
+        rows: statsRows.value,
+        tags: badges.value,
+      },
 )
 const ringClass = computed(() => tagRingClass(tags.value))
 const barClass = computed(() => inclusionBarClass(props.card.inclusionRate))

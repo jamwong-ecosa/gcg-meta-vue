@@ -38,7 +38,7 @@
           <UiHint
             v-if="item.isLast"
             class="absolute right-1 -bottom-3 z-10 flex items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xs leading-5 whitespace-nowrap text-sky-700 tabular-nums dark:bg-nalika-bg dark:text-sky-400"
-            :text="item.group.title"
+            :content="item.group.hint"
           >
             <!-- Same type and layout as a card's own share / WR line -->
             <span class="font-bold">≡ {{ item.group.pct }}%</span>
@@ -116,14 +116,21 @@ function groupInfo(g) {
     allPct: hasAll ? sharePct(props.deckCount ? g.allDecks / props.deckCount : 0) : null,
     liftText: liftValue(lift),
     liftClass: liftTone(lift),
-    title: [
-      'Same card under different names (same effect and stats)',
-      `In ${g.decks} decks in any version, ${g.wins} of them won`,
-      hasAll && `${g.allDecks} decks run ${size === 2 ? 'both versions' : `all ${size} versions`}`,
-      liftNote(lift) || 'WR: win rate of decks running any version vs none',
-    ]
-      .filter(Boolean)
-      .join('\n'),
+    hint: {
+      title: 'Same card, different names',
+      subtitle: 'Same effect and stats',
+      rows: [
+        { label: 'Decks', value: g.decks, note: 'any version' },
+        { label: 'Wins', value: g.wins, note: 'events won' },
+        hasAll && {
+          label: allLabel,
+          value: g.allDecks,
+          note: size === 2 ? 'decks run both versions' : `decks run all ${size} versions`,
+        },
+        liftRow(lift, 'any version vs none'),
+      ].filter(Boolean),
+      footnote: lift ? '' : 'WR: win rate of decks running any version vs none',
+    },
   }
 }
 

@@ -17,14 +17,52 @@
         v-if="open"
         ref="bubble"
         role="tooltip"
-        class="pointer-events-none fixed z-1300 max-w-xs rounded-md bg-gray-900 px-2.5 py-1.5 text-xs leading-snug font-normal whitespace-pre-line text-white shadow-lg dark:bg-gray-700"
+        class="pointer-events-none fixed z-1300 max-w-xs rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm leading-relaxed font-normal text-gray-800 shadow-lg dark:border-sky-800 dark:bg-slate-800 dark:text-gray-100"
         :style="{
           top: `${pos.top}px`,
           left: `${pos.left}px`,
           visibility: pos.ready ? '' : 'hidden',
         }"
       >
-        {{ text }}
+        <template v-if="content">
+          <p v-if="content.title" class="font-bold text-gray-900 dark:text-white">
+            {{ content.title }}
+          </p>
+          <p v-if="content.subtitle" class="text-xs text-gray-500 dark:text-gray-400">
+            {{ content.subtitle }}
+          </p>
+          <dl
+            v-if="content.rows?.length"
+            class="mt-1.5 grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-0.5"
+          >
+            <template v-for="r in content.rows" :key="r.label">
+              <dt class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                {{ r.label }}
+              </dt>
+              <dd>
+                <span class="font-mono tabular-nums" :class="r.class">{{ r.value }}</span>
+                <span v-if="r.note" class="ml-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  {{ r.note }}
+                </span>
+              </dd>
+            </template>
+          </dl>
+          <p v-if="content.footnote" class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+            {{ content.footnote }}
+          </p>
+          <ul
+            v-if="content.tags?.length"
+            class="mt-2 space-y-1 border-t border-sky-200 pt-2 dark:border-sky-800"
+          >
+            <li v-for="t in content.tags" :key="t.text" class="flex items-baseline gap-2">
+              <span class="shrink-0 rounded px-1 text-xxs leading-tight font-bold" :class="t.class">
+                {{ t.text }}
+              </span>
+              <span class="text-xs">{{ t.title }}</span>
+            </li>
+          </ul>
+        </template>
+        <span v-else class="whitespace-pre-line">{{ text }}</span>
       </div>
     </Teleport>
   </span>
@@ -35,9 +73,13 @@ import { onClickOutside, onKeyStroke, useEventListener } from '@vueuse/core'
 
 // Explanatory hint shown in a popover instead of a native `title`: hover with a
 // mouse, tap on touch screens (tap again or anywhere else to close)
+// `content` lays the hint out instead of plain `text`:
+// { title, subtitle, rows: [{ label, value, note, class }], footnote, tags: [{ text, title, class }] }
 const props = defineProps({
   text: { type: String, default: '' },
+  content: { type: Object, default: null },
 })
+const hasHint = computed(() => !!(props.text || props.content))
 
 const open = ref(false)
 const root = useTemplateRef('root')
@@ -51,7 +93,7 @@ const MARGIN = 8
 const OFFSET = 6
 
 async function show() {
-  if (!props.text) {
+  if (!hasHint.value) {
     return
   }
   pos.value = { top: 0, left: 0, ready: false }
@@ -113,7 +155,7 @@ function onFocus(event) {
 function onClick(event) {
   const tapped = lastPointer === 'touch' || lastPointer === 'pen'
   lastPointer = ''
-  if (!tapped || !props.text || event.target.closest?.('button, a')) {
+  if (!tapped || !hasHint.value || event.target.closest?.('button, a')) {
     return
   }
   event.stopPropagation()
