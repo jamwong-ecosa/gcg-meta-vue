@@ -879,16 +879,19 @@ for (const series of tournaments) {
   byMonth.get(month).push(series)
 }
 
+// Every monthly entry gets a short label, e.g. "2026-11 (NTC)" or
+// "2026-09 (NTC + Serial)". Single-series months keep their original value so
+// existing ?series= links still work.
 const mergedSeries = [...monthlessSeries]
 for (const [month, seriesList] of byMonth) {
+  const label = `${month} (${seriesList.map(getSeriesShortName).join(' + ')})`
   if (seriesList.length === 1) {
-    mergedSeries.push(seriesList[0])
+    mergedSeries.push({ ...seriesList[0], label })
     continue
   }
-  const [y, m] = month.split('-')
   mergedSeries.push({
     value: month,
-    label: `${y}-${m} (${seriesList.map(getSeriesShortName).join(' + ')})`,
+    label,
     url: '',
     events: seriesList.flatMap(s => s.events),
   })
