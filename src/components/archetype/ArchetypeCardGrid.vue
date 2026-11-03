@@ -2,14 +2,14 @@
   <!-- One grid so rows fill the width; the type label sits over the first card of
        each type instead of breaking the row. Cards that play the same (same
        effect and stats) share one cell spanning their columns, in a dashed box,
-       with one win-rate change for the group -->
+       with one win-rate change for the group. The label sits in the row gap, so
+       rows without one don't keep an empty band -->
   <div
-    class="grid grid-cols-4 gap-x-3 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
+    class="grid grid-cols-4 gap-x-3 gap-y-9 pt-7 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
   >
-    <div v-for="item in items" :key="item.key" class="min-w-0" :class="item.spanClass">
-      <div class="mb-3 flex h-5 min-w-0 items-center">
+    <div v-for="item in items" :key="item.key" class="relative min-w-0" :class="item.spanClass">
+      <div v-if="item.typeLabel" class="absolute inset-x-0 -top-7 flex h-5 min-w-0 items-center">
         <span
-          v-if="item.typeLabel"
           class="flex shrink-0 items-center gap-1.5 border-l-2 border-gray-400 pl-1.5 text-xs font-bold tracking-wider text-gray-700 uppercase dark:border-gray-500 dark:text-nalika-text"
         >
           {{ item.typeLabel }}
@@ -31,7 +31,7 @@
         />
         <!-- Caption on the box's bottom edge, clear of the type heading above -->
         <span
-          class="absolute right-2 -bottom-3.5 z-10 flex cursor-help items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xxs leading-4 whitespace-nowrap text-sky-700 sm:-bottom-4 dark:bg-nalika-bg dark:text-sky-400"
+          class="absolute right-2 -bottom-2 z-10 flex cursor-help items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xxs leading-4 whitespace-nowrap text-sky-700 dark:bg-nalika-bg dark:text-sky-400"
           :title="item.groupTitle"
         >
           <span class="font-semibold">≡ {{ item.groupPct }}%</span>
