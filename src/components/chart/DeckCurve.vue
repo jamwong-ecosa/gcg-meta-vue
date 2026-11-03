@@ -63,7 +63,7 @@
             {{ title }} {{ bar.value }} · {{ bar.total.toFixed(1) }} copies
           </div>
           <div
-            v-for="c in bar.cards"
+            v-for="c in bar.cards.slice(0, POPOVER_CARDS)"
             :key="c.cardId"
             class="flex items-baseline gap-1.5 text-gray-600 dark:text-nalika-text-muted"
           >
@@ -73,6 +73,9 @@
             />
             <span class="min-w-0 flex-1 truncate">{{ c.name }}</span>
             <span class="font-mono text-gray-400 tabular-nums">{{ c.copies.toFixed(1) }}</span>
+          </div>
+          <div v-if="bar.cards.length > POPOVER_CARDS" class="mt-0.5 text-gray-400">
+            +{{ bar.cards.length - POPOVER_CARDS }} more
           </div>
         </div>
       </button>
@@ -109,12 +112,15 @@ const props = defineProps({
   title: { type: String, required: true },
   // 'level' | 'cost'
   field: { type: String, required: true },
-  // Every card the archetype plays (featured and other)
+  // Cards with level, cost, type, name and totalQty (copies across all decks):
+  // an archetype's cards, or a whole series' aggregated cards
   cards: { type: Array, required: true },
   deckCount: { type: Number, required: true },
 })
 
 const HEIGHT = 150
+// A series-wide bar can hold dozens of cards; the popover lists the biggest
+const POPOVER_CARDS = 12
 const BAR_MAX = 125
 
 const TYPE_STYLE = {
@@ -144,8 +150,15 @@ const entries = computed(() => {
     .filter(e => Number.isFinite(e.value) && TYPES.includes(e.type) && e.copies > 0)
 })
 
+// Axis covers values with a visible amount (0.05+ copies per deck), so a few
+// stray high-level cards don't add empty slots
+const MIN_VISIBLE = 0.05
 const bars = computed(() => {
-  const values = entries.value.map(e => e.value)
+  const perValue = new Map()
+  for (const e of entries.value) {
+    perValue.set(e.value, (perValue.get(e.value) ?? 0) + e.copies)
+  }
+  const values = [...perValue].filter(([, copies]) => copies >= MIN_VISIBLE).map(([v]) => v)
   if (!values.length) {
     return []
   }

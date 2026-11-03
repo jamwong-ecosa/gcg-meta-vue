@@ -88,7 +88,6 @@ const { allColorDist, allWinRateDist } = useDistributionData({
   allRows,
   totalSeriesDecks,
   totalSeriesWinnerDecks,
-  aggregationResult,
 })
 
 await loadTierData()

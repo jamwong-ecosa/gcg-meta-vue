@@ -8,7 +8,6 @@ export function useDistributionData({
   allRows,
   totalSeriesDecks,
   totalSeriesWinnerDecks,
-  aggregationResult,
 }) {
   const previousColorMap = computed(() => {
     const data = previousSeries.value?.colorComboData ?? []
@@ -175,50 +174,11 @@ export function useDistributionData({
 
   const winRateDist = computed(() => allWinRateDist.value.slice(0, PREVIEW_ROWS))
 
-  // ── Level & Cost distribution ──
-  const levelDist = computed(() => {
-    const counts = {}
-    const qtySums = {}
-    const cards = aggregationResult.value?.cards ?? []
-    for (const card of cards) {
-      const lv = parseInt(card.level)
-      if (lv >= 1 && lv <= 9) {
-        counts[lv] = (counts[lv] || 0) + 1
-        qtySums[lv] = (qtySums[lv] || 0) + (card.avgQty || 0)
-      }
-    }
-    return Array.from({ length: 9 }, (_, i) => ({
-      label: i + 1,
-      count: counts[i + 1] || 0,
-      sumAvgQty: Math.round(qtySums[i + 1] || 0),
-    }))
-  })
-
-  const costDist = computed(() => {
-    const counts = {}
-    const qtySums = {}
-    const cards = aggregationResult.value?.cards ?? []
-    for (const card of cards) {
-      const c = parseInt(card.cost)
-      if (c >= 1 && c <= 9) {
-        counts[c] = (counts[c] || 0) + 1
-        qtySums[c] = (qtySums[c] || 0) + (card.avgQty || 0)
-      }
-    }
-    return Array.from({ length: 9 }, (_, i) => ({
-      label: i + 1,
-      count: counts[i + 1] || 0,
-      sumAvgQty: Math.round(qtySums[i + 1] || 0),
-    }))
-  })
-
   return {
     tierDist,
     allColorDist,
     colorDist,
     allWinRateDist,
     winRateDist,
-    levelDist,
-    costDist,
   }
 }

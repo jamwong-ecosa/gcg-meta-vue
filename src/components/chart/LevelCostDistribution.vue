@@ -1,25 +1,12 @@
 <template>
+  <!-- Copies per average deck across the series at each level and cost, by type -->
   <div class="mb-6 grid gap-4 md:grid-cols-2">
-    <ChartDistributionBars title="Level Distribution" :items="levelDist" color="#005caf" />
-    <ChartDistributionBars title="Cost Distribution" :items="costDist" color="#0b346e" />
+    <ChartDeckCurve title="Level" field="level" :cards="cards" :deck-count="totalSeriesDecks" />
+    <ChartDeckCurve title="Cost" field="cost" :cards="cards" :deck-count="totalSeriesDecks" />
   </div>
 </template>
 
 <script setup>
-const {
-  currentSeries,
-  previousSeries,
-  allRows,
-  totalSeriesDecks,
-  totalSeriesWinnerDecks,
-  aggregationResult,
-} = inject('meta')
-const { levelDist, costDist } = useDistributionData({
-  currentSeries,
-  previousSeries,
-  allRows,
-  totalSeriesDecks,
-  totalSeriesWinnerDecks,
-  aggregationResult,
-})
+const { totalSeriesDecks, aggregationResult } = inject('meta')
+const cards = computed(() => aggregationResult.value?.cards ?? [])
 </script>

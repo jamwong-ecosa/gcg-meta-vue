@@ -775,7 +775,9 @@ function processSeries(series) {
       accumulateCard(card, arch)
     }
     for (const sigId of arch.sigCardIds ?? []) {
-      sigCardCounts[sigId] = (sigCardCounts[sigId] || 0) + 1
+      const sig = (sigCardCounts[sigId] ??= { archetypes: 0, decks: 0 })
+      sig.archetypes++
+      sig.decks += arch.deckCount
     }
   }
 
@@ -787,19 +789,23 @@ function processSeries(series) {
     card.effectiveArchetypes = +(card.totalDecksIncluded ** 2 / card.sumSqDecks).toFixed(1)
     delete card.sumSqDecks
   }
+  // Signature cards ranked by the decks of the archetypes built around them, so
+  // one 300-deck archetype outweighs several 3-deck ones
   const sigCards = Object.entries(sigCardCounts)
-    .map(([cardId, count]) => {
+    .map(([cardId, sig]) => {
       const info = cardMap[cardId] || {}
       return {
         cardId,
         name: info.name || '?',
         color: info.color || 'inherit',
         rarity: info.rarity || '',
-        archetypeCount: count,
+        archetypeCount: sig.archetypes,
+        deckCount: sig.decks,
+        deckShare: +((sig.decks / allPlayers.length) * 100).toFixed(1),
         avgQty: info.avgQty || 0,
       }
     })
-    .sort((a, b) => b.archetypeCount - a.archetypeCount)
+    .sort((a, b) => b.deckCount - a.deckCount || b.archetypeCount - a.archetypeCount)
 
   const aggregatedCards = {
     cards,

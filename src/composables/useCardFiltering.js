@@ -2,7 +2,22 @@ import { useStorage } from '@vueuse/core'
 
 const CARD_TYPE_OPTIONS = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
 
-export function useCardFiltering(aggregationResult) {
+// "Most Archetypes": effective archetypes (how many it's spread across if they
+// all played it equally), so archetypes that barely play a card don't count
+// fully. Only cards in MIN_SPREAD_SHARE of the series' decks rank (and at least
+// 20): a card in 0.5% of decks across 6 archetypes is spread wide but barely played
+const MIN_SPREAD_SHARE = 0.05
+const MIN_SPREAD_DECKS = 20
+function spreadRanked(cards, totalDecks) {
+  const min = Math.max(MIN_SPREAD_DECKS, totalDecks * MIN_SPREAD_SHARE)
+  return cards.filter(c => c.totalDecksIncluded >= min)
+}
+const byArchetypeSpread = (a, b) =>
+  (b.effectiveArchetypes ?? b.archetypeCount) - (a.effectiveArchetypes ?? a.archetypeCount) ||
+  b.totalDecksIncluded - a.totalDecksIncluded
+
+// totalDecks: the series' deck count (a ref), for the Most Archetypes cutoff
+export function useCardFiltering(aggregationResult, totalDecks = ref(0)) {
   const cardTab = useStorage('gcg-card-tab', 'played')
   if (cardTab.value === 'winner') {
     cardTab.value = 'archetype'
@@ -50,8 +65,8 @@ export function useCardFiltering(aggregationResult) {
     if (cardTab.value === 'played') {
       return aggregationResult.value.topPlayed
     }
-    return [...aggregationResult.value.cards]
-      .sort((a, b) => b.archetypeCount - a.archetypeCount)
+    return spreadRanked(aggregationResult.value.cards, totalDecks.value)
+      .sort(byArchetypeSpread)
       .slice(0, 10)
   })
 
@@ -78,7 +93,7 @@ export function useCardFiltering(aggregationResult) {
     const sorted =
       cardTab.value === 'played'
         ? [...cards].sort((a, b) => b.totalDecksIncluded - a.totalDecksIncluded)
-        : [...cards].sort((a, b) => b.archetypeCount - a.archetypeCount)
+        : spreadRanked(cards, totalDecks.value).sort(byArchetypeSpread)
     let filtered = sorted
     if (colorFilter.value) {
       filtered = filtered.filter(c => c.color === colorFilter.value)

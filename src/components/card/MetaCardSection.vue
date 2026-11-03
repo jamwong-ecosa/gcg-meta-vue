@@ -13,13 +13,14 @@
 
     <div
       v-if="cards.length"
-      class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-10"
+      class="grid grid-cols-4 gap-x-3 gap-y-4 sm:grid-cols-5 lg:grid-cols-10 lg:gap-x-4"
     >
       <CardMetaCardItem
-        v-for="card in cards"
+        v-for="(card, i) in cards"
         :key="card.cardId"
-        v-memo="[card]"
+        v-memo="[card, ranked]"
         :card="card"
+        :rank="ranked ? i + 1 : 0"
         @toggle-enlarge="$emit('toggle-enlarge', $event)"
       >
         <slot name="footer" :card="card" />
@@ -37,6 +38,8 @@ defineProps({
   title: { type: String, required: true },
   cards: { type: Array, default: () => [] },
   emptyText: { type: String, default: 'No data' },
+  // Show #1, #2… on the cards
+  ranked: { type: Boolean, default: false },
 })
 
 defineEmits(['toggle-enlarge'])

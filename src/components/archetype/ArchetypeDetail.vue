@@ -73,13 +73,13 @@
 
     <!-- Deck curve: copies per average deck at each level and cost, by type -->
     <div class="mt-6 grid gap-4 md:grid-cols-2">
-      <ArchetypeDeckCurve
+      <ChartDeckCurve
         title="Level"
         field="level"
         :cards="allCards"
         :deck-count="archetype.deckCount"
       />
-      <ArchetypeDeckCurve
+      <ChartDeckCurve
         title="Cost"
         field="cost"
         :cards="allCards"

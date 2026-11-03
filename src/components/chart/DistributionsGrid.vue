@@ -173,6 +173,5 @@ const { tierDist, allColorDist, colorDist, allWinRateDist, winRateDist } = useDi
   allRows,
   totalSeriesDecks,
   totalSeriesWinnerDecks,
-  aggregationResult,
 })
 </script>
