@@ -164,32 +164,39 @@
             />
           </div>
           <div class="flex min-w-0 flex-1 flex-col justify-center p-3 md:justify-start">
-            <div class="flex items-center gap-1.5 text-xxs text-gray-500 dark:text-gray-400">
-              <span class="rounded px-1.5 py-px text-xs font-bold" :class="tierPillClass(row.tier)">
+            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span
+                class="rounded px-2 py-0.5 text-sm leading-none font-bold"
+                :class="tierPillClass(row.tier)"
+              >
                 {{ row.tier }}
               </span>
-              <span class="font-bold text-gray-700 tabular-nums dark:text-nalika-text">
+              <span class="text-sm font-bold text-gray-700 tabular-nums dark:text-nalika-text">
                 {{ row.score }}
               </span>
               <span class="ml-1 flex items-center gap-0.5">
                 <span
                   v-for="dot in row.colorDots"
                   :key="dot.name"
-                  class="h-2 w-2 rounded-full"
+                  class="h-2.5 w-2.5 rounded-full"
                   :style="{ background: dot.hex }"
                 />
               </span>
               <span class="truncate">{{ row.colors }}</span>
             </div>
+            <!-- Wrap between card names, never inside one -->
             <div
-              class="mt-1.5 line-clamp-2 text-sm leading-snug font-bold text-sumi group-hover:underline dark:text-nalika-text"
+              class="mt-1.5 line-clamp-2 text-sm leading-snug font-bold break-keep text-sumi group-hover:underline dark:text-nalika-text"
             >
               <template v-for="(seg, si) in row.segments" :key="si">
                 <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
                 <span v-else>{{ seg.text }}</span>
               </template>
             </div>
-            <div class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
+            <!-- Pinned to the bottom so cards in a row line up when a name wraps -->
+            <div
+              class="mt-1.5 text-xs text-gray-500 tabular-nums md:mt-auto md:pt-1.5 dark:text-gray-400"
+            >
               {{ row.wins }} wins · {{ row.usePct }} of placements
             </div>
           </div>
