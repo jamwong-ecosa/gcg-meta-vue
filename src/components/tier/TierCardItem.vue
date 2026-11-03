@@ -32,7 +32,7 @@
               />
             </span>
             <span class="truncate">{{ headline }}</span>
-            <span v-if="row.darkHorse" class="text-xs" :title="DARK_HORSE_HELP">🐴</span>
+            <UiHint v-if="row.darkHorse" class="text-xs" :text="DARK_HORSE_HELP">🐴</UiHint>
           </div>
           <div
             v-if="cardNames.length"
@@ -52,7 +52,9 @@
                 {{ card.name }}
               </span>
             </template>
-            <span v-if="!headline && row.darkHorse" class="ml-1" :title="DARK_HORSE_HELP">🐴</span>
+            <UiHint v-if="!headline && row.darkHorse" class="ml-1" :text="DARK_HORSE_HELP">
+              🐴
+            </UiHint>
           </div>
         </div>
         <!-- Score on top, usage and rank change underneath -->

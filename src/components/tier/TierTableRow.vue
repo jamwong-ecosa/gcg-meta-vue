@@ -35,13 +35,13 @@
             <span v-else class="shrink-0 whitespace-pre" v-text="seg.text" />
           </template>
         </div>
-        <span
+        <UiHint
           v-if="row.darkHorse"
-          class="shrink-0 cursor-help rounded bg-amber-100 px-1 text-xs dark:bg-amber-900/40"
-          :title="DARK_HORSE_HELP"
+          class="shrink-0 rounded bg-amber-100 px-1 text-xs dark:bg-amber-900/40"
+          :text="DARK_HORSE_HELP"
         >
           🐴
-        </span>
+        </UiHint>
       </div>
     </td>
     <td class="px-3 py-2 text-right font-mono tabular-nums">{{ row.decks }}</td>

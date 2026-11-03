@@ -22,14 +22,15 @@
             ]"
             :aria-sort="ariaSort(c.key)"
           >
-            <button
-              class="inline-flex cursor-pointer items-center gap-1 hover:text-white"
-              :title="TIER_COLUMN_HELP[c.key]"
-              @click="$emit('sort', sortFieldOf(c.key))"
-            >
-              {{ c.label }}
-              <span class="w-2 text-xxs opacity-80">{{ sortIndicator(c.key) }}</span>
-            </button>
+            <UiHint :text="TIER_COLUMN_HELP[c.key]">
+              <button
+                class="inline-flex cursor-pointer items-center gap-1 hover:text-white"
+                @click="$emit('sort', sortFieldOf(c.key))"
+              >
+                {{ c.label }}
+                <span class="w-2 text-xxs opacity-80">{{ sortIndicator(c.key) }}</span>
+              </button>
+            </UiHint>
           </th>
           <th class="rounded-tr-lg px-1 py-2" />
         </tr>

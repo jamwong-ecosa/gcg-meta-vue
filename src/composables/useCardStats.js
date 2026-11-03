@@ -2,7 +2,7 @@
 // with the card (`lift`, computed by ArchetypeDetail), and a tooltip with both.
 // `card` and `lift` are getters so the values follow prop changes.
 export function useCardStats(card, lift) {
-  // Copies per deck that runs it: exact for the tooltip, whole for the badge
+  // Copies per deck that runs it, rounded to a whole number for the badge and hint
   const copiesExact = computed(() => {
     const { totalQty, decksIncluded, avgQty } = card()
     return totalQty && decksIncluded ? +(totalQty / decksIncluded).toFixed(1) : avgQty
@@ -18,7 +18,7 @@ export function useCardStats(card, lift) {
     const lines = [
       c.name,
       `In ${c.decksIncluded} deck${c.decksIncluded === 1 ? '' : 's'} (${(c.inclusionRate * 100).toFixed(1)}%), ${c.winnerDeckCount ?? 0} of them won`,
-      `×${copiesExact.value} copies on average when run`,
+      `×${copies.value} copies on average when run`,
     ]
     const note = liftNote(l)
     if (note) {
@@ -84,7 +84,7 @@ export function liftNote(lift) {
     return lift.note ?? ''
   }
   const chance = lift.significant ? '' : ' (could be chance)'
-  return `Win rate ${liftValue(lift)} pts with it vs without${chance}`
+  return `Event wins ${liftValue(lift)} pts with it vs without${chance}`
 }
 
 // Share as a percentage: whole numbers, but one decimal under 1% so a card in a

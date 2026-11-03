@@ -27,35 +27,35 @@
         v-if="sec === cardSections[0]"
         class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xxs whitespace-nowrap text-gray-400 dark:text-gray-500"
       >
-        <span title="Copies per deck that runs it">
+        <UiHint text="Copies per deck that runs it">
           <b class="font-semibold text-gray-500 dark:text-gray-400">×</b>
           copies
-        </span>
-        <span
-          title="Win rate with the card vs without, in points. Grey when it could be chance; hidden when either side has under 20 decks"
+        </UiHint>
+        <UiHint
+          text="How often this archetype's decks won their event (1st, or 2nd at 16+ players) with the card minus without, in points. Green or red when the gap is clear; grey when it could be chance; hidden when either side has under 20 decks. Shows what winning lists run, not that the card causes wins"
         >
           <b class="font-semibold text-gray-500 dark:text-gray-400">WR ±</b>
-          with vs without
-        </span>
-        <span class="flex items-center gap-1" title="Signature card of the archetype">
+          event wins, with card vs without
+        </UiHint>
+        <UiHint class="flex items-center gap-1" text="Signature card of the archetype">
           <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">★ SIG</span>
-        </span>
-        <span
+        </UiHint>
+        <UiHint
           class="flex items-center gap-1"
-          title="Top tech pick: uncommon, but its decks win well"
+          text="Top tech pick: uncommon, but its decks win well"
         >
           <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">TECH</span>
-        </span>
-        <span
+        </UiHint>
+        <UiHint
           v-if="prevCardIds?.size"
           class="flex items-center gap-1"
-          title="Not played by this archetype last series"
+          text="Not played by this archetype last series"
         >
           <span class="rounded-sm bg-green-600 px-1 font-bold text-white">NEW</span>
-        </span>
-        <span
+        </UiHint>
+        <UiHint
           class="flex items-center gap-1"
-          title="Same card under another name: decks running either, and one WR for both"
+          text="Same card under another name: decks running either, and one WR for both"
         >
           <span
             class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
@@ -63,7 +63,7 @@
             ≡ %
           </span>
           same card
-        </span>
+        </UiHint>
       </p>
       <div v-else class="mb-3" />
       <ArchetypeCardGrid

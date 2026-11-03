@@ -29,10 +29,10 @@
           class="pointer-events-none absolute -inset-y-1 border-y-2 border-dashed border-sky-400/80 sm:-inset-y-1.5 dark:border-sky-500/60"
           :class="item.boxClass"
         />
-        <span
+        <UiHint
           v-if="item.isLast"
-          class="absolute right-1 -bottom-3 z-10 flex cursor-help items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xs leading-5 whitespace-nowrap text-sky-700 tabular-nums dark:bg-nalika-bg dark:text-sky-400"
-          :title="item.group.title"
+          class="absolute right-1 -bottom-3 z-10 flex items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xs leading-5 whitespace-nowrap text-sky-700 tabular-nums dark:bg-nalika-bg dark:text-sky-400"
+          :text="item.group.title"
         >
           <!-- Same type and layout as a card's own share / WR line -->
           <span class="font-bold">≡ {{ item.group.pct }}%</span>
@@ -40,7 +40,7 @@
             <span class="max-sm:hidden">WR</span>
             {{ item.group.liftText }}
           </span>
-        </span>
+        </UiHint>
       </template>
       <ArchetypeCardThumb
         class="w-full"
