@@ -1,44 +1,17 @@
 <template>
-  <div class="w-full">
-    <div
-      class="mb-2 flex max-w-full flex-nowrap gap-1 overflow-x-auto rounded-lg bg-gray-100 p-0.5 xl:w-fit dark:bg-gray-700/70"
-    >
-      <button
-        v-for="mode in MODES"
-        :key="mode.key"
-        class="rounded-md px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors"
-        :class="
-          chartMode === mode.key
-            ? 'bg-white text-sumi shadow-xs dark:bg-nalika-surface dark:text-nalika-text'
-            : 'text-gray-500 hover:text-sumi dark:text-nalika-text-muted dark:hover:text-nalika-text'
-        "
-        @click="chartMode = mode.key"
-      >
-        {{ mode.label }}
-      </button>
-    </div>
-    <p v-if="!items.length" class="py-4 text-center text-xs text-gray-400 dark:text-gray-500">
-      No data
-    </p>
-    <VueApexCharts
-      v-else
-      :key="`${chartMode}-${renderKey}`"
-      type="bubble"
-      :height="chartHeight"
-      width="100%"
-      :options="chartOptions"
-      :series="chartSeries"
-    />
-  </div>
+  <ChartQuadrantBubble
+    v-model:mode="chartMode"
+    :modes="MODES"
+    :axes="axes"
+    :points="points"
+    :groups="GROUPS"
+    :tooltip="tooltip"
+    :note="note"
+  />
 </template>
 
 <script setup>
-import { useStorage, useWindowSize } from '@vueuse/core'
-
-// Core build plus only what these charts use, instead of ApexCharts' full default bundle
-import 'apexcharts/bubble'
-import 'apexcharts/features/annotations'
-import VueApexCharts from 'vue3-apexcharts/core'
+import { useStorage } from '@vueuse/core'
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
@@ -47,50 +20,23 @@ const props = defineProps({
 const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
 const TIER_COLORS = ['#fca5a5', '#fdba74', '#fbbf24', '#86efac', '#93c5fd', '#d1d5db']
 const TIER_COLORS_DARK = ['#c53030', '#dd6b20', '#d69e2e', '#2f855a', '#2b6cb0', '#4b5563']
+const GROUPS = TIER_ORDER.map((name, i) => ({
+  name,
+  color: TIER_COLORS[i],
+  colorDark: TIER_COLORS_DARK[i],
+}))
+
+// Same prior as the tier score's smoothed conversion (scripts/build-tiers.mjs):
+// each archetype is treated as having this many extra decks at the average win rate
+const PRIOR_DECKS = 10
+const LABEL_COUNT = 6
+const QUADRANTS = ['Meta', 'Sleeper', 'Niche', 'Trap']
 
 const MODES = [
-  {
-    key: 'usage-winEv',
-    label: 'Usage - Win.Ev',
-    xKey: 'usePct',
-    yKey: 'winPerEv',
-    xLabel: 'Usage Rate (%)',
-    yLabel: 'Win Rate / Event (%)',
-    xIsPercent: true,
-    yIsPercent: true,
-    minWins: 3,
-  },
-  {
-    key: 'usage-winDk',
-    label: 'Usage - Win.Dk',
-    xKey: 'usePct',
-    yKey: 'winPerDk',
-    xLabel: 'Usage Rate (%)',
-    yLabel: 'Win Rate / Deck (%)',
-    xIsPercent: true,
-    yIsPercent: true,
-  },
-  {
-    key: 'usage-score',
-    label: 'Usage - Score',
-    xKey: 'usePct',
-    yKey: 'score',
-    xLabel: 'Usage Rate (%)',
-    yLabel: 'Tier Score',
-    xIsPercent: true,
-    yIsPercent: false,
-  },
-  {
-    key: 'winDk-winEv',
-    label: 'Win.Dk - Win.Ev',
-    xKey: 'winPerDk',
-    yKey: 'winPerEv',
-    xLabel: 'Win Rate / Deck (%)',
-    yLabel: 'Win Rate / Event (%)',
-    xIsPercent: true,
-    yIsPercent: true,
-    minWins: 3,
-  },
+  { key: 'usage-winEv', label: 'Usage - Win.Ev', x: 'use', y: 'winEv', minWins: 3 },
+  { key: 'usage-winDk', label: 'Usage - Win.Dk', x: 'use', y: 'winDk' },
+  { key: 'usage-score', label: 'Usage - Score', x: 'use', y: 'score' },
+  { key: 'winDk-winEv', label: 'Win.Dk - Win.Ev', x: 'winDk', y: 'winEv', minWins: 3 },
 ]
 
 const chartMode = useStorage('gcg-quadrant-mode', 'usage-winEv')
@@ -99,217 +45,116 @@ if (!MODES.some(m => m.key === chartMode.value)) {
   chartMode.value = MODES[0].key
 }
 
-const config = computed(() => MODES.find(m => m.key === chartMode.value))
+const config = computed(() => MODES.find(m => m.key === chartMode.value) ?? MODES[0])
 
-const { width: winWidth } = useWindowSize()
-const chartHeight = computed(() => (winWidth.value < 640 ? 350 : 500))
-const bubbleRadius = computed(() =>
-  winWidth.value < 640 ? { min: 4, max: 12 } : { min: 6, max: 24 },
+const rows = computed(() =>
+  props.items.map(item => ({
+    ...item,
+    use: parseFloat(item.usePct),
+    winEv: parseFloat(item.winPerEv),
+    rawWinDk: parseFloat(item.winPerDk),
+    score: Number(item.score),
+  })),
 )
 
-const renderKey = ref(0)
+// Series-wide references: fair share of usage and of event wins is 1/N,
+// win rate per deck is total wins ÷ total decks
+const fairShare = computed(() => (rows.value.length ? 100 / rows.value.length : null))
+const avgWinDk = computed(() => {
+  const decks = rows.value.reduce((s, r) => s + r.decks, 0)
+  const wins = rows.value.reduce((s, r) => s + r.wins, 0)
+  return decks ? (wins / decks) * 100 : null
+})
+
+const METRICS = computed(() => ({
+  use: { label: 'Usage Rate (%)', scale: 'sqrt', ref: fairShare.value, refLabel: 'fair share' },
+  winEv: {
+    label: 'Win Rate / Event (%)',
+    scale: 'linear',
+    ref: fairShare.value,
+    refLabel: 'fair share',
+  },
+  winDk: {
+    label: 'Win Rate / Deck (%, adj.)',
+    scale: 'linear',
+    ref: avgWinDk.value,
+    refLabel: 'avg',
+  },
+  score: { label: 'Tier Score', scale: 'linear', ref: null, refLabel: 'median' },
+}))
 
 const parsed = computed(() => {
   const cfg = config.value
-  if (!cfg) {
-    return []
-  }
-  return props.items
-    .filter(item => item.decks >= 3 && item.wins >= (cfg.minWins ?? 1))
-    .map(item => {
-      const x = parseFloat(item[cfg.xKey])
-      const v = item[cfg.yKey]
-      const y = cfg.yIsPercent ? parseFloat(v) : Number(v)
-      if (isNaN(x) || isNaN(y)) {
-        return null
-      }
-      return { ...item, _x: x, _y: y }
-    })
-    .filter(Boolean)
+  const avg = (avgWinDk.value ?? 0) / 100
+  return rows.value
+    .filter(r => r.decks >= 3 && r.wins >= (cfg.minWins ?? 1))
+    .map(r => ({
+      ...r,
+      // Shrunk toward the average so 3-deck archetypes with 1 win don't top the chart
+      winDk: ((r.wins + PRIOR_DECKS * avg) / (r.decks + PRIOR_DECKS)) * 100,
+    }))
+    .filter(r => !isNaN(r[cfg.x]) && !isNaN(r[cfg.y]))
 })
 
-watch(parsed, val => {
-  if (val.length > 0) {
-    renderKey.value++
-  }
-})
-
-const medX = computed(() => median(parsed.value.map(d => d._x)))
-const medY = computed(() => median(parsed.value.map(d => d._y)))
-
-const xMax = computed(() => {
-  const mx = Math.max(...parsed.value.map(d => d._x), 0)
-  return mx === 0 ? 1 : Math.ceil(mx * 1.15)
-})
-
-const yMax = computed(() => {
-  const mx = Math.max(...parsed.value.map(d => d._y), 0)
-  return mx === 0 ? 1 : Math.ceil(mx * 1.15)
-})
-
-const chartSeries = computed(() => {
+const axes = computed(() => {
   const cfg = config.value
-  if (!cfg) {
-    return []
-  }
-  const groups = {}
-  for (const item of parsed.value) {
-    const group = (groups[item.tier] ??= [])
-    group.push({
-      x: item._x,
-      y: item._y,
-      z: item.wins,
-      meta: {
-        archetype: item.archetype,
-        usePct: item.usePct,
-        winPerDk: item.winPerDk,
-        winPerEv: item.winPerEv,
-        decks: item.decks,
-        wins: item.wins,
-        top4: item.top4,
-        score: item.score,
-      },
-    })
-  }
-  return TIER_ORDER.filter(t => groups[t]).map(t => ({ name: t, data: groups[t] }))
-})
-
-const seriesColors = computed(() => {
-  const present = new Set(chartSeries.value.map(s => s.name))
-  const base = isDark.value ? TIER_COLORS_DARK : TIER_COLORS
-  return TIER_ORDER.filter(t => present.has(t)).map((_, i) => base[i])
-})
-
-const chartOptions = computed(() => {
-  const cfg = config.value
-  if (!cfg) {
-    return {}
-  }
-  const dark = isDark.value
-  const textColor = dark ? '#9ca3af' : '#999'
-  const gridColor = dark ? '#374151' : '#e5e7eb'
-  const annotColor = dark ? '#6b7280' : '#999'
-  const labelColor = dark ? '#6b7280' : '#bbb'
-  const fontFamily = "'Roboto Mono', 'Noto Sans TC', monospace"
-
-  const fmtX = v => Number(v).toFixed(0)
-  const fmtY = v => Number(v).toFixed(0)
-
-  const qLabels = []
-  if (medX.value !== null && medY.value !== null) {
-    qLabels.push(
-      { x: (medX.value + xMax.value) / 2, y: (medY.value + yMax.value) / 2, text: 'Meta' },
-      { x: medX.value / 2, y: (medY.value + yMax.value) / 2, text: 'Sleeper' },
-      { x: medX.value / 2, y: medY.value / 2, text: 'Niche' },
-      { x: (medX.value + xMax.value) / 2, y: medY.value / 2, text: 'Trap' },
-    )
-  }
-
+  const mx = METRICS.value[cfg.x]
+  const my = METRICS.value[cfg.y]
   return {
-    theme: { mode: dark ? 'dark' : 'light' },
-    chart: {
-      type: 'bubble',
-      toolbar: { show: false },
-      zoom: { enabled: false },
-    },
-    colors: seriesColors.value,
-    dataLabels: { enabled: false },
-    plotOptions: {
-      bubble: {
-        minBubbleRadius: bubbleRadius.value.min,
-        maxBubbleRadius: bubbleRadius.value.max,
-      },
-    },
-    markers: {
-      strokeColor: '#fff',
-      strokeWidth: 0.5,
-    },
-    xaxis: {
-      min: 0,
-      max: xMax.value,
-      tickAmount: 5,
-      forceNiceScale: true,
-      title: {
-        text: cfg.xLabel,
-        style: { fontSize: '12px', color: textColor, fontFamily, cssClass: 'tracking-wider' },
-      },
-      labels: {
-        formatter: fmtX,
-        style: { fontSize: '12px', colors: textColor, fontFamily, cssClass: 'tracking-wider' },
-      },
-    },
-    yaxis: {
-      min: 0,
-      max: yMax.value,
-      tickAmount: 5,
-      forceNiceScale: true,
-      title: {
-        text: cfg.yLabel,
-        style: { fontSize: '12px', color: textColor, fontFamily, cssClass: 'tracking-wider' },
-      },
-      labels: {
-        formatter: fmtY,
-        style: { fontSize: '12px', colors: textColor, fontFamily, cssClass: 'tracking-wider' },
-      },
-    },
-    tooltip: {
-      custom({ seriesIndex, dataPointIndex, w }) {
-        const d = w.config.series[seriesIndex].data[dataPointIndex]
-        return `<div class="${tw`max-w-60 truncate px-1.5 py-0.5 text-xxs leading-snug break-words sm:max-w-72 sm:px-2 sm:py-1 sm:text-xs`}">
-          <b>${d.meta.archetype}</b><br/>
-          Use: ${d.meta.usePct}<br/>
-          Win/Dk: ${d.meta.winPerDk}<br/>
-          Win/Ev: ${d.meta.winPerEv}<br/>
-          Score: ${d.meta.score}<br/>
-          Decks: ${d.meta.decks}<br/>
-          Wins: ${d.meta.wins}<br/>
-          Top4: ${d.meta.top4}
-        </div>`
-      },
-    },
-    annotations: {
-      position: 'back',
-      xaxis:
-        medX.value !== null
-          ? [{ x: medX.value, strokeDashArray: 4, borderColor: annotColor, borderWidth: 1 }]
-          : [],
-      yaxis:
-        medY.value !== null
-          ? [{ y: medY.value, strokeDashArray: 4, borderColor: annotColor, borderWidth: 1 }]
-          : [],
-      points: qLabels.map(q => ({
-        x: q.x,
-        y: q.y,
-        marker: { size: 0 },
-        label: {
-          text: q.text,
-          borderWidth: 0,
-          textAnchor: 'middle',
-          offsetX: 0,
-          offsetY: 0,
-          style: {
-            background: 'transparent',
-            color: labelColor,
-            fontSize: '11px',
-            fontWeight: 'bold',
-            fontFamily,
-            pointerEvents: 'none',
-            cssClass: 'tracking-wider',
-          },
-        },
-      })),
-    },
-    grid: { borderColor: gridColor },
-    legend: { show: false },
+    xLabel: mx.label,
+    yLabel: my.label,
+    xScale: mx.scale,
+    xRef: mx.ref ?? median(parsed.value.map(r => r[cfg.x])),
+    yRef: my.ref ?? median(parsed.value.map(r => r[cfg.y])),
+    xRefLabel: mx.refLabel,
+    yRefLabel: my.refLabel,
+    quadrants: QUADRANTS,
   }
 })
 
-function median(arr) {
-  if (!arr.length) {
-    return null
+const points = computed(() => {
+  const cfg = config.value
+  const labeled = new Set(
+    [...parsed.value]
+      .sort((a, b) => b.decks - a.decks)
+      .slice(0, LABEL_COUNT)
+      .map(r => r.archetype),
+  )
+  // Archetypes can share a lead signature card; add their colors to tell them apart
+  const names = parsed.value.filter(r => labeled.has(r.archetype)).map(r => shortName(r.archetype))
+  const dupes = new Set(names.filter((n, i) => names.indexOf(n) !== i))
+  const labelOf = r => {
+    const name = shortName(r.archetype)
+    return dupes.has(name) ? `${name} (${r.archetype.split('（')[0]})` : name
   }
-  const sorted = [...arr].sort((a, b) => a - b)
-  const mid = Math.floor(sorted.length / 2)
-  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+  return parsed.value.map(r => ({
+    x: r[cfg.x],
+    y: r[cfg.y],
+    size: r.decks,
+    group: r.tier,
+    label: labeled.has(r.archetype) ? labelOf(r) : null,
+    meta: r,
+  }))
+})
+
+const note = computed(
+  () =>
+    `Bubble size = decks. Win.Dk is shrunk toward the ${avgWinDk.value?.toFixed(1) ?? '–'}% average (${PRIOR_DECKS}-deck prior).`,
+)
+
+function tooltip(r) {
+  return `<b>${r.archetype}</b><br/>
+    Use: ${r.usePct}<br/>
+    Win/Dk: ${r.winPerDk} (adj. ${r.winDk.toFixed(1)}%)<br/>
+    Win/Ev: ${r.winPerEv}<br/>
+    Score: ${r.score}<br/>
+    Decks: ${r.decks}<br/>
+    Wins: ${r.wins}<br/>
+    Top4: ${r.top4}`
+}
+
+// "Red+White（マスターガンダム / シャイニングガンダム）" → "マスターガンダム"
+function shortName(archetype) {
+  return archetype.match(/（(.+?)）/)?.[1].split(' / ')[0] ?? archetype
 }
 </script>

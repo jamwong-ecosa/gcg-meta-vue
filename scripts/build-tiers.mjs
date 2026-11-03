@@ -669,16 +669,22 @@ function processSeries(series) {
   // Pre-aggregated card data for MetaOverview (eliminates 73 runtime imports)
   const cardMap = {}
   const sigCardCounts = {}
-  const accumulateCard = card => {
+  // expectedWinnerDecks: winner decks the card would have if it won at the rate of
+  // each archetype that plays it, so the chart can show the card's own lift.
+  // sumSqDecks feeds the effective archetype count (inverse Simpson index).
+  const accumulateCard = (card, arch) => {
     if (!card.cardId) {
       return
     }
+    const expected = card.decksIncluded * (arch.winnerDeckCount / arch.deckCount)
     const c = cardMap[card.cardId]
     if (c) {
       c.totalDecksIncluded += card.decksIncluded
       c.totalWinnerDecks += card.winnerDeckCount
       c.totalQty += card.totalQty
       c.archetypeCount += 1
+      c.expectedWinnerDecks += expected
+      c.sumSqDecks += card.decksIncluded ** 2
     } else {
       const info = lookup(card.cardId)
       cardMap[card.cardId] = {
@@ -693,15 +699,17 @@ function processSeries(series) {
         totalWinnerDecks: card.winnerDeckCount,
         totalQty: card.totalQty,
         archetypeCount: 1,
+        expectedWinnerDecks: expected,
+        sumSqDecks: card.decksIncluded ** 2,
       }
     }
   }
   for (const arch of mainDetails) {
     for (const card of arch.cards) {
-      accumulateCard(card)
+      accumulateCard(card, arch)
     }
     for (const card of arch.filteredCards) {
-      accumulateCard(card)
+      accumulateCard(card, arch)
     }
     for (const sigId of arch.sigCardIds ?? []) {
       sigCardCounts[sigId] = (sigCardCounts[sigId] || 0) + 1
@@ -711,6 +719,10 @@ function processSeries(series) {
   const cards = Object.values(cardMap)
   for (const card of cards) {
     card.avgQty = Math.round(card.totalQty / card.totalDecksIncluded)
+    card.expectedWinnerDecks = +card.expectedWinnerDecks.toFixed(2)
+    // How many archetypes the card is spread across if they all played it equally
+    card.effectiveArchetypes = +(card.totalDecksIncluded ** 2 / card.sumSqDecks).toFixed(1)
+    delete card.sumSqDecks
   }
   const sigCards = Object.entries(sigCardCounts)
     .map(([cardId, count]) => {

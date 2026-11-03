@@ -1,46 +1,21 @@
 <template>
-  <div class="w-full">
-    <div
-      class="mb-2 flex w-fit max-w-full flex-nowrap gap-1 overflow-x-auto rounded-lg bg-gray-100 p-0.5 dark:bg-gray-700/70"
-    >
-      <button
-        v-for="mode in MODES"
-        :key="mode.key"
-        class="rounded-md px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors"
-        :class="
-          chartMode === mode.key
-            ? 'bg-white text-sumi shadow-xs dark:bg-nalika-surface dark:text-nalika-text'
-            : 'text-gray-500 hover:text-sumi dark:text-nalika-text-muted dark:hover:text-nalika-text'
-        "
-        @click="chartMode = mode.key"
-      >
-        {{ mode.label }}
-      </button>
-    </div>
-    <p v-if="!cardItems.length" class="py-4 text-center text-xs text-gray-400 dark:text-gray-500">
-      No data
-    </p>
-    <VueApexCharts
-      v-else
-      :key="`${props.seriesKey}-${chartMode}-${props.cardTypeChart ?? 'all'}-${renderKey}`"
-      type="bubble"
-      :height="chartHeight"
-      width="100%"
-      :options="chartOptions"
-      :series="chartSeries"
-    />
-  </div>
+  <ChartQuadrantBubble
+    v-model:mode="chartMode"
+    :modes="MODES"
+    :axes="axes"
+    :points="points"
+    :groups="GROUPS"
+    :tooltip="tooltip"
+    :note="note"
+    :chart-key="`${seriesKey}-${cardTypeChart ?? 'all'}`"
+  />
 </template>
 
 <script setup>
-import { useStorage, useWindowSize } from '@vueuse/core'
-
-// Core build plus only what these charts use, instead of ApexCharts' full default bundle
-import 'apexcharts/bubble'
-import 'apexcharts/features/annotations'
-import VueApexCharts from 'vue3-apexcharts/core'
+import { useStorage } from '@vueuse/core'
 
 const props = defineProps({
+  // Already filtered to cardTypeChart by the parent section
   cardItems: { type: Array, default: () => [] },
   cardTypeChart: { type: String, default: null },
   seriesKey: { type: String, default: '' },
@@ -54,269 +29,114 @@ const CARD_COLOR_MAP = {
   Red: '#e53e3e',
   White: '#cbd5e1',
 }
+// White bubbles need a visible outline on the light background
+const GROUPS = CARD_COLOR_ORDER.map(name => ({
+  name,
+  color: CARD_COLOR_MAP[name],
+  stroke: name === 'White' ? '#94a3b8' : undefined,
+}))
+
+const TOP_N = 40
+// Lift is shrunk toward 0 as if each card had this many extra decks at its archetypes' rate
+const PRIOR_DECKS = 10
 
 const MODES = [
   {
     key: 'card-impact',
     label: 'Card Impact',
-    xKey: 'totalDecksIncluded',
-    yKey: '_winnerRate',
-    xLabel: 'Decks Included',
-    yLabel: 'Winner Rate (%)',
-    xIsPercent: false,
-    yIsPercent: true,
+    yLabel: 'Winner Rate vs Archetype (pp)',
+    quadrants: ['Elite', 'Hidden Gem', 'Fringe', 'Overplayed'],
   },
   {
     key: 'card-versatility',
     label: 'Card Versatility',
-    xKey: 'totalDecksIncluded',
-    yKey: 'archetypeCount',
-    xLabel: 'Decks Included',
-    yLabel: 'Archetypes',
-    xIsPercent: false,
-    yIsPercent: false,
+    yLabel: 'Effective Archetypes',
+    quadrants: ['Staples', 'Flex Pick', 'Obscure', 'One-Trick'],
   },
 ]
 
 const chartMode = useStorage('gcg-card-chart-mode', 'card-impact')
+if (!MODES.some(m => m.key === chartMode.value)) {
+  chartMode.value = MODES[0].key
+}
 
-const config = computed(() => MODES.find(m => m.key === chartMode.value))
+const config = computed(() => MODES.find(m => m.key === chartMode.value) ?? MODES[0])
+const isImpact = computed(() => config.value.key === 'card-impact')
 
-const { width: winWidth } = useWindowSize()
-const chartHeight = computed(() => (winWidth.value < 640 ? 350 : 500))
-const bubbleRadius = computed(() =>
-  winWidth.value < 640 ? { min: 4, max: 12 } : { min: 6, max: 24 },
+const parsed = computed(() =>
+  props.cardItems
+    .filter(item => isImpact.value || item.archetypeCount > 1)
+    .sort((a, b) => b.totalDecksIncluded - a.totalDecksIncluded)
+    .slice(0, TOP_N)
+    .map(item => {
+      const decks = item.totalDecksIncluded
+      const expected = item.expectedWinnerDecks ?? 0
+      return {
+        ...item,
+        winnerRate: decks > 0 ? (item.totalWinnerDecks / decks) * 100 : 0,
+        expectedRate: decks > 0 ? (expected / decks) * 100 : 0,
+        // Positive = winner decks play it more often than their archetypes alone predict
+        lift: ((item.totalWinnerDecks - expected) / (decks + PRIOR_DECKS)) * 100,
+        spread: item.effectiveArchetypes ?? item.archetypeCount,
+      }
+    }),
 )
 
-const renderKey = ref(0)
+const yKey = computed(() => (isImpact.value ? 'lift' : 'spread'))
 
-const parsed = computed(() => {
-  const cfg = config.value
-  if (!cfg) {
-    return []
-  }
-  let baseItems = props.cardItems
-  if (props.cardTypeChart) {
-    const chartTypeKey = props.cardTypeChart.toUpperCase()
-    baseItems = baseItems.filter(item => (item.type ?? '').toUpperCase() === chartTypeKey)
-  }
-  return baseItems
-    .filter(item => {
-      if (cfg.key === 'card-versatility' && item.archetypeCount <= 1) {
-        return false
-      }
-      if (cfg.key === 'card-impact' && item.totalWinnerDecks <= 0) {
-        return false
-      }
-      return true
-    })
-    .sort((a, b) => b.totalDecksIncluded - a.totalDecksIncluded)
-    .slice(0, 40)
-    .map(item => {
-      const enriched = { ...item }
-      if (cfg.yKey === '_winnerRate') {
-        enriched._winnerRate =
-          item.totalDecksIncluded > 0 ? (item.totalWinnerDecks / item.totalDecksIncluded) * 100 : 0
-      }
-      const x = parseFloat(enriched[cfg.xKey])
-      const v = enriched[cfg.yKey]
-      const y = cfg.yIsPercent ? parseFloat(v) : Number(v)
-      if (isNaN(x) || isNaN(y)) {
-        return null
-      }
-      return { ...enriched, _x: x, _y: y }
-    })
-    .filter(Boolean)
-})
-
-watch(parsed, val => {
-  if (val.length > 0) {
-    renderKey.value++
-  }
-})
-
-const medX = computed(() => median(parsed.value.map(d => d._x)))
-const medY = computed(() => median(parsed.value.map(d => d._y)))
-
-const xMax = computed(() => {
-  const mx = Math.max(...parsed.value.map(d => d._x), 0)
-  return mx === 0 ? 1 : Math.ceil(mx * 1.15)
-})
-
-const yMax = computed(() => {
-  const mx = Math.max(...parsed.value.map(d => d._y), 0)
-  return mx === 0 ? 1 : Math.ceil(mx * 1.15)
-})
-
-const chartSeries = computed(() => {
-  const cfg = config.value
-  if (!cfg) {
-    return []
-  }
-  const groups = {}
-  for (const item of parsed.value) {
-    const color = CARD_COLOR_ORDER.includes(item.color) ? item.color : 'Other'
-    const group = (groups[color] ??= [])
-    group.push({
-      x: item._x,
-      y: item._y,
-      z: item.totalDecksIncluded,
-      meta: {
-        name: item.name,
-        cardId: item.cardId,
-        color: item.color,
-        type: item.type,
-        totalDecksIncluded: item.totalDecksIncluded,
-        totalWinnerDecks: item.totalWinnerDecks,
-        archetypeCount: item.archetypeCount,
-      },
-    })
-  }
-  return CARD_COLOR_ORDER.filter(c => groups[c]).map(c => ({ name: c, data: groups[c] }))
-})
-
-const seriesColors = computed(() => {
-  const present = new Set(chartSeries.value.map(s => s.name))
-  return CARD_COLOR_ORDER.filter(c => present.has(c)).map(c => CARD_COLOR_MAP[c])
-})
-
-const chartOptions = computed(() => {
-  const cfg = config.value
-  if (!cfg) {
-    return {}
-  }
-  const dark = isDark.value
-  const textColor = dark ? '#9ca3af' : '#999'
-  const gridColor = dark ? '#374151' : '#e5e7eb'
-  const annotColor = dark ? '#6b7280' : '#999'
-  const labelColor = dark ? '#6b7280' : '#bbb'
-  const fontFamily = "'Roboto Mono', 'Noto Sans TC', monospace"
-
-  const fmtX = v => Number(v).toFixed(0)
-  const fmtY = v => Number(v).toFixed(0)
-
-  function getQuadrantLabels(key) {
-    if (key === 'card-impact') {
-      return ['Elite', 'Hidden Gem', 'Fringe', 'Overplayed']
-    }
-    return ['Staples', 'Specialist', 'Obscure', 'One-Trick']
-  }
-
-  const qLabels = []
-  if (medX.value !== null && medY.value !== null) {
-    const [tr, tl, bl, br] = getQuadrantLabels(cfg.key)
-    qLabels.push(
-      { x: (medX.value + xMax.value) / 2, y: (medY.value + yMax.value) / 2, text: tr },
-      { x: medX.value / 2, y: (medY.value + yMax.value) / 2, text: tl },
-      { x: medX.value / 2, y: medY.value / 2, text: bl },
-      { x: (medX.value + xMax.value) / 2, y: medY.value / 2, text: br },
-    )
-  }
-
+const axes = computed(() => {
+  const ys = parsed.value.map(c => c[yKey.value])
   return {
-    theme: { mode: dark ? 'dark' : 'light' },
-    chart: {
-      type: 'bubble',
-      toolbar: { show: false },
-      zoom: { enabled: false },
-    },
-    colors: seriesColors.value,
-    dataLabels: { enabled: false },
-    plotOptions: {
-      bubble: {
-        minBubbleRadius: bubbleRadius.value.min,
-        maxBubbleRadius: bubbleRadius.value.max,
-      },
-    },
-    markers: {
-      strokeColor: '#fff',
-      strokeWidth: 0.5,
-    },
-    xaxis: {
-      min: 0,
-      max: xMax.value,
-      tickAmount: 5,
-      forceNiceScale: true,
-      title: {
-        text: cfg.xLabel,
-        style: { fontSize: '12px', color: textColor, fontFamily, cssClass: 'tracking-wider' },
-      },
-      labels: {
-        formatter: fmtX,
-        style: { fontSize: '12px', colors: textColor, fontFamily, cssClass: 'tracking-wider' },
-      },
-    },
-    yaxis: {
-      min: 0,
-      max: yMax.value,
-      tickAmount: 5,
-      forceNiceScale: true,
-      title: {
-        text: cfg.yLabel,
-        style: { fontSize: '12px', color: textColor, fontFamily, cssClass: 'tracking-wider' },
-      },
-      labels: {
-        formatter: fmtY,
-        style: { fontSize: '12px', colors: textColor, fontFamily, cssClass: 'tracking-wider' },
-      },
-    },
-    tooltip: {
-      custom({ seriesIndex, dataPointIndex, w }) {
-        const d = w.config.series[seriesIndex].data[dataPointIndex]
-        return `<div class="${tw`max-w-40 truncate px-1.5 py-0.5 text-xxs leading-snug break-words sm:max-w-52 sm:px-2 sm:py-1 sm:text-xs`}">
-          <b>${d.meta.name}</b><br/>
-          ID: ${d.meta.cardId}.${d.meta.type}<br/>
-          Color: ${d.meta.color}<br/>
-          Decks: ${d.meta.totalDecksIncluded}<br/>
-          Winner Decks: ${d.meta.totalWinnerDecks}<br/>
-          Winner Rate: ${d.meta.totalDecksIncluded > 0 ? Math.round((d.meta.totalWinnerDecks / d.meta.totalDecksIncluded) * 100) : 0}%<br/>
-          Archetypes: ${d.meta.archetypeCount}
-        </div>`
-      },
-    },
-    annotations: {
-      position: 'back',
-      xaxis:
-        medX.value !== null
-          ? [{ x: medX.value, strokeDashArray: 4, borderColor: annotColor, borderWidth: 1 }]
-          : [],
-      yaxis:
-        medY.value !== null
-          ? [{ y: medY.value, strokeDashArray: 4, borderColor: annotColor, borderWidth: 1 }]
-          : [],
-      points: qLabels.map(q => ({
-        x: q.x,
-        y: q.y,
-        marker: { size: 0 },
-        label: {
-          text: q.text,
-          borderWidth: 0,
-          textAnchor: 'middle',
-          offsetX: 0,
-          offsetY: 0,
-          style: {
-            background: 'transparent',
-            color: labelColor,
-            fontSize: '11px',
-            fontWeight: 'bold',
-            fontFamily,
-            pointerEvents: 'none',
-            cssClass: 'tracking-wider',
-          },
-        },
-      })),
-    },
-    grid: { borderColor: gridColor },
-    legend: { show: false },
+    xLabel: 'Decks Included',
+    yLabel: config.value.yLabel,
+    xScale: 'sqrt',
+    xRef: median(parsed.value.map(c => c.totalDecksIncluded)),
+    yRef: isImpact.value ? 0 : median(ys),
+    xRefLabel: 'median',
+    yRefLabel: isImpact.value ? 'archetype avg' : 'median',
+    yFormat: isImpact.value ? v => (v > 0 ? `+${trim(v)}` : trim(v)) : undefined,
+    quadrants: config.value.quadrants,
   }
 })
 
-function median(arr) {
-  if (!arr.length) {
-    return null
-  }
-  const sorted = [...arr].sort((a, b) => a - b)
-  const mid = Math.floor(sorted.length / 2)
-  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+const points = computed(() => {
+  const y = yKey.value
+  const ref = axes.value.yRef ?? 0
+  const byDecks = [...parsed.value].sort((a, b) => b.totalDecksIncluded - a.totalDecksIncluded)
+  const byOutlier = [...parsed.value].sort((a, b) => Math.abs(b[y] - ref) - Math.abs(a[y] - ref))
+  const labeled = new Set([...byDecks.slice(0, 4), ...byOutlier.slice(0, 3)].map(c => c.cardId))
+  return parsed.value.map(c => ({
+    x: c.totalDecksIncluded,
+    y: c[y],
+    size: isImpact.value ? c.archetypeCount : c.totalWinnerDecks,
+    group: CARD_COLOR_ORDER.includes(c.color) ? c.color : 'Other',
+    label: labeled.has(c.cardId) ? c.name : null,
+    meta: c,
+  }))
+})
+
+const note = computed(() => {
+  const scope = `Top ${TOP_N} ${props.cardTypeChart ?? ''} cards by decks included`.replace(
+    /\s+/g,
+    ' ',
+  )
+  return isImpact.value
+    ? `${scope}. Y = winner rate minus what the archetypes playing it would predict. Bubble size = archetypes.`
+    : `${scope}. Y = archetypes the card is spread across, weighted by decks. Bubble size = winner decks.`
+})
+
+function tooltip(c) {
+  return `<b>${c.name}</b><br/>
+    ID: ${c.cardId}.${c.type}<br/>
+    Color: ${c.color}<br/>
+    Decks: ${c.totalDecksIncluded}<br/>
+    Winner Decks: ${c.totalWinnerDecks}<br/>
+    Winner Rate: ${c.winnerRate.toFixed(1)}% (archetype ${c.expectedRate.toFixed(1)}%)<br/>
+    Lift: ${c.lift > 0 ? '+' : ''}${c.lift.toFixed(1)}pp<br/>
+    Archetypes: ${c.archetypeCount} (effective ${c.spread})`
+}
+
+function trim(v) {
+  return String(+v.toFixed(1))
 }
 </script>
