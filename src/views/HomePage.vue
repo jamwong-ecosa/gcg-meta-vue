@@ -35,8 +35,15 @@
           </RouterLink>
         </div>
 
-        <dl class="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 max-md:text-left sm:grid-cols-4">
-          <div v-for="s in totals" :key="s.label">
+        <!-- Phone: a centred 2×2 panel under the centred hero; desktop: one plain row -->
+        <dl
+          class="mt-8 grid grid-cols-2 max-md:mx-auto max-md:max-w-sm max-md:rounded-lg max-md:border max-md:border-gray-500/10 max-md:bg-shironezumi/5 md:grid-cols-4 md:gap-x-6 dark:max-md:border-nalika-border dark:max-md:bg-nalika-surface"
+        >
+          <div
+            v-for="s in totals"
+            :key="s.label"
+            class="border-gray-500/10 max-md:px-3 max-md:py-2.5 max-md:odd:border-r dark:border-nalika-border max-md:[&:nth-child(-n+2)]:border-b"
+          >
             <dt
               class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500"
             >
