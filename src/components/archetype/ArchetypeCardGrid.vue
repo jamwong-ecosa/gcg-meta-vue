@@ -51,6 +51,7 @@
               <b class="font-bold text-sky-700 dark:text-sky-400">{{ item.group.allPct }}%</b>
             </span>
             <span v-if="item.group.liftText" :class="item.group.liftClass">
+              <span class="mr-1.5 text-gray-300 dark:text-gray-600">·</span>
               <span class="max-sm:hidden">WR</span>
               {{ item.group.liftText }}
             </span>
