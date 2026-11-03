@@ -259,17 +259,30 @@ const MIN_EVENTS_FOR_TIERS = 50
 // Aim for at least this many archetypes per tier when choosing the tier count
 const ARCHETYPES_PER_TIER = 4
 
-// Results only cover each event's top 8, so both inputs are performance measures:
-//   win share  = event wins ÷ events (%)
-//   top-8 share = top-8 appearances ÷ all top-8 decks (%)
-// Strength = √(average of the two). Rates such as wins per deck or top-4 per deck
-// are left out: they are noisy for small archetypes and did not predict the next
-// series' results. Shares are heavily skewed (a few archetypes hold most top-8
-// slots), so the square root spreads the long tail for tiering and display.
-function archetypeStrength({ wins, archDecks, totalDecks, totalEvents }) {
-  const winShare = (wins / totalEvents) * 100
-  const top8Share = (archDecks / totalDecks) * 100
-  return Math.sqrt(winShare * 0.5 + top8Share * 0.5)
+// Wins per placed deck, shrunk toward the series average as if every archetype
+// had this many extra placed decks at the average rate
+const CONVERSION_PRIOR_DECKS = 10
+
+function smoothedConversion(wins, archDecks, avgConversion) {
+  return (wins + CONVERSION_PRIOR_DECKS * avgConversion) / (archDecks + CONVERSION_PRIOR_DECKS)
+}
+
+// Results only list each event's placed decks (top 8, or top 16 for larger
+// events), so placement share (an archetype's placed decks ÷ all placed decks)
+// is itself a performance measure, and it is stable from one series to the next.
+// 9th–16th places count like 1st–8th: dropping them barely changed tiers and
+// backtested slightly worse. How well an archetype converts placements into wins
+// barely carries over, so it only nudges the result: placement share ×
+// √(smoothed conversion ÷ series average). Converting at 60% of average costs
+// ~20%; 130% gains ~14%. Strength is the square root of that, because shares are
+// heavily skewed (a few archetypes hold most placements) and the root spreads the
+// long tail for tiering and display.
+function archetypeStrength({ wins, archDecks, totalDecks, avgConversion }) {
+  const placementShare = (archDecks / totalDecks) * 100
+  const conversionFactor = Math.sqrt(
+    smoothedConversion(wins, archDecks, avgConversion) / avgConversion,
+  )
+  return Math.sqrt(placementShare * conversionFactor)
 }
 
 // Displayed score: strength as 0–100 of the series' strongest archetype
@@ -730,12 +743,13 @@ function processSeries(series) {
   }
 
   // Score each archetype and assign a tier label
+  const avgConversion = winners.length / allPlayers.length
   for (const a of seriesProcessed.archetypes) {
     a.tierStrength = archetypeStrength({
       wins: a.winnerDeckCount,
       archDecks: a.deckCount,
       totalDecks: allPlayers.length,
-      totalEvents: series.events.length,
+      avgConversion,
     })
   }
   const strengths = seriesProcessed.archetypes.map(a => a.tierStrength)
@@ -746,20 +760,19 @@ function processSeries(series) {
     a.tierLabel = getDeckTier(a.tierStrength, seriesProcessed.tierThresholds).label
   }
 
-  // Mark dark horses: under-the-radar archetypes (< 2% of top-8 slots) that convert
-  // top-8 finishes into wins well above the series average. The rate is smoothed
-  // toward the average (K = 10 decks) so a 2-for-5 run does not dominate.
-  const avgConversion = winners.length / allPlayers.length
-  const smoothedConversion = a => (a.winnerDeckCount + 10 * avgConversion) / (a.deckCount + 10)
+  // Mark dark horses: under-the-radar archetypes (< 2% of placed decks) that convert
+  // placements into wins well above the series average. The smoothing keeps a
+  // 2-for-5 run from dominating.
+  const conversion = a => smoothedConversion(a.winnerDeckCount, a.deckCount, avgConversion)
   const darkHorses = seriesProcessed.archetypes
     .filter(
       a =>
         a.deckCount >= 5 &&
         a.winnerDeckCount >= 2 &&
         a.deckCount / allPlayers.length < 0.02 &&
-        smoothedConversion(a) >= avgConversion * 1.3,
+        conversion(a) >= avgConversion * 1.3,
     )
-    .sort((a, b) => smoothedConversion(b) - smoothedConversion(a))
+    .sort((a, b) => conversion(b) - conversion(a))
     .slice(0, 3)
   const darkHorseSet = new Set(darkHorses.map(a => a.combo))
   for (const a of seriesProcessed.archetypes) {
