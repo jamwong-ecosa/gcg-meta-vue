@@ -16,12 +16,14 @@
         >
           {{ row.tier }}
         </span>
+        <!-- Color combo on its own line, signature cards underneath, so the
+             Japanese card names never wrap into the combo -->
         <div class="min-w-0 flex-1">
           <div
-            class="text-xs leading-snug text-gray-800 dark:text-nalika-text"
-            :class="open ? '' : 'line-clamp-2'"
+            v-if="headline"
+            class="flex items-center gap-1 text-[13px] leading-snug font-semibold text-gray-800 dark:text-nalika-text"
           >
-            <span v-if="!hideColor" class="mr-1 inline-flex gap-0.5 align-middle">
+            <span v-if="!hideColor" class="inline-flex shrink-0 gap-0.5">
               <span
                 v-for="dot in row.colorDots"
                 :key="dot.name"
@@ -29,27 +31,41 @@
                 :style="{ background: dot.hex }"
               />
             </span>
-            <template
-              v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [], {
-                skipBaseCombo: hideColor,
-              })"
-              :key="si"
-            >
-              <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
-              <span v-else>{{ seg.text }}</span>
+            <span class="truncate">{{ headline }}</span>
+            <span v-if="row.darkHorse" class="text-xs" :title="DARK_HORSE_HELP">🐴</span>
+          </div>
+          <div
+            v-if="cardNames.length"
+            class="leading-snug [overflow-wrap:anywhere] break-keep"
+            :class="
+              headline
+                ? 'mt-0.5 text-xs text-gray-400 dark:text-gray-500'
+                : 'text-[13px] text-gray-800 dark:text-nalika-text'
+            "
+          >
+            <!-- break-keep stops Japanese wrapping mid-name, so lines break at the
+                 slash (or a space inside a long name); the nbsp keeps the slash
+                 at the end of the line rather than starting the next one -->
+            <template v-for="(card, ci) in cardNames" :key="ci">
+              <span v-if="ci > 0">{{ CARD_SEP }}</span>
+              <span :class="card.color ? 'font-medium' : ''" :style="{ color: card.color }">
+                {{ card.name }}
+              </span>
             </template>
-            <span v-if="row.darkHorse" class="ml-1" :title="DARK_HORSE_HELP">🐴</span>
+            <span v-if="!headline && row.darkHorse" class="ml-1" :title="DARK_HORSE_HELP">🐴</span>
           </div>
         </div>
         <!-- Score on top, usage and rank change underneath -->
         <div class="shrink-0 text-right leading-tight">
           <div
-            class="font-mono text-sm font-bold text-aisumicha tabular-nums dark:text-nalika-text"
+            class="font-mono text-lg font-bold text-aisumicha tabular-nums dark:text-nalika-text"
           >
             {{ row.score }}
           </div>
-          <div class="flex items-baseline justify-end gap-1.5 font-mono text-xxs tabular-nums">
-            <span class="text-gray-400">{{ row.usePct }}</span>
+          <div
+            class="mt-0.5 flex items-baseline justify-end gap-1.5 font-mono text-xs tabular-nums"
+          >
+            <span class="text-gray-500 dark:text-gray-400">{{ row.usePct }}</span>
             <TierMovement
               v-if="hasMovement"
               compact
@@ -120,6 +136,29 @@ const stats = computed(() => [
   { key: 'winEv', label: 'Win/Ev', value: props.row.winPerEv },
   { key: 'winDk', label: 'Win/Dk', value: props.row.winPerDk },
 ])
+
+// "Red+White（A / B）" → headline "Red+White", cards "A / B". Grouped by color
+// the section header already names the combo, so only the cards are shown
+// (falling back to the combo when the archetype has no cards).
+const nameParts = computed(() => {
+  const m = props.row.archetype.match(/^(.+?)\s*[（(](.+)[）)]$/)
+  return m ? { base: m[1].trimEnd(), cards: m[2] } : { base: props.row.archetype, cards: '' }
+})
+
+const headline = computed(() =>
+  props.hideColor && nameParts.value.cards ? '' : nameParts.value.base,
+)
+
+const CARD_SEP = ' / '
+
+const cardNames = computed(() =>
+  nameParts.value.cards
+    ? nameParts.value.cards.split(/\s*\/\s*/).map(name => {
+        const sc = props.row.sigCards?.find(c => c.name === name)
+        return { name, color: sc ? COLOR_TEXT[sc.color] : undefined }
+      })
+    : [],
+)
 
 const tierChanged = computed(
   () => props.row.move?.prevTier && props.row.move.prevTier !== props.row.tier,
