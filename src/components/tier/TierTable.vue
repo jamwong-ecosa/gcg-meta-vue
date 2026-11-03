@@ -2,275 +2,118 @@
   <div
     class="hidden rounded-lg bg-white not-dark:shadow-xs not-dark:shadow-gray-400/15 md:block dark:bg-nalika-surface"
   >
-    <table class="w-full text-left text-sm">
+    <table class="w-full table-fixed text-left text-sm">
       <colgroup>
         <col class="w-auto" />
-        <col class="w-16" />
-        <col class="w-16" />
-        <col class="w-16" />
-        <col class="w-16" />
-        <col class="w-16" />
-        <col class="w-16" />
-        <col class="w-16" />
-        <col class="w-16" />
+        <col v-for="c in numericCols" :key="c.key" class="w-18" />
+        <col class="w-20" />
+        <col v-if="hasMovement" class="w-16" />
         <col class="w-8" />
       </colgroup>
       <thead class="sticky top-(--nav-h) z-1">
         <tr class="bg-ruri text-stone-100 dark:bg-nalika-header dark:text-nalika-text">
-          <th class="rounded-tl-lg px-4 py-2 font-semibold">Archetype</th>
-          <th class="px-4 py-2 text-right font-semibold">Decks</th>
-          <th class="px-4 py-2 text-right font-semibold">Wins</th>
-          <th class="px-4 py-2 text-right font-semibold">Top4</th>
-          <th class="px-4 py-2 text-right font-semibold">Use%</th>
-          <th class="px-4 py-2 text-right font-semibold">Win/Ev</th>
-          <th class="px-4 py-2 text-right font-semibold">Win/Dk</th>
-          <th class="px-4 py-2 text-right font-semibold">Score</th>
-          <th class="px-4 py-2 text-right font-semibold">Tier</th>
+          <th
+            v-for="(c, i) in headerCols"
+            :key="c.key"
+            class="py-2 font-semibold"
+            :class="[
+              i === 0 ? 'rounded-tl-lg pr-4 pl-4' : 'px-3 text-right',
+              c.key === 'tier' ? 'text-right' : '',
+            ]"
+            :aria-sort="ariaSort(c.key)"
+          >
+            <button
+              class="inline-flex cursor-pointer items-center gap-1 hover:text-white"
+              :title="TIER_COLUMN_HELP[c.key]"
+              @click="$emit('sort', sortFieldOf(c.key))"
+            >
+              {{ c.label }}
+              <span class="w-2 text-xxs opacity-80">{{ sortIndicator(c.key) }}</span>
+            </button>
+          </th>
           <th class="rounded-tr-lg px-1 py-2" />
         </tr>
       </thead>
-      <template v-if="groupByColor">
-        <tbody v-for="group in groups" :key="group.colors">
-          <tr
-            class="bg-gray-300/40 text-xs font-semibold text-gray-500 dark:bg-white/15 dark:text-gray-400"
-          >
-            <td colspan="10" class="px-4 py-1.5">
-              <div class="flex items-center gap-2">
-                <div class="flex items-center gap-0.5">
-                  <div
-                    v-for="dot in group.colorDots"
-                    :key="dot.name"
-                    class="inline-block h-2.5 w-2.5 rounded-full"
-                    :style="{ background: dot.hex }"
-                  />
-                </div>
-                <span>{{ group.colors }}</span>
-                <span class="text-gray-400">({{ group.rows.length }})</span>
-                <span class="ml-auto font-mono tabular-nums">
-                  {{ group.totalDecks }} decks / {{ group.totalWins }} wins
-                </span>
-              </div>
-            </td>
-          </tr>
-          <tr
-            v-for="row in group.rows"
-            :key="row.archetype"
-            class="group cursor-pointer text-aisumicha odd:bg-gray-100/15 even:bg-gray-100/45 hover:bg-gray-200/50 dark:text-nalika-text-muted dark:odd:bg-gray-100/10 dark:even:bg-white/3 dark:hover:bg-white/15"
-            @click="$emit('detail', row)"
-          >
-            <td class="flex items-baseline gap-1 py-2 pr-4 pl-6">
-              <div class="flex items-center gap-1">
-                <div class="text-sumi dark:text-nalika-text">
-                  <template
-                    v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [], {
-                      skipBaseCombo: true,
-                    })"
-                    :key="si"
-                  >
-                    <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
-                    <span v-else>{{ seg.text }}</span>
-                  </template>
-                </div>
+
+      <tbody v-for="section in sections" :key="section.key">
+        <tr
+          v-if="section.kind !== 'flat'"
+          class="cursor-pointer bg-gray-300/30 text-xs font-semibold text-gray-500 hover:bg-gray-300/50 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/15"
+          @click="$emit('toggleSection', section.key)"
+        >
+          <td :colspan="colCount" class="px-4 py-1.5">
+            <div class="flex items-center gap-2">
+              <span
+                class="inline-block w-3 text-center transition-transform"
+                :class="collapsed.has(section.key) ? '' : 'rotate-90'"
+              >
+                ▸
+              </span>
+              <span
+                v-if="section.kind === 'tier'"
+                class="w-10 rounded px-1.5 py-0.5 text-center font-bold"
+                :class="tierPillClass(section.tier)"
+              >
+                {{ section.tier }}
+              </span>
+              <span v-else class="flex items-center gap-0.5">
                 <span
-                  v-if="row.darkHorse"
-                  class="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 text-xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                >
-                  🐴
-                </span>
-              </div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.decks }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.wins }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.top4 }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.usePct }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.winPerEv }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.score }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div
-                class="w-12 rounded px-1.5 py-0.5 text-center text-xs font-bold"
-                :class="tierPillClass(row.tier)"
-              >
-                {{ row.tier }}
-              </div>
-            </td>
-            <td class="px-1 py-2 text-center">
-              <button
-                class="rounded text-xxs font-medium text-gray-400 group-hover:text-sora focus:outline-none dark:text-gray-500"
-                @click.stop="$emit('detail', row)"
-              >
-                <span>▶</span>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </template>
-      <template v-else>
-        <tbody>
-          <tr
-            v-for="row in rows"
-            :key="row.archetype"
-            v-memo="[row]"
-            class="group cursor-pointer text-aisumicha odd:bg-gray-100/15 even:bg-gray-100/45 hover:bg-gray-200/50 dark:text-nalika-text-muted dark:odd:bg-gray-100/10 dark:even:bg-white/3 dark:hover:bg-white/15"
-            @click="$emit('detail', row)"
-          >
-            <td class="flex items-baseline gap-1.5 px-4 py-2">
-              <div class="flex shrink-0 items-center gap-0.5">
-                <div
-                  v-for="dot in row.colorDots"
+                  v-for="dot in section.colorDots"
                   :key="dot.name"
-                  class="mr-px inline-block h-2 w-2 rounded-full"
+                  class="inline-block h-2.5 w-2.5 rounded-full"
                   :style="{ background: dot.hex }"
                 />
-              </div>
-              <div class="flex items-center gap-1">
-                <div class="text-sumi dark:text-nalika-text">
-                  <template
-                    v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [])"
-                    :key="si"
-                  >
-                    <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
-                    <span v-else>{{ seg.text }}</span>
-                  </template>
-                </div>
-                <span
-                  v-if="row.darkHorse"
-                  class="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 text-xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                >
-                  🐴
-                </span>
-              </div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.decks }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.wins }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.top4 }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.usePct }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.winPerEv }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.score }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div
-                class="w-12 rounded px-1.5 py-0.5 text-center text-xs font-bold"
-                :class="tierPillClass(row.tier)"
-              >
-                {{ row.tier }}
-              </div>
-            </td>
-            <td class="px-1 py-2 text-center">
-              <button
-                class="rounded text-xxs font-medium text-gray-400 group-hover:text-sora focus:outline-none dark:text-gray-500"
-                @click.stop="$emit('detail', row)"
-              >
-                <span>▶</span>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </template>
+                <span class="ml-1.5">{{ section.label }}</span>
+              </span>
+              <span class="font-normal text-gray-400">
+                {{ section.rows.length }} archetype{{ section.rows.length === 1 ? '' : 's' }}
+              </span>
+              <span class="ml-auto font-mono font-normal tabular-nums">
+                {{ section.decks.toLocaleString() }} decks · {{ section.wins }} wins
+              </span>
+            </div>
+          </td>
+        </tr>
+        <template v-if="!collapsed.has(section.key)">
+          <TierTableRow
+            v-for="row in section.rows"
+            :key="row.archetype"
+            v-memo="[row, hasMovement]"
+            :row="row"
+            :hide-color="section.kind === 'color'"
+            :has-movement="hasMovement"
+            @detail="$emit('detail', $event)"
+          />
+        </template>
+      </tbody>
 
-      <tbody v-if="zeroWinRows.length">
+      <tbody v-if="zeroRows.length">
         <tr
           class="cursor-pointer text-center text-xs font-medium text-ruri hover:bg-gray-100/50 dark:hover:bg-white/10"
           @click="$emit('toggleZeroWins')"
         >
-          <td :colspan="10" class="px-4 py-3">
-            0 Wins（{{ zeroWinRows.length }}）{{ showZeroWins ? '−' : '+' }}
+          <td :colspan="colCount" class="px-4 py-3">
+            0 Wins（{{ zeroRows.length }}）{{ showZeroWins ? '−' : '+' }}
           </td>
         </tr>
         <template v-if="showZeroWins">
-          <tr
-            v-for="row in zeroWinRows"
+          <TierTableRow
+            v-for="row in zeroRows"
             :key="row.archetype"
-            v-memo="[row]"
-            class="group cursor-pointer text-aisumicha odd:bg-gray-100/15 even:bg-gray-100/45 hover:bg-gray-200/50 dark:text-nalika-text-muted dark:odd:bg-gray-100/10 dark:even:bg-white/3 dark:hover:bg-white/15"
-            @click="$emit('detail', row)"
-          >
-            <td class="flex items-baseline gap-1.5 px-4 py-2">
-              <div class="flex shrink-0 items-center gap-0.5">
-                <div
-                  v-for="dot in row.colorDots"
-                  :key="dot.name"
-                  class="mr-px inline-block h-2 w-2 rounded-full"
-                  :style="{ background: dot.hex }"
-                />
-              </div>
-              <div class="text-sumi dark:text-nalika-text">
-                <template
-                  v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [])"
-                  :key="si"
-                >
-                  <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
-                  <span v-else>{{ seg.text }}</span>
-                </template>
-              </div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.decks }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.wins }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.top4 }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.usePct }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.winPerEv }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.winPerDk }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div class="font-mono tabular-nums">{{ row.score }}</div>
-            </td>
-            <td class="px-4 py-2 text-right">
-              <div
-                class="w-12 rounded px-1.5 py-0.5 text-center text-xs font-bold"
-                :class="tierPillClass(row.tier)"
-              >
-                {{ row.tier }}
-              </div>
-            </td>
-            <td class="px-1 py-2 text-center">
-              <button
-                class="rounded text-xxs font-medium text-gray-400 group-hover:text-sora focus:outline-none dark:text-gray-500"
-                @click.stop="$emit('detail', row)"
-              >
-                <span>▶</span>
-              </button>
-            </td>
-          </tr>
+            v-memo="[row, hasMovement]"
+            :row="row"
+            :has-movement="hasMovement"
+            @detail="$emit('detail', $event)"
+          />
         </template>
+      </tbody>
+
+      <tbody v-if="!sections.length && !zeroRows.length">
+        <tr>
+          <td :colspan="colCount" class="px-4 py-8 text-center text-sm text-gray-400">
+            No archetypes match these filters
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -278,32 +121,54 @@
 
 <script setup>
 const props = defineProps({
-  rows: { type: Array, required: true },
-  zeroWinRows: { type: Array, default: () => [] },
+  sections: { type: Array, required: true },
+  zeroRows: { type: Array, default: () => [] },
   showZeroWins: { type: Boolean, default: false },
-  groupByColor: { type: Boolean, default: false },
+  collapsed: { type: Set, required: true },
+  sortKey: { type: String, required: true },
+  sortDir: { type: String, required: true },
+  hasMovement: { type: Boolean, default: false },
 })
-defineEmits(['detail', 'toggleZeroWins'])
+defineEmits(['detail', 'toggleZeroWins', 'toggleSection', 'sort'])
 
-const groups = computed(() => {
-  if (!props.groupByColor) {
-    return []
+const numericCols = [
+  { key: 'decks', label: 'Decks' },
+  { key: 'wins', label: 'Wins' },
+  { key: 'top4', label: 'Top4' },
+  { key: 'use', label: 'Use%' },
+  { key: 'winEv', label: 'Win/Ev' },
+  { key: 'winDk', label: 'Win/Dk' },
+  { key: 'score', label: 'Score' },
+]
+
+// The Archetype and Tier headers both sort by tier order
+const headerCols = computed(() => [
+  { key: 'rank', label: 'Archetype' },
+  ...numericCols,
+  { key: 'tier', label: 'Tier' },
+  ...(props.hasMovement ? [{ key: 'move', label: 'Δ' }] : []),
+])
+
+const colCount = computed(() => headerCols.value.length + 1)
+
+function sortFieldOf(key) {
+  return key === 'tier' ? 'rank' : key
+}
+
+// Arrows only once the order differs from the default tier order; the
+// Archetype header shares the tier sort, so its arrow shows on Tier only
+function sortIndicator(key) {
+  const isDefault = props.sortKey === 'rank' && props.sortDir === 'asc'
+  if (key === 'rank' || isDefault || sortFieldOf(key) !== props.sortKey) {
+    return ''
   }
-  const map = {}
-  for (const row of props.rows) {
-    if (!map[row.colors]) {
-      map[row.colors] = {
-        colors: row.colors,
-        colorDots: row.colorDots,
-        rows: [],
-        totalDecks: 0,
-        totalWins: 0,
-      }
-    }
-    map[row.colors].rows.push(row)
-    map[row.colors].totalDecks += row.decks
-    map[row.colors].totalWins += row.wins
+  return props.sortDir === 'asc' ? '↑' : '↓'
+}
+
+function ariaSort(key) {
+  if (sortFieldOf(key) !== props.sortKey) {
+    return 'none'
   }
-  return Object.values(map).sort((a, b) => b.totalDecks - a.totalDecks)
-})
+  return props.sortDir === 'asc' ? 'ascending' : 'descending'
+}
 </script>

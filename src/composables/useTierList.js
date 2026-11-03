@@ -1,0 +1,185 @@
+import { useStorage } from '@vueuse/core'
+
+const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
+
+// Sortable fields; 'rank' is the tier order (strongest first)
+export const TIER_SORT_OPTIONS = [
+  { key: 'rank', label: 'Tier' },
+  { key: 'score', label: 'Score' },
+  { key: 'use', label: 'Use%' },
+  { key: 'winEv', label: 'Win/Ev' },
+  { key: 'winDk', label: 'Win/Dk' },
+  { key: 'decks', label: 'Decks' },
+  { key: 'wins', label: 'Wins' },
+  { key: 'top4', label: 'Top4' },
+  { key: 'move', label: 'Change' },
+]
+
+// Filtering, sorting and sectioning for the tier page. Both the desktop table
+// and the mobile list render `sections` + `zeroRows`, so they always agree.
+export function useTierList({ allRows, previousSeries }) {
+  const query = ref('')
+  const colors = ref([])
+  const groupByColor = useStorage('gcg-group-color', false)
+  const sortKey = ref('rank')
+  const sortDir = ref('asc')
+  // Every section starts open; headers fold on click
+  const collapsed = ref(new Set())
+  const showZeroWins = ref(false)
+
+  const prevByName = computed(() => {
+    const map = new Map()
+    for (const [i, r] of (previousSeries.value?.rows ?? []).entries()) {
+      map.set(normalizeArchetypeName(r.archetype), { rank: i + 1, tier: r.tier })
+    }
+    return map
+  })
+  const hasMovement = computed(() => prevByName.value.size > 0)
+
+  // Rows arrive sorted by strength, so the index is the rank
+  const ranked = computed(() =>
+    allRows.value.map((r, i) => {
+      const rank = i + 1
+      const prev = hasMovement.value
+        ? prevByName.value.get(normalizeArchetypeName(r.archetype))
+        : null
+      return {
+        ...r,
+        rank,
+        use: parseFloat(r.usePct),
+        winEv: parseFloat(r.winPerEv),
+        winDk: parseFloat(r.winPerDk),
+        move: !hasMovement.value
+          ? null
+          : prev
+            ? { delta: prev.rank - rank, prevRank: prev.rank, prevTier: prev.tier }
+            : { isNew: true },
+      }
+    }),
+  )
+
+  const isFiltered = computed(() => !!query.value.trim() || colors.value.length > 0)
+  const isDefaultSort = computed(() => sortKey.value === 'rank' && sortDir.value === 'asc')
+
+  function matches(r) {
+    const q = query.value.trim().toLowerCase()
+    if (q && !r.archetype.toLowerCase().includes(q)) {
+      return false
+    }
+    const rowColors = r.colors.split('+')
+    return colors.value.every(c => rowColors.includes(c))
+  }
+
+  function sortValue(r) {
+    if (sortKey.value === 'move') {
+      // New archetypes count as the biggest climbers
+      return r.move?.isNew ? Infinity : (r.move?.delta ?? -Infinity)
+    }
+    return r[sortKey.value] ?? 0
+  }
+
+  function sorted(list) {
+    const dir = sortDir.value === 'asc' ? 1 : -1
+    return [...list].sort((a, b) => {
+      const va = sortValue(a)
+      const vb = sortValue(b)
+      return va === vb ? a.rank - b.rank : (va < vb ? -1 : 1) * dir
+    })
+  }
+
+  const visibleRows = computed(() => ranked.value.filter(r => r.wins > 0 && matches(r)))
+  const zeroRows = computed(() => sorted(ranked.value.filter(r => r.wins === 0 && matches(r))))
+
+  const sections = computed(() => {
+    const rows = visibleRows.value
+    if (groupByColor.value) {
+      const map = new Map()
+      for (const r of rows) {
+        if (!map.has(r.colors)) {
+          map.set(r.colors, {
+            key: `color-${r.colors}`,
+            kind: 'color',
+            label: r.colors,
+            colorDots: r.colorDots,
+            rows: [],
+            decks: 0,
+            wins: 0,
+          })
+        }
+        const g = map.get(r.colors)
+        g.rows.push(r)
+        g.decks += r.decks
+        g.wins += r.wins
+      }
+      return [...map.values()]
+        .sort((a, b) => b.decks - a.decks)
+        .map(g => ({ ...g, rows: sorted(g.rows) }))
+    }
+    if (isDefaultSort.value) {
+      return TIER_ORDER.map(tier => {
+        const tierRows = rows.filter(r => r.tier === tier)
+        return {
+          key: `tier-${tier}`,
+          kind: 'tier',
+          tier,
+          label: `${tier} tier`,
+          rows: tierRows,
+          decks: tierRows.reduce((s, r) => s + r.decks, 0),
+          wins: tierRows.reduce((s, r) => s + r.wins, 0),
+        }
+      }).filter(s => s.rows.length)
+    }
+    return [{ key: 'all', kind: 'flat', rows: sorted(rows) }]
+  })
+
+  const shownCount = computed(() => visibleRows.value.length + zeroRows.value.length)
+
+  function setSort(key) {
+    if (sortKey.value === key) {
+      sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+      return
+    }
+    sortKey.value = key
+    sortDir.value = key === 'rank' ? 'asc' : 'desc'
+  }
+
+  function toggleColor(color) {
+    colors.value = colors.value.includes(color)
+      ? colors.value.filter(c => c !== color)
+      : [...colors.value, color]
+  }
+
+  function toggleSection(key) {
+    const next = new Set(collapsed.value)
+    if (next.has(key)) {
+      next.delete(key)
+    } else {
+      next.add(key)
+    }
+    collapsed.value = next
+  }
+
+  function clearFilters() {
+    query.value = ''
+    colors.value = []
+  }
+
+  return {
+    query,
+    colors,
+    groupByColor,
+    sortKey,
+    sortDir,
+    collapsed,
+    showZeroWins,
+    hasMovement,
+    isFiltered,
+    sections,
+    zeroRows,
+    shownCount,
+    setSort,
+    toggleColor,
+    toggleSection,
+    clearFilters,
+  }
+}

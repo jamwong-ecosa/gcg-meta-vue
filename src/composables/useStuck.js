@@ -3,9 +3,11 @@ export function useStuck() {
   let observer = null
 
   function register(el, id) {
-    if (!el || !observer) {
+    // Function refs run on every re-render; only add one sentinel per element
+    if (!el || !observer || el._stuckRegistered) {
       return
     }
+    el._stuckRegistered = true
     const sentinel = document.createElement('div')
     sentinel.style.height = '1px'
     sentinel.style.marginBottom = '-1px'
