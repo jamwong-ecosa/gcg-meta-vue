@@ -55,12 +55,12 @@
         </UiHint>
         <UiHint
           class="flex items-center gap-1"
-          text="Same card under another name. “any”: decks running any version; “all”: decks running every version. One WR for the group"
+          text="Same card under another name: one WR for the group, decks running any version vs none. Hover the group for its decks"
         >
           <span
             class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
           >
-            ≡ %
+            ≡
           </span>
           same card
         </UiHint>
