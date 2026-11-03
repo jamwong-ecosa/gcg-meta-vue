@@ -85,7 +85,8 @@ function createCardLookups(cardsRaw) {
 
   // Cards that play the same: same type, colour, level, cost, AP, HP, effect and
   // pilot link (GD01-008 ガンタンク / GD05-015 M1アストレイ); cards with no effect
-  // only need the same type, level, cost, AP and HP. Name and traits don't count.
+  // only need the same type, level, cost, AP, HP and link (a different link pairs
+  // with different pilots: GD05-009 vs GD05-010). Name and traits don't count.
   // Cards keep their own stats; the key groups them in the UI and keeps a
   // version of a common effect from looking like a rare tech pick.
   const functionKey = cardId => {
@@ -94,7 +95,7 @@ function createCardLookups(cardsRaw) {
       return cardId
     }
     return c.effect === '-'
-      ? ['vanilla', c.type, c.level, c.cost, c.ap, c.hp].join('|')
+      ? ['vanilla', c.type, c.level, c.cost, c.ap, c.hp, c.link].join('|')
       : [c.type, c.color, c.level, c.cost, c.ap, c.hp, c.effect, c.link].join('|')
   }
 
