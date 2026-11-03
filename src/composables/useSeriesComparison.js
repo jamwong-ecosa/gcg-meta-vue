@@ -18,7 +18,7 @@ export function useSeriesComparison({ currentSeries, previousSeries }) {
       return null
     }
     const topColor = currentTopColor.value
-    const makeMetric = (label, currentVal, previousVal, format = v => v) => ({
+    const makeMetric = (label, currentVal, previousVal, format = v => v.toLocaleString()) => ({
       label,
       current: currentVal,
       previous: previousVal,
@@ -48,7 +48,7 @@ export function useSeriesComparison({ currentSeries, previousSeries }) {
     }
     const currentState = current.cardState
     const prevState = prev.cardState
-    const makeMetric = (label, currentVal, previousVal, format = v => v) => ({
+    const makeMetric = (label, currentVal, previousVal, format = v => v.toLocaleString()) => ({
       label,
       current: currentVal,
       previous: previousVal,
