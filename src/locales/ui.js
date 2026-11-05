@@ -9,7 +9,7 @@ export default {
     },
     seriesHeader: {
       events: '{n} event | {n} events',
-      wins: '{n} win | {n} wins',
+      wins: '{n} winning deck | {n} winning decks',
       decks: '{n} deck | {n} decks',
       archetypes: '{n} archetype | {n} archetypes',
     },
@@ -35,7 +35,7 @@ export default {
     },
     seriesHeader: {
       events: '{n} 場賽事',
-      wins: '{n} 冠',
+      wins: '{n} 副冠軍卡組',
       decks: '{n} 副卡組',
       archetypes: '{n} 種牌型',
     },
