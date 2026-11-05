@@ -15,9 +15,10 @@ function initialLocale() {
       return saved
     }
   } catch {
-    // storage blocked: fall back to the browser language
+    // storage blocked: use the default
   }
-  return /^zh/i.test(navigator.language) ? 'zh-HK' : 'en'
+  // Hong Kong Chinese first: English only once a visitor picks it
+  return 'zh-HK'
 }
 
 export const i18n = createI18n({

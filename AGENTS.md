@@ -82,14 +82,14 @@ source ~/.nvm/nvm.sh && nvm use
 
 ## i18n (English / 繁中 zh-HK)
 
-- `vue-i18n` (Composition API). Instance in `src/i18n/index.js`; locale saved in localStorage key `lang` (defaults to `zh-HK` for any `zh*` browser language), toggled by `UiLangToggle`
+- `vue-i18n` (Composition API). Instance in `src/i18n/index.js`; locale saved in localStorage key `lang` (defaults to `zh-HK` for every visitor; English only once picked), toggled by `UiLangToggle`
 - Messages live in `src/locales/<namespace>.js`, each holding both languages: `export default { en: { ... }, 'zh-HK': { ... } }` → `t('<namespace>.key')`. Keep the key sets identical in both languages
 - Templates use `$t()` / `<i18n-t>`; `<script setup>` uses `useI18n()` (auto-imported); plain JS uses `translate()` from `useLocale.js`
 - Data keys stay English (`'Blue'`, `'UNIT'`, `'Red+White'`); display them with `colorName()`, `cardTypeName()`, `comboName()`
 - Text built in JS must be in a `computed` (or called from the template) so it follows a language switch
 - Chinese copy is Hong Kong usage (卡組, 按, 鼠標, 甚麼); follow the glossary at the top of `src/locales/common.js`
 - Card, archetype and series names are data and stay untranslated
-- `<title>` and meta/OG description per route come from `src/locales/head.js` (keyed by route name), applied by `useHeadMeta()` in `App.vue`; `index.html` holds the English defaults for crawlers. A new route needs a `head.<route-name>` entry in both languages
+- `<title>` and meta/OG description per route come from `src/locales/head.js` (keyed by route name), applied by `useHeadMeta()` in `App.vue`; `index.html` holds the zh-HK defaults for crawlers and link previews. A new route needs a `head.<route-name>` entry in both languages
 - Open Graph / Twitter tags use absolute URLs from `VITE_SITE_URL` (defaults to `https://gcg.jamwong.me` in `vite.config.js`). The share image `public/og-image.png` is rendered from `scripts/og/og-image.html` with `node scripts/og/render-og-image.mjs`
 
 ## Data pipeline
