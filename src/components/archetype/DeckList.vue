@@ -25,9 +25,9 @@
     <div
       v-if="shown.length"
       ref="scrollBox"
-      class="max-h-[28rem] overflow-y-auto overscroll-contain rounded border border-gray-500/10 px-1 dark:border-white/5"
+      class="max-h-[28rem] overflow-x-hidden overflow-y-auto overscroll-contain rounded border border-gray-500/10 px-1 dark:border-white/5"
     >
-      <ul class="grid gap-x-6 lg:grid-cols-2">
+      <ul class="grid grid-cols-[minmax(0,1fr)] gap-x-6 lg:grid-cols-[repeat(2,minmax(0,1fr))]">
         <li v-for="d in shown" :key="d.idx" class="border-b border-gray-500/8 dark:border-white/5">
           <UiDeckPopover :cards="d.cards" :url="d.url" :label="d.popoverLabel" :tags-of="tagsOf">
             <component
