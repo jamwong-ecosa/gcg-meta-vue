@@ -151,8 +151,9 @@
           v-for="row in topRows"
           :key="row.archetype"
           :to="row.to"
-          class="group flex h-28 overflow-hidden rounded-lg border border-gray-500/15 bg-white transition-colors hover:border-ruri/60 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/60"
+          class="group flex h-28 overflow-hidden rounded-lg border border-gray-500/15 bg-white transition-[border-color,box-shadow] duration-200 hover:border-ruri/30 hover:shadow-md hover:shadow-ruri/10 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/40 dark:hover:shadow-black/30"
         >
+          <!-- Hover: soft shadow and a faint blue border; no underline through the names -->
           <div class="w-28 shrink-0 bg-gray-100 dark:bg-nalika-bg">
             <img
               v-if="row.imageCardId"
@@ -185,7 +186,7 @@
             </div>
             <!-- Wrap between card names, never inside one -->
             <div
-              class="mt-1.5 line-clamp-2 text-sm leading-snug font-bold break-keep text-sumi group-hover:underline dark:text-nalika-text"
+              class="mt-1.5 line-clamp-2 text-sm leading-snug font-bold break-keep text-sumi dark:text-nalika-text"
             >
               <template v-for="(seg, si) in row.segments" :key="si">
                 <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
@@ -210,12 +211,10 @@
           v-for="feature in features"
           :key="feature.to"
           :to="{ name: feature.to, query: seriesQuery }"
-          class="group rounded-lg border border-gray-500/15 bg-shironezumi/4 p-4 transition-colors hover:border-ruri/60 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/60"
+          class="group rounded-lg border border-gray-500/15 bg-white p-4 transition-[border-color,box-shadow] duration-200 hover:border-ruri/30 hover:shadow-md hover:shadow-ruri/10 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/40 dark:hover:shadow-black/30"
         >
           <div class="flex items-center justify-between">
-            <h3
-              class="text-sm font-bold text-gray-700 group-hover:text-ruri dark:text-nalika-text dark:group-hover:text-sora"
-            >
+            <h3 class="text-sm font-bold text-gray-700 dark:text-nalika-text">
               {{ $t(`home.features.${feature.key}.title`) }}
             </h3>
             <span
