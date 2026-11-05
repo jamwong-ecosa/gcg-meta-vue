@@ -35,37 +35,46 @@
           </RouterLink>
         </div>
 
-        <!-- Phone and tablet: three counts side by side in one panel, the update date as its
-             footer; desktop: one plain row of all four -->
+        <!-- One panel at every size: the three counts, biggest first, split by hairlines;
+             how fresh the data is sits underneath as a quiet status line -->
         <div
-          class="mt-8 max-lg:mx-auto max-lg:max-w-sm max-lg:overflow-hidden max-lg:rounded-xl max-lg:border max-lg:border-gray-500/10 max-lg:bg-shironezumi/5 dark:max-lg:border-nalika-border dark:max-lg:bg-nalika-surface"
+          class="mt-8 max-w-lg overflow-hidden rounded-xl border border-gray-500/15 bg-white/70 shadow-sm shadow-black/[0.03] backdrop-blur-sm max-lg:mx-auto dark:border-nalika-border dark:bg-nalika-surface/80"
         >
-          <dl
-            class="grid grid-cols-3 max-lg:divide-x max-lg:divide-gray-500/10 lg:grid-cols-4 lg:gap-x-6 dark:max-lg:divide-nalika-border"
-          >
+          <dl class="grid grid-cols-3 divide-x divide-gray-500/10 dark:divide-nalika-border">
             <div
               v-for="s in totals"
               :key="s.label"
-              class="max-lg:px-2 max-lg:py-3"
-              :class="{ 'max-lg:hidden': s.footer }"
+              class="flex flex-col-reverse gap-1 px-3 py-4 sm:px-5"
             >
-              <dt
-                class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500"
-              >
+              <dt class="text-xs text-gray-500 dark:text-nalika-text-muted">
                 {{ s.label }}
               </dt>
               <dd
-                class="mt-0.5 text-lg font-bold text-gray-700 tabular-nums max-lg:text-xl dark:text-nalika-text"
+                class="text-xl font-bold tracking-tight text-sumi tabular-nums sm:text-2xl dark:text-nalika-text"
               >
                 {{ s.value }}
               </dd>
             </div>
           </dl>
           <p
-            class="border-t border-gray-500/10 py-1.5 text-xxs text-gray-400 lg:hidden dark:border-nalika-border dark:text-gray-500"
+            v-if="updated"
+            class="flex items-center gap-2 border-t border-gray-500/10 bg-gray-50/80 px-3 py-2 text-xs text-gray-500 max-lg:justify-center sm:px-5 dark:border-nalika-border dark:bg-nalika-bg/40 dark:text-nalika-text-muted"
           >
-            Updated
-            <span class="font-mono text-gray-500 dark:text-gray-400">{{ updated }}</span>
+            <span
+              class="h-1.5 w-1.5 shrink-0 rounded-full"
+              :class="updated.fresh ? 'bg-emerald-500' : 'bg-gray-400'"
+              aria-hidden="true"
+            />
+            <span>
+              Results through
+              <time
+                :datetime="updated.date"
+                class="font-medium text-gray-700 dark:text-nalika-text"
+              >
+                {{ updated.label }}
+              </time>
+              <span class="ml-1.5 text-gray-400 dark:text-gray-500">· {{ updated.ago }}</span>
+            </span>
           </p>
         </div>
       </div>
@@ -110,41 +119,33 @@
     <!-- Current meta -->
     <section v-if="featured" class="mt-14 md:mt-20">
       <!-- The series is the heading: an eyebrow, its month large with the event
-           name beside it, one line of counts; the tier-list link sits level with
-           the heading on the right -->
-      <div class="flex items-end justify-between gap-4">
-        <div class="min-w-0">
-          <p
-            class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70"
-          >
-            Current meta
-          </p>
-          <h2
-            class="mt-1 flex flex-wrap items-baseline gap-x-2 text-2xl font-bold text-sumi md:text-3xl dark:text-nalika-text"
-          >
-            {{ featuredTitle.main }}
-            <span
-              v-if="featuredTitle.sub"
-              class="text-base font-semibold text-ruri md:text-lg dark:text-sora"
-            >
-              {{ featuredTitle.sub }}
-            </span>
-          </h2>
-        </div>
-        <RouterLink
-          :to="{ name: 'tier', query: { series: featured.value } }"
-          class="mb-1 shrink-0 text-sm font-medium whitespace-nowrap text-ruri hover:underline hover:underline-offset-4 dark:text-sora"
+           name beside it, one line of counts. No tier-list link here — the hero's
+           "View tier list" already opens this same series -->
+      <p
+        class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70"
+      >
+        Current meta
+      </p>
+      <h2
+        class="mt-1 flex flex-wrap items-baseline gap-x-2 text-2xl font-bold text-sumi md:text-3xl dark:text-nalika-text"
+      >
+        {{ featuredTitle.main }}
+        <span
+          v-if="featuredTitle.sub"
+          class="text-base font-semibold text-ruri md:text-lg dark:text-sora"
         >
-          Full tier list →
-        </RouterLink>
-      </div>
+          {{ featuredTitle.sub }}
+        </span>
+      </h2>
       <p class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
         {{ featured.events.toLocaleString() }} events · {{ featuredRange }}
       </p>
 
+      <!-- A status line, not a CTA: the whole row opens the in-progress series' tiers -->
       <RouterLink
         v-if="inProgress"
         :to="{ name: 'tier', query: { series: inProgress.value } }"
+        :title="`Preliminary tiers for ${inProgress.label}`"
         class="group mt-4 flex items-center gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/25 dark:text-amber-200/80 dark:hover:bg-amber-900/40"
       >
         <span class="relative flex h-2 w-2 shrink-0" aria-hidden="true">
@@ -156,8 +157,11 @@
           in progress · {{ inProgress.events }} events
           <span class="max-sm:hidden">so far, tiers are preliminary</span>
         </span>
-        <span class="shrink-0 font-medium whitespace-nowrap group-hover:underline">
-          Early tiers →
+        <span
+          class="shrink-0 text-amber-600/70 transition-transform group-hover:translate-x-0.5 dark:text-amber-300/60"
+          aria-hidden="true"
+        >
+          →
         </span>
       </RouterLink>
 
@@ -300,22 +304,37 @@ const featuredRange = computed(() => {
 const inProgress = computed(() => (latest.value !== featured.value ? latest.value : null))
 const seriesQuery = computed(() => (featured.value ? { series: featured.value.value } : {}))
 
-// Shown as the phone panel's footer rather than a fourth column
-const updated = computed(() => totals.value.find(t => t.footer)?.value)
-
 const totals = computed(() => {
   const series = tierData.value
-  const lastDate = series
+  return [
+    { label: 'Placed decks', value: series.reduce((n, s) => n + s.totalDecks, 0).toLocaleString() },
+    { label: 'Events', value: series.reduce((n, s) => n + s.events, 0).toLocaleString() },
+    { label: 'Series', value: series.length },
+  ]
+})
+
+// Latest event date in the data, e.g. "Nov 3, 2026 · 2 days ago"
+const updated = computed(() => {
+  const date = tierData.value
     .map(s => s.eventMaxDate)
     .filter(Boolean)
     .sort()
     .at(-1)
-  return [
-    { label: 'Series', value: series.length },
-    { label: 'Events', value: series.reduce((n, s) => n + s.events, 0).toLocaleString() },
-    { label: 'Placed decks', value: series.reduce((n, s) => n + s.totalDecks, 0).toLocaleString() },
-    { label: 'Updated', value: lastDate ?? '—', footer: true },
-  ]
+  if (!date) {
+    return null
+  }
+  const [y, m, d] = date.split('-').map(Number)
+  const then = new Date(y, m - 1, d)
+  const now = new Date()
+  const days = Math.round(
+    (new Date(now.getFullYear(), now.getMonth(), now.getDate()) - then) / 86400000,
+  )
+  return {
+    date,
+    label: then.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    ago: new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(-days, 'day'),
+    fresh: days <= 7,
+  }
 })
 
 const topRows = computed(() => {
