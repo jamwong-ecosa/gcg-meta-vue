@@ -6,8 +6,8 @@
       <colgroup>
         <col class="w-auto" />
         <col v-for="c in numericCols" :key="c.key" class="w-18" />
-        <col class="w-20" />
-        <col v-if="hasMovement" class="w-16" />
+        <col class="w-28" />
+        <col v-if="hasMovement" class="w-14" />
         <col class="w-8" />
       </colgroup>
       <thead class="sticky top-(--nav-h) z-1">

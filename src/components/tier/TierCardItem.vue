@@ -113,8 +113,15 @@
           </dd>
         </div>
       </dl>
-      <p v-if="tierChanged" class="mt-2 text-xxs text-gray-500 dark:text-gray-400">
-        Was {{ row.move.prevTier }} tier (rank {{ row.move.prevRank }}) last series
+      <p v-if="shift" class="mt-2 text-xxs text-gray-500 dark:text-gray-400">
+        <b
+          :class="
+            shift === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+          "
+        >
+          {{ shift === 'up' ? 'Up' : 'Down' }}
+        </b>
+        from {{ row.move.prevTier }} tier (rank {{ row.move.prevRank }}) last series
       </p>
     </div>
   </div>
@@ -162,7 +169,5 @@ const cardNames = computed(() =>
     : [],
 )
 
-const tierChanged = computed(
-  () => props.row.move?.prevTier && props.row.move.prevTier !== props.row.tier,
-)
+const shift = computed(() => tierShift(props.row.move?.prevTier, props.row.tier))
 </script>

@@ -56,16 +56,34 @@
       {{ row.score }}
     </td>
     <td class="px-3 py-2">
-      <div class="flex items-center justify-end gap-1">
+      <!-- A tier change reads "B → A": last series' tier as a faded mini pill, an arrow
+           green for a promotion / red for a drop, then this series' pill -->
+      <div class="flex items-center justify-end gap-1 whitespace-nowrap">
         <span
-          v-if="tierChanged"
-          class="font-mono text-xxs text-gray-400 dark:text-gray-500"
-          :title="`Was ${row.move.prevTier} tier last series`"
+          v-if="shift"
+          class="flex shrink-0 items-center gap-0.5"
+          :title="`${shift === 'up' ? 'Up' : 'Down'} from ${row.move.prevTier} tier last series`"
         >
-          {{ row.move.prevTier }}→
+          <span
+            class="rounded px-1 py-px text-xxs leading-none font-bold opacity-55"
+            :class="tierPillClass(row.move.prevTier)"
+          >
+            {{ row.move.prevTier }}
+          </span>
+          <span
+            class="text-xs leading-none font-bold"
+            :class="
+              shift === 'up'
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-500 dark:text-red-400'
+            "
+            aria-hidden="true"
+          >
+            →
+          </span>
         </span>
         <span
-          class="w-10 rounded px-1.5 py-0.5 text-center text-xs font-bold"
+          class="w-10 shrink-0 rounded px-1.5 py-0.5 text-center text-xs font-bold"
           :class="tierPillClass(row.tier)"
         >
           {{ row.tier }}
@@ -91,7 +109,5 @@ const props = defineProps({
 })
 defineEmits(['detail'])
 
-const tierChanged = computed(
-  () => props.row.move?.prevTier && props.row.move.prevTier !== props.row.tier,
-)
+const shift = computed(() => tierShift(props.row.move?.prevTier, props.row.tier))
 </script>

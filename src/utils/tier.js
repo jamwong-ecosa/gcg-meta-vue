@@ -34,6 +34,18 @@ export function tierPillClass(tier) {
   return map[tier] || tw`bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400`
 }
 
+const TIER_RANKS = ['S', 'A', 'B', 'C', 'D', '--']
+
+// Direction of a tier change: 'up' (promoted, e.g. B → A), 'down', or null when unchanged/unknown
+export function tierShift(prevTier, tier) {
+  const from = TIER_RANKS.indexOf(prevTier)
+  const to = TIER_RANKS.indexOf(tier)
+  if (from < 0 || to < 0 || from === to) {
+    return null
+  }
+  return to < from ? 'up' : 'down'
+}
+
 // Hover help for tier table headers and mobile stat labels
 export const TIER_COLUMN_HELP = {
   rank: 'Tier order: strongest archetype first',
