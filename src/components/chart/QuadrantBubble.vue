@@ -109,6 +109,54 @@ const chartSeries = computed(() =>
     .filter(s => s.data.length),
 )
 
+// Quadrant tints in [topRight, topLeft, bottomLeft, bottomRight] order: the good
+// corner green, the under-rated corner blue, the over-rated corner red
+const QUAD_TINTS = ['#22c55e', '#3b82f6', null, '#ef4444']
+const QUAD_TEXT = ['#15803d', '#1d4ed8', '#9ca3af', '#b91c1c']
+const QUAD_TEXT_DARK = ['#4ade80', '#60a5fa', '#6b7280', '#f87171']
+
+// ApexCharts has no rectangle annotation, so the tints are drawn straight into
+// the plot group, behind the grid, after every render
+function shadeQuadrants(ctx) {
+  const ax = props.axes
+  const plot = ctx.el.querySelector('.apexcharts-graphical')
+  if (!plot) {
+    return
+  }
+  plot.querySelector('.quad-shade')?.remove()
+  if (!ax.quadrants || ax.xRef == null || ax.yRef == null) {
+    return
+  }
+  const { gridWidth: w, gridHeight: h } = ctx.w.globals
+  const xr = xRange.value
+  const yr = yRange.value
+  const clamp = v => Math.min(Math.max(v, 0), 1)
+  const fx = clamp((toPlotX(ax.xRef) - xr.min) / (xr.max - xr.min)) * w
+  const fy = clamp((yr.max - ax.yRef) / (yr.max - yr.min)) * h
+  const rects = [
+    [fx, 0, w - fx, fy],
+    [0, 0, fx, fy],
+    [0, fy, fx, h - fy],
+    [fx, fy, w - fx, h - fy],
+  ]
+  const ns = 'http://www.w3.org/2000/svg'
+  const group = document.createElementNS(ns, 'g')
+  group.setAttribute('class', 'quad-shade')
+  group.setAttribute('pointer-events', 'none')
+  rects.forEach(([x, y, rw, rh], i) => {
+    if (!QUAD_TINTS[i] || rw <= 0 || rh <= 0) {
+      return
+    }
+    const rect = document.createElementNS(ns, 'rect')
+    Object.entries({ x, y, width: rw, height: rh, fill: QUAD_TINTS[i] }).forEach(([k, v]) =>
+      rect.setAttribute(k, v),
+    )
+    rect.setAttribute('fill-opacity', isDark.value ? 0.09 : 0.07)
+    group.append(rect)
+  })
+  plot.insertBefore(group, plot.firstChild)
+}
+
 const presentGroups = computed(() => {
   const present = new Set(chartSeries.value.map(s => s.name))
   return props.groups.filter(g => present.has(g.name))
@@ -120,7 +168,7 @@ const chartOptions = computed(() => {
   const textColor = dark ? '#9ca3af' : '#999'
   const gridColor = dark ? '#374151' : '#e5e7eb'
   const annotColor = dark ? '#6b7280' : '#aaa'
-  const quadColor = dark ? '#6b7280' : '#bbb'
+  const quadColors = dark ? QUAD_TEXT_DARK : QUAD_TEXT
   const nameColor = dark ? '#d1d5db' : '#555'
   const fontFamily = "'Roboto Mono', 'Noto Sans TC', monospace"
   const xFmt = ax.xFormat ?? trimNum
@@ -130,7 +178,7 @@ const chartOptions = computed(() => {
 
   const axisStyle = { fontSize: '12px', fontFamily, cssClass: 'tracking-wider' }
 
-  const quadLabel = (x, y, text, anchor, offsetY) => ({
+  const quadLabel = (x, y, text, anchor, offsetY, color) => ({
     x,
     y,
     marker: { size: 0 },
@@ -142,8 +190,8 @@ const chartOptions = computed(() => {
       offsetY,
       style: {
         background: 'transparent',
-        color: quadColor,
-        fontSize: '11px',
+        color,
+        fontSize: '12px',
         fontWeight: 'bold',
         fontFamily,
         cssClass: 'tracking-wider pointer-events-none',
@@ -152,12 +200,17 @@ const chartOptions = computed(() => {
   })
 
   const [tr, tl, bl, br] = ax.quadrants ?? []
+  // ApexCharts drops a point annotation it computes as past the grid edge, and an
+  // anchor exactly on an axis bound can round a hair past it (e.g. y = +2 on a
+  // −2…+2 axis), so the corner labels sit a tiny step inside the range
+  const ex = (xr.max - xr.min) * 1e-4
+  const ey = (yr.max - yr.min) * 1e-4
   const quadrantLabels = ax.quadrants
     ? [
-        quadLabel(xr.min, yr.max, tl, 'start', 18),
-        quadLabel(xr.max, yr.max, tr, 'end', 18),
-        quadLabel(xr.min, yr.min, bl, 'start', -4),
-        quadLabel(xr.max, yr.min, br, 'end', -4),
+        quadLabel(xr.min + ex, yr.max - ey, tl, 'start', 18, quadColors[1]),
+        quadLabel(xr.max - ex, yr.max - ey, tr, 'end', 18, quadColors[0]),
+        quadLabel(xr.min + ex, yr.min + ey, bl, 'start', -4, quadColors[2]),
+        quadLabel(xr.max - ex, yr.min + ey, br, 'end', -4, quadColors[3]),
       ]
     : []
 
@@ -211,9 +264,10 @@ const chartOptions = computed(() => {
       type: 'bubble',
       toolbar: { show: false },
       zoom: { enabled: false },
+      events: { mounted: shadeQuadrants, updated: shadeQuadrants },
     },
     colors: presentGroups.value.map(g => (dark && g.colorDark) || g.color),
-    fill: { opacity: 0.8 },
+    fill: { opacity: 0.85 },
     dataLabels: { enabled: false },
     // z is already the pixel radius
     plotOptions: { bubble: { zScaling: false } },

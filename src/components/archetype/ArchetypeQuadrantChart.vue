@@ -18,7 +18,8 @@ const props = defineProps({
 })
 
 const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
-const TIER_COLORS = ['#fca5a5', '#fdba74', '#fbbf24', '#86efac', '#93c5fd', '#d1d5db']
+// One step stronger than the tier pills so bubbles stand out against the quadrant tints
+const TIER_COLORS = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#60a5fa', '#9ca3af']
 const TIER_COLORS_DARK = ['#c53030', '#dd6b20', '#d69e2e', '#2f855a', '#2b6cb0', '#4b5563']
 const GROUPS = TIER_ORDER.map((name, i) => ({
   name,
@@ -32,20 +33,22 @@ const PRIOR_DECKS = 10
 // Fewer archetypes and names on phones, where the small ones pile up near the origin
 const { width: winWidth } = useWindowSize()
 const isMobile = computed(() => winWidth.value < 640)
-const labelCount = computed(() => (isMobile.value ? 4 : 6))
+const labelCount = computed(() => (isMobile.value ? 4 : 8))
+// Also name the best under-played winners, the chart's most interesting points
+const SLEEPER_LABELS = 2
 const MOBILE_MAX_POINTS = 20
 // Percentage points between raw and adjusted Win.Dk before the tooltip shows both
 const ADJ_NOTE_MIN_DIFF = 0.5
 const QUADRANTS = ['Meta', 'Sleeper', 'Niche', 'Trap']
 
+// Usage vs Win.Dk first: Win.Ev grows with usage, so Usage - Win.Ev mostly draws a diagonal
 const MODES = [
-  { key: 'usage-winEv', label: 'Usage - Win.Ev', x: 'use', y: 'winEv', minWins: 3 },
   { key: 'usage-winDk', label: 'Usage - Win.Dk', x: 'use', y: 'winDk' },
-  { key: 'usage-score', label: 'Usage - Score', x: 'use', y: 'score' },
-  { key: 'winDk-winEv', label: 'Win.Dk - Win.Ev', x: 'winDk', y: 'winEv', minWins: 3 },
+  { key: 'usage-winEv', label: 'Usage - Win.Ev', x: 'use', y: 'winEv', minWins: 3 },
 ]
 
-const chartMode = useStorage('gcg-quadrant-mode', 'usage-winEv')
+// v2 key so everyone lands on the new Usage - Win.Dk default once
+const chartMode = useStorage('gcg-quadrant-mode-v2', 'usage-winDk')
 // A stored mode may have been removed (e.g. the old Top4/Dk mode)
 if (!MODES.some(m => m.key === chartMode.value)) {
   chartMode.value = MODES[0].key
@@ -59,7 +62,6 @@ const rows = computed(() =>
     use: parseFloat(item.usePct),
     winEv: parseFloat(item.winPerEv),
     rawWinDk: parseFloat(item.winPerDk),
-    score: Number(item.score),
   })),
 )
 
@@ -86,7 +88,6 @@ const METRICS = computed(() => ({
     ref: avgWinDk.value,
     refLabel: 'avg',
   },
-  score: { label: 'Tier Score', scale: 'linear', ref: null, refLabel: 'median' },
 }))
 
 const parsed = computed(() => {
@@ -122,10 +123,16 @@ const axes = computed(() => {
 
 const points = computed(() => {
   const cfg = config.value
+  const { xRef, yRef } = axes.value
+  const sleepers = parsed.value
+    .filter(r => r[cfg.x] < xRef && r[cfg.y] > yRef)
+    .sort((a, b) => b[cfg.y] - a[cfg.y])
+    .slice(0, SLEEPER_LABELS)
   const labeled = new Set(
     [...parsed.value]
       .sort((a, b) => b.decks - a.decks)
       .slice(0, labelCount.value)
+      .concat(sleepers)
       .map(r => r.archetype),
   )
   // Archetypes can share a lead signature card; add their colors to tell them apart
@@ -147,7 +154,7 @@ const points = computed(() => {
 
 const note = computed(
   () =>
-    `${isMobile.value ? `Top ${MOBILE_MAX_POINTS} archetypes by decks. ` : ''}Bubble size = decks. Win.Dk is shrunk toward the ${avgWinDk.value?.toFixed(1) ?? '–'}% average (${PRIOR_DECKS}-deck prior).`,
+    `${isMobile.value ? `Top ${MOBILE_MAX_POINTS} archetypes by decks. ` : ''}Meta = popular and winning, Sleeper = winning but under-played, Trap = popular but under-performing. Bubble size = decks. Win.Dk is shrunk toward the ${avgWinDk.value?.toFixed(1) ?? '–'}% average (${PRIOR_DECKS}-deck prior).`,
 )
 
 function tooltip(r) {
