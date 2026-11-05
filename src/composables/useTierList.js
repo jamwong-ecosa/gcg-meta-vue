@@ -1,4 +1,5 @@
 import { useStorage } from '@vueuse/core'
+import cardMeta from '$data/card-meta.json'
 
 const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
 
@@ -16,10 +17,42 @@ export const TIER_SORT_OPTIONS = [
   { key: 'move', labelKey: 'tier.col.move' },
 ]
 
+// Every card each archetype plays ({ [series]: { [archetype]: [cardId, …] } }),
+// kept out of tiers.json and loaded the first time someone types a search;
+// shared by every tier page instance for the rest of the visit
+const cardIdIndex = shallowRef(null)
+let cardIdsLoading = null
+function loadCardIds() {
+  cardIdsLoading ??= import('$data/tier-card-ids.json')
+    .then(mod => {
+      cardIdIndex.value = mod.default ?? {}
+    })
+    .catch(() => {
+      cardIdIndex.value = {}
+    })
+}
+
+// "gd05-033", "GD05033", "gd05 033" → "gd05033". Only 3+ characters with a
+// digit count as a card number, so names and a stray "5" never match an ID
+function cardNumberQuery(q) {
+  const num = q.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return num.length >= 3 && /\d/.test(num) ? num : ''
+}
+
+// Card number → lower-cased name, to search any played card by name
+const cardNameById = new Map(cardMeta.map(c => [c.id, (c.name ?? '').toLowerCase()]))
+
 // Filtering, sorting and sectioning for the tier page. Both the desktop table
 // and the mobile list render `sections` + `zeroRows`, so they always agree.
-export function useTierList({ allRows, previousSeries }) {
+// `seriesKey` picks the series in the played-card index
+export function useTierList({ allRows, previousSeries, seriesKey }) {
   const query = ref('')
+  // Two characters is enough: some card names are that short
+  watch(query, q => {
+    if (q.trim().length >= 2) {
+      loadCardIds()
+    }
+  })
   const colors = ref([])
   const groupByColor = useStorage('gcg-group-color', false)
   const sortKey = ref('rank')
@@ -67,12 +100,29 @@ export function useTierList({ allRows, previousSeries }) {
     if (
       q &&
       !r.archetype.toLowerCase().includes(q) &&
-      !comboName(r.colors).toLowerCase().includes(q)
+      !comboName(r.colors).toLowerCase().includes(q) &&
+      !matchesPlayedCard(r, q)
     ) {
       return false
     }
     const rowColors = r.colors.split('+')
     return colors.value.every(c => rowColors.includes(c))
+  }
+
+  // Any card the archetype plays, by name or card number. Until the index has
+  // loaded (or with older data that has none) only the signature cards count
+  function matchesPlayedCard(r, q) {
+    const num = cardNumberQuery(q)
+    const ids = cardIdIndex.value?.[seriesKey?.value]?.[r.archetype] ?? r.sigCardIds ?? []
+    return ids.some(
+      id =>
+        (q.length >= 2 && cardNameById.get(id)?.includes(q)) ||
+        (num &&
+          id
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '')
+            .includes(num)),
+    )
   }
 
   function sortValue(r) {

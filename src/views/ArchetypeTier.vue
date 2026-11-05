@@ -222,7 +222,7 @@ const {
   toggleColor,
   toggleSection,
   clearFilters,
-} = useTierList({ allRows, previousSeries })
+} = useTierList({ allRows, previousSeries, seriesKey: selectedKey })
 
 const sortOptions = TIER_SORT_OPTIONS
 

@@ -421,6 +421,9 @@ function formatTierRows(series) {
         colorDots: colorDots(baseCombo),
         sigCards: a.sigCards,
         sigCardIds: a.sigCardIds,
+        // Every card the archetype's decks play, for card-number search; moved
+        // out to tier-card-ids.json before tiers.json is written
+        cardIds: [...new Set([...(a.cards ?? []), ...(a.filteredCards ?? [])].map(c => c.cardId))],
         decks: a.deckCount,
         wins: a.winnerDeckCount,
         top4: a.top4 ?? 0,
@@ -1040,6 +1043,20 @@ for (const series of mergedSeries) {
 
 tierData.sort((a, b) => (b.eventMaxDate || '').localeCompare(a.eventMaxDate || ''))
 manifest.sort((a, b) => (b.eventMaxDate || '').localeCompare(a.eventMaxDate || ''))
+
+// Card numbers per archetype go to their own file, which the tier page loads
+// only when someone searches by card number, so tiers.json stays small for
+// every page: { [series]: { [archetype]: [cardId, …] } }
+const cardIdIndex = {}
+for (const entry of tierData) {
+  cardIdIndex[entry.value] = {}
+  for (const row of entry.rows) {
+    cardIdIndex[entry.value][row.archetype] = row.cardIds
+    delete row.cardIds
+  }
+}
+writeFileSync('data-processed/tier-card-ids.json', JSON.stringify(cardIdIndex))
+console.log('Saved data-processed/tier-card-ids.json')
 
 writeFileSync('data-processed/tiers.json', JSON.stringify(tierData, null, 2))
 console.log(
