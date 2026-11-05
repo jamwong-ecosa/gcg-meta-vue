@@ -1,13 +1,13 @@
 <template>
   <div
-    class="overflow-hidden rounded-r-lg border-l-4 bg-shironezumi/7 not-dark:shadow-xs not-dark:shadow-gray-400/10 dark:bg-nalika-surface"
+    class="overflow-hidden rounded-r-lg border-l-4 bg-white ring-1 ring-gray-500/10 not-dark:shadow-xs not-dark:shadow-gray-400/10 dark:bg-nalika-surface dark:ring-white/[0.06]"
     :class="tierBorderClass(row.tier)"
   >
     <!-- One line with the essentials: tap opens the analysis, the chevron shows
          the rest of the stats -->
     <div class="flex items-stretch">
       <button
-        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-2 pl-2.5 text-left"
+        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-2 pl-2.5 text-left transition-colors hover:bg-sky-50 active:bg-sky-50 dark:hover:bg-sky-400/10 dark:active:bg-sky-400/10"
         @click="$emit('detail', row)"
       >
         <span
