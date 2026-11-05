@@ -4,6 +4,7 @@ export default {
     enlarged: 'Enlarged card',
     close: 'Close',
     noData: 'No data',
+    swipeHint: 'Swipe for more',
     copiesPerDeck: 'Copies per deck that runs it',
     state: {
       title: 'Card State vs Previous',
@@ -77,6 +78,7 @@ export default {
     enlarged: '放大的卡牌',
     close: '關閉',
     noData: '沒有資料',
+    swipeHint: '向左滑查看更多',
     copiesPerDeck: '採用此卡的卡組平均投入張數',
     state: {
       title: '卡牌使用狀況 vs 上一系列',
