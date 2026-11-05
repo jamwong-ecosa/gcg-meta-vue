@@ -9,7 +9,7 @@
         Archetype Timeline
       </h2>
       <p v-if="timeline.length > 1" class="text-xxs text-gray-400 dark:text-gray-500">
-        Small figures: change from the series before
+        ▲▼ change from the series before
       </p>
     </div>
     <!-- One table at every width; phones drop the raw counts and the arrow, and
@@ -50,7 +50,7 @@
               "
               @click="goToEntry(entry)"
             >
-              <td class="py-1.5 pr-3 pl-1 align-baseline dark:text-nalika-text">
+              <td class="py-2 pr-3 pl-1 align-baseline dark:text-nalika-text">
                 <div v-if="isPhone" class="min-w-0 leading-tight">
                   <div class="truncate font-medium">{{ entry.labelMain }}</div>
                   <div v-if="entry.labelSub" class="truncate text-xxs text-gray-400">
@@ -67,7 +67,7 @@
                   </span>
                 </div>
               </td>
-              <td class="py-1.5 align-baseline">
+              <td class="py-2 align-baseline">
                 <span
                   class="inline-block w-7 rounded px-1.5 py-0.5 text-center text-xxs font-bold sm:w-10"
                   :class="tierPillClass(entry.tier)"
@@ -78,7 +78,7 @@
               <td
                 v-for="cell in entry.cells"
                 :key="cell.key"
-                class="py-1.5 pl-2 text-right align-baseline sm:pl-3"
+                class="py-2 pl-2 text-right align-baseline sm:pl-3"
               >
                 <div
                   class="font-mono leading-tight text-gray-700 tabular-nums dark:text-nalika-text"
@@ -90,17 +90,18 @@
                     v-text="cell.suffix"
                   />
                 </div>
-                <div
-                  v-if="cell.diffText"
-                  class="font-mono text-xxs leading-tight tabular-nums"
-                  :class="cell.toneClass"
-                >
-                  {{ cell.diffText }}
+                <div v-if="cell.diffText" class="mt-1">
+                  <span
+                    class="inline-block rounded px-1 py-px font-mono text-[11px] leading-tight font-medium tabular-nums"
+                    :class="cell.toneClass"
+                  >
+                    {{ cell.diffText }}
+                  </span>
                 </div>
               </td>
               <td
                 v-if="!isPhone"
-                class="py-1.5 text-center align-baseline text-xxs text-gray-300 group-hover:text-sora dark:text-gray-600"
+                class="py-2 text-center align-baseline text-xxs text-gray-300 group-hover:text-sora dark:text-gray-600"
               >
                 <span v-if="!entry.isCurrent">▶</span>
               </td>
@@ -212,29 +213,24 @@ function buildCell(m, entry, prev) {
     diffText: '',
     toneClass: '',
   }
-  if (!prev) {
+  // Raw counts swing with how many events a series had, so their change says little —
+  // only the comparable metrics (rank, shares) show one
+  if (!prev || !m.scored) {
     return cell
   }
   const raw = value - prev[m.key]
   const diff = m.pct ? +raw.toFixed(1) : raw
   if (diff === 0) {
-    return { ...cell, diffText: '–', toneClass: tw`text-gray-300 dark:text-gray-600` }
+    return { ...cell, diffText: '±0', toneClass: tw`text-gray-400 dark:text-gray-500` }
   }
   const better = m.invert ? diff < 0 : diff > 0
   const magnitude = m.pct ? Math.abs(diff).toFixed(1) : Math.abs(diff)
-  if (!m.scored) {
-    return {
-      ...cell,
-      diffText: `${diff > 0 ? '+' : '−'}${magnitude}`,
-      toneClass: tw`text-gray-400 dark:text-gray-500`,
-    }
-  }
   return {
     ...cell,
     diffText: `${better ? '▲' : '▼'}${magnitude}`,
     toneClass: better
-      ? tw`text-green-600 dark:text-green-500`
-      : tw`text-red-600 dark:text-red-500/90`,
+      ? tw`bg-green-500/10 text-green-700 dark:bg-green-400/15 dark:text-green-400`
+      : tw`bg-red-500/10 text-red-700 dark:bg-red-400/15 dark:text-red-400`,
   }
 }
 
