@@ -35,7 +35,7 @@
               :href="d.url || undefined"
               :target="d.url ? '_blank' : undefined"
               :rel="d.url ? 'noopener' : undefined"
-              class="group flex items-center gap-3 rounded px-1.5 py-1.5 text-xs hover:bg-gray-100/70 dark:hover:bg-white/5"
+              class="group flex items-center gap-2 rounded px-1.5 py-1.5 text-xs hover:bg-gray-100/70 sm:gap-3 dark:hover:bg-white/5"
             >
               <span
                 class="w-14 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
@@ -55,17 +55,26 @@
               </span>
               <span
                 v-if="showTech"
-                :class="{ invisible: !d.flex }"
-                class="w-14 shrink-0 rounded bg-gray-100 px-1.5 text-center font-mono text-xxs text-gray-500 tabular-nums dark:bg-white/5 dark:text-gray-400"
-              >
-                {{ $t('archetype.decks.flexCount', { n: d.flex }) }}
-              </span>
-              <span
-                v-if="showTech"
                 :class="{ invisible: !d.tech }"
                 class="w-14 shrink-0 rounded bg-sora/10 px-1.5 text-center font-mono text-xxs text-ruri tabular-nums dark:bg-sora/15 dark:text-sora"
               >
                 {{ $t('archetype.decks.techCount', { n: d.tech }) }}
+              </span>
+              <!-- Phones skip the flex count to leave the shop name room -->
+              <span
+                v-if="showTech"
+                :class="{ invisible: !d.flex }"
+                class="w-14 shrink-0 rounded bg-gray-100 px-1.5 text-center font-mono text-xxs text-gray-500 tabular-nums max-sm:hidden dark:bg-white/5 dark:text-gray-400"
+              >
+                {{ $t('archetype.decks.flexCount', { n: d.flex }) }}
+              </span>
+              <!-- Top tech picks, in the 奇招 tag's yellow as on the cards -->
+              <span
+                v-if="showTech"
+                :class="{ invisible: !d.topTech }"
+                class="w-14 shrink-0 rounded bg-yellow-400/25 px-1.5 text-center font-mono text-xxs font-medium text-yellow-800 tabular-nums dark:bg-yellow-400/15 dark:text-yellow-300"
+              >
+                {{ $t('archetype.decks.topTechCount', { n: d.topTech }) }}
               </span>
               <span
                 v-if="d.url"
@@ -151,15 +160,18 @@ const cardShare = computed(() => {
   return new Map([...counts].map(([id, k]) => [id, k / n]))
 })
 
-// Tags for a card in a deck's popover: the archetype cards' tags, plus 冷門 for
-// the cards the list's uncommon chip counts (a top tech pick keeps just 奇招)
+// Tags for a card in a deck's popover: the archetype cards' tags, plus 彈性 and
+// 冷門 for the cards the row's chips count (a top tech pick keeps just 奇招)
 function tagsOf(card) {
   const tech = props.techIds.has(card.cardId)
+  const share = cardShare.value.get(card.cardId) ?? 0
+  const counted = props.showTech && !tech
   return {
     sig: props.sigIds.has(card.cardId),
     tech,
     new: props.isNew(card.cardId),
-    uncommon: props.showTech && !tech && (cardShare.value.get(card.cardId) ?? 0) < TECH_SHARE,
+    flex: counted && share >= TECH_SHARE && share < STAPLE_SHARE,
+    uncommon: counted && share < TECH_SHARE,
   }
 }
 
@@ -175,11 +187,10 @@ function placeLabel(place) {
 
 const rows = computed(() =>
   props.decks.map(d => {
-    const shareOf = c => cardShare.value.get(c.cardId) ?? 0
-    const techCards = props.showTech ? d.cards.filter(c => shareOf(c) < TECH_SHARE) : []
-    const flexCards = props.showTech
-      ? d.cards.filter(c => shareOf(c) >= TECH_SHARE && shareOf(c) < STAPLE_SHARE)
-      : []
+    // Count from the popover's tags, so each chip matches the tagged cards
+    const tagged = d.cards.map(tagsOf)
+    const techCards = tagged.filter(tags => tags.uncommon)
+    const flexCards = tagged.filter(tags => tags.flex)
     const placeText = placeLabel(d.place)
     // Event names often end with the date ("…定員64名2026/11/2"); the date has its own column
     const shop = (d.shop ?? '').replace(/\s*\d{4}\/\d{1,2}\/\d{1,2}$/, '')
@@ -188,6 +199,7 @@ const rows = computed(() =>
       shop,
       placeLabel: d.isWinner && d.place === 1 ? `🏆 ${placeText}` : placeText,
       tech: techCards.length,
+      topTech: d.cards.filter(c => props.techIds.has(c.cardId)).length,
       flex: flexCards.length,
       popoverLabel: [placeText, d.date, shop].filter(Boolean).join(' · '),
     }

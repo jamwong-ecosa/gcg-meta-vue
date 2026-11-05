@@ -115,9 +115,10 @@ const TAG_BADGES = [
   { key: 'sig', class: tw`bg-black/75 text-yellow-300` },
   { key: 'tech', class: tw`bg-yellow-400 text-yellow-950` },
   { key: 'new', class: tw`bg-green-600 text-white` },
-  { key: 'flex', class: tw`bg-sky-600 text-white` },
-  // Deck lists only: a card few of the archetype's decks play
-  { key: 'uncommon', class: tw`bg-slate-600 text-white` },
+  // Deck lists only, in their row chips' colours: a card some of the archetype's
+  // decks play (flex), and one few of them play (uncommon)
+  { key: 'flex', class: tw`bg-gray-600 text-white` },
+  { key: 'uncommon', class: tw`bg-ruri text-white` },
 ]
 
 export function tagBadges(tags, titles = {}) {
