@@ -164,6 +164,21 @@
       </div>
     </div>
 
+    <!-- Decks: always shown, ahead of the collapsible card lists -->
+    <section v-if="archetype.deckCardIds?.length" class="mt-6">
+      <h4 class="mb-2 flex items-baseline gap-2">
+        <span
+          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        >
+          Decks
+        </span>
+        <span class="font-mono text-xs text-gray-400 tabular-nums dark:text-gray-500">
+          {{ archetype.deckCardIds.length }}
+        </span>
+      </h4>
+      <ArchetypeDeckList :decks="deckPreviews" :sig-ids="sigCardIds" :is-new="isNewCard" />
+    </section>
+
     <!-- Other Cards (collapsible) -->
     <UiCollapsibleSection
       v-if="otherCards.length"
@@ -202,17 +217,6 @@
         @zoom="enlargedCardId = $event"
       />
     </UiCollapsibleSection>
-
-    <!-- Decks (hidden, toggle) -->
-    <UiCollapsibleSection
-      v-if="archetype.deckCardIds?.length"
-      :show="showDeckUrls"
-      :count="archetype.deckCardIds.length"
-      title="Decks"
-      @toggle="showDeckUrls = !showDeckUrls"
-    >
-      <ArchetypeDeckList :decks="deckPreviews" :sig-ids="sigCardIds" :is-new="isNewCard" />
-    </UiCollapsibleSection>
   </div>
 </template>
 
@@ -225,7 +229,7 @@ const props = defineProps({
 
 const isNewCard = cardId => props.prevCardIds?.size > 0 && !props.prevCardIds.has(cardId)
 
-const { showOther, showDeckUrls, showRemoved } = useCollapseState()
+const { showOther, showRemoved } = useCollapseState()
 
 const sigCardIds = computed(() => new Set(props.archetype.sigCardIds ?? []))
 

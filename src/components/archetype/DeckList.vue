@@ -192,7 +192,6 @@ const filterOptions = computed(() => {
   return [
     { value: 'all', label: `All ${all.length}` },
     { value: 'winners', label: `Winners ${count(d => d.isWinner)}` },
-    { value: 'top4', label: `Top 4 ${count(d => d.place && d.place <= 4)}` },
     { value: 'other', label: `Other ${count(d => !d.isWinner)}` },
   ]
 })
@@ -206,7 +205,6 @@ const sortOptions = computed(() => [
 const FILTERS = {
   all: () => true,
   winners: d => d.isWinner,
-  top4: d => d.place && d.place <= 4,
   other: d => !d.isWinner,
 }
 
