@@ -9,7 +9,7 @@ export function useCardStats(card, lift) {
   })
   const copies = computed(() => Math.max(1, Math.round(copiesExact.value)))
 
-  const liftText = computed(() => liftValue(lift()))
+  const liftText = computed(() => liftBadge(lift()))
   const liftClass = computed(() => liftTone(lift()))
 
   // Rows for UiHint's `content`
@@ -74,6 +74,12 @@ export function liftValue(lift) {
     return ''
   }
   return `${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(v).toFixed(1)}`
+}
+
+// For the short label under a card: a gap that rounds to ±0.0 says nothing, so it's
+// left out there (the hover still shows it)
+export function liftBadge(lift) {
+  return Math.abs(lift?.value ?? 0) < 0.05 ? '' : liftValue(lift)
 }
 
 // Grey unless the gap is beyond chance

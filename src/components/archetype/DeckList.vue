@@ -111,7 +111,7 @@ const props = defineProps({
 const PAGE = 20
 const TECH_SHARE = 0.25
 // Below this share a card is flex rather than a staple (as on the archetype cards)
-const STAPLE_SHARE = 0.9
+const STAPLE_SHARE = 0.85
 
 // Open on Winners; a list without any (0-win archetypes) opens on All
 const defaultFilter = () => (props.decks.some(d => d.isWinner) ? 'winners' : 'all')

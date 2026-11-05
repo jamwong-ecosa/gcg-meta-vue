@@ -1,6 +1,7 @@
 <template>
   <!-- One grid so rows fill the width; the type label sits over the first card
-       of each type, and only rows holding one get the room for it on top.
+       of each type and of each row a type wraps onto, and only rows holding one
+       get the room for it on top.
        Cards that play the same (same effect and stats) stay in sort order inside
        one dashed box with one win-rate change; when the group runs past the end
        of a row it breaks, and each row draws its own piece of the box -->
@@ -16,11 +17,20 @@
     >
       <div v-if="item.typeLabel" class="absolute inset-x-0 top-0 flex h-5 min-w-0 items-center">
         <span
-          class="flex shrink-0 items-center gap-1.5 border-l-2 border-gray-400 pl-1.5 text-xs font-bold tracking-wider text-gray-700 uppercase dark:border-gray-500 dark:text-nalika-text"
+          class="flex shrink-0 items-center gap-1.5 border-l-[3px] pl-1.5 text-xs font-bold tracking-wider text-gray-700 uppercase dark:text-nalika-text"
+          :class="item.typeStyle.rail"
         >
           {{ item.typeLabel }}
           <span
-            class="rounded bg-gray-200 px-1 font-mono text-xxs font-semibold text-gray-600 dark:bg-white/10 dark:text-nalika-text-muted"
+            v-if="item.typeCont"
+            class="font-normal tracking-normal text-gray-400 normal-case max-sm:hidden dark:text-gray-500"
+          >
+            cont.
+          </span>
+          <span
+            v-else
+            class="rounded px-1 font-mono text-xxs font-semibold"
+            :class="item.typeStyle.chip"
           >
             {{ item.typeCount }}
           </span>
@@ -28,6 +38,14 @@
       </div>
 
       <div class="relative">
+        <!-- This card's piece of its type's band: reaches half the gap towards a
+             same-type neighbour in the row, rounded where the type's run ends, so
+             each type reads as its own block with a gap where the type changes -->
+        <div
+          class="pointer-events-none absolute -inset-y-2 border-y border-gray-500/10 bg-white dark:border-white/[0.06] dark:bg-white/[0.04]"
+          :class="item.bandClass"
+          aria-hidden="true"
+        />
         <template v-if="item.group">
           <!-- This card's piece of the box: reaches into the gap towards its
                neighbours, closed on the sides where the group's row segment ends -->
@@ -83,6 +101,38 @@ const props = defineProps({
 const emit = defineEmits(['zoom'])
 
 const TYPES = { UNIT: 'Unit', PILOT: 'Pilot', COMMAND: 'Command', BASE: 'Base' }
+// Same colours as the deck-curve chart's type legend
+const TYPE_STYLE = {
+  UNIT: {
+    rail: tw`border-ruri dark:border-sky-600`,
+    chip: tw`bg-ruri/10 text-ruri dark:bg-sky-600/20 dark:text-sky-300`,
+  },
+  PILOT: {
+    rail: tw`border-sky-400 dark:border-sky-300`,
+    chip: tw`bg-sky-400/15 text-sky-700 dark:bg-sky-300/15 dark:text-sky-200`,
+  },
+  COMMAND: {
+    rail: tw`border-amber-400 dark:border-amber-500`,
+    chip: tw`bg-amber-400/20 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300`,
+  },
+  BASE: {
+    rail: tw`border-emerald-500 dark:border-emerald-600`,
+    chip: tw`bg-emerald-500/15 text-emerald-700 dark:bg-emerald-600/20 dark:text-emerald-300`,
+  },
+}
+const OTHER_STYLE = {
+  rail: tw`border-gray-400 dark:border-gray-500`,
+  chip: tw`bg-gray-200 text-gray-600 dark:bg-white/10 dark:text-nalika-text-muted`,
+}
+
+// A type band piece joins its same-type neighbours in the row (reaching half the
+// column gap) and is rounded at the ends of the run
+function bandClass(joinLeft, joinRight) {
+  return [
+    joinLeft ? tw`-left-1.5 sm:-left-3` : tw`-left-2 rounded-l border-l`,
+    joinRight ? tw`-right-1.5 sm:-right-3` : tw`-right-2 rounded-r border-r`,
+  ]
+}
 
 // Columns the grid has right now (auto-fill on wider screens), to know where a
 // group's row segments start and end
@@ -103,7 +153,7 @@ function groupInfo(g) {
   const hasAll = g.allDecks != null
   const pct = n => sharePct(props.deckCount ? n / props.deckCount : 0)
   return {
-    liftText: liftValue(lift),
+    liftText: liftBadge(lift),
     liftClass: liftTone(lift),
     hint: {
       title: 'Same card, different names',
@@ -161,21 +211,39 @@ const items = computed(() => {
     }
     return out.map((e, i) => ({
       ...e,
-      typeLabel: i === 0 ? (TYPES[type] ?? type) : '',
+      typeFirst: i === 0,
       typeCount: ofType.length,
     }))
   })
   // Every card takes one column, so its column is its position mod the count
-  // and its row the position divided by it
+  // and its row the position divided by it. A type's first card carries its
+  // label. A row the type wraps onto repeats it (marked "cont.") only when another
+  // type also starts in that row: a row of one type with no label plainly
+  // continues the row above, and long lists stay free of repeated labels
   const rowOf = i => Math.floor(i / cols.value)
-  const labelRows = new Set(ordered.flatMap((e, i) => (e.typeLabel ? [rowOf(i)] : [])))
-  return ordered.map((e, i) => {
+  const startRows = new Set(ordered.flatMap((e, i) => (e.typeFirst ? [rowOf(i)] : [])))
+  const labelled = ordered.map((e, i) => {
+    const cont = !e.typeFirst && i % cols.value === 0 && startRows.has(rowOf(i))
+    const name = TYPES[e.card.type] ?? e.card.type
+    return { ...e, typeLabel: e.typeFirst || cont ? name : '', typeCont: cont }
+  })
+  const labelRows = new Set(labelled.flatMap((e, i) => (e.typeLabel ? [rowOf(i)] : [])))
+  return labelled.map((e, i) => {
     const labelRow = labelRows.has(rowOf(i))
-    if (!e.group) {
-      return { ...e, labelRow }
+    const col = i % cols.value
+    const type = e.card.type
+    const joinLeft = col > 0 && ordered[i - 1]?.card.type === type
+    const joinRight = col < cols.value - 1 && ordered[i + 1]?.card.type === type
+    const base = {
+      ...e,
+      labelRow,
+      typeStyle: TYPE_STYLE[type] ?? OTHER_STYLE,
+      bandClass: bandClass(joinLeft, joinRight),
     }
-    const box = boxClass({ first: e.first, last: e.isLast, col: i % cols.value })
-    return { ...e, labelRow, boxClass: box }
+    if (!e.group) {
+      return base
+    }
+    return { ...base, boxClass: boxClass({ first: e.first, last: e.isLast, col }) }
   })
 })
 </script>

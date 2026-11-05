@@ -1,72 +1,114 @@
 <template>
   <div>
-    <!-- Average deck: copies per type across all of this archetype's decks -->
-    <div
-      class="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-nalika-text-muted"
+    <!-- Average deck and the key to the card badges, as two labelled rows sharing one
+         label column -->
+    <dl
+      class="mb-4 grid grid-cols-[4.5rem_1fr] items-start gap-x-3 gap-y-3 text-xs text-gray-500 sm:grid-cols-[5.5rem_1fr] sm:items-center dark:text-nalika-text-muted"
     >
-      <span class="font-semibold tracking-wider text-gray-400 uppercase">Avg deck</span>
-      <span v-for="t in avgDeck" :key="t.type">
-        <span class="font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text">
-          {{ t.copies }}
+      <!-- Average deck: copies per type across all of this archetype's decks, as a
+           stacked bar in the deck-curve chart's type colours -->
+      <dt class="font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500">
+        Avg deck
+      </dt>
+      <dd class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <div class="flex h-2 w-40 shrink-0 overflow-hidden rounded-sm sm:w-56" aria-hidden="true">
+          <div
+            v-for="t in avgDeck"
+            :key="t.type"
+            :class="t.bar"
+            :style="{ width: `${(t.copies / avgDeckTotal) * 100}%` }"
+          />
+        </div>
+        <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span v-for="t in avgDeck" :key="t.type" class="flex items-center gap-1.5">
+            <span class="h-2 w-2 rounded-sm" :class="t.bar" aria-hidden="true" />
+            <b class="font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text">
+              {{ t.copies }}
+            </b>
+            {{ t.label }}
+          </span>
+          <span class="text-gray-400 dark:text-gray-500">· {{ avgDeckTotal }} cards</span>
         </span>
-        {{ t.label }}
-      </span>
-    </div>
+      </dd>
 
-    <!-- Staples and flex share one layout: compact cards in one width-filling grid
-         per section. Hover a card for its numbers, click to enlarge -->
-    <section v-for="sec in cardSections" :key="sec.key" class="mb-5">
-      <h4 class="mb-1 flex flex-wrap items-baseline gap-x-2">
-        <span class="text-lg font-semibold tracking-wider text-gray-600 dark:text-nalika-text">
+      <!-- Key for both card sections: each badge with its meaning, details on hover -->
+      <template v-if="cardSections.length">
+        <dt class="font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500">Key</dt>
+        <dd class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          <UiHint class="flex items-center gap-1.5" text="Copies per deck that runs it">
+            <span class="rounded-sm bg-black/75 px-1 font-mono font-bold text-white">×4</span>
+            copies per deck
+          </UiHint>
+          <UiHint
+            class="flex items-center gap-1.5"
+            text="How often this archetype's decks won their event (1st, or 2nd at 16+ players) with the card minus without, in points. Green or red when the gap is clear; grey when it could be chance; hidden when either side has under 20 decks or there is no gap. Shows what winning lists run, not that the card causes wins"
+          >
+            <span class="font-mono font-semibold text-green-600 dark:text-green-400">WR +2.0</span>
+            wins with the card vs without
+          </UiHint>
+          <UiHint class="flex items-center gap-1.5" text="Signature card of the archetype">
+            <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">★ SIG</span>
+            signature card
+          </UiHint>
+          <UiHint
+            class="flex items-center gap-1.5"
+            text="Top tech pick: uncommon, but its decks win well"
+          >
+            <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">TECH</span>
+            top tech pick
+          </UiHint>
+          <UiHint
+            v-if="prevCardIds?.size"
+            class="flex items-center gap-1.5"
+            text="Not played by this archetype last series"
+          >
+            <span class="rounded-sm bg-green-600 px-1 font-bold text-white">NEW</span>
+            new this series
+          </UiHint>
+          <UiHint
+            class="flex items-center gap-1.5"
+            text="Same card under another name: one WR for the group, decks running any version vs none. Hover the group for its decks"
+          >
+            <span
+              class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
+            >
+              ≡
+            </span>
+            same card, other name
+          </UiHint>
+        </dd>
+      </template>
+    </dl>
+
+    <!-- Staples and flex each get their own tinted panel with a header strip in its
+         colour, so the core of the list and the slots builds disagree on read as
+         separate blocks.
+         Compact cards in one width-filling grid; hover for numbers, click to enlarge -->
+    <section
+      v-for="sec in cardSections"
+      :key="sec.key"
+      class="mb-5 overflow-hidden rounded border"
+      :class="sec.panelClass"
+    >
+      <h4
+        class="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b px-3 py-2 sm:px-4"
+        :class="sec.headClass"
+      >
+        <span class="text-lg font-semibold tracking-wider" :class="sec.titleClass">
           {{ sec.title }}
         </span>
-        <span class="text-xs text-gray-400 dark:text-gray-500">{{ sec.subtitle }}</span>
+        <span
+          class="rounded-full px-2 py-0.5 font-mono text-xs font-semibold tabular-nums"
+          :class="sec.badgeClass"
+        >
+          {{ sec.range }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-nalika-text-muted">
+          {{ sec.blurb }} · {{ sec.cards.length }} cards
+        </span>
       </h4>
-      <!-- Legend, once, under the first heading: short keys, details on hover -->
-      <p
-        v-if="sec === cardSections[0]"
-        class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xxs whitespace-nowrap text-gray-400 dark:text-gray-500"
-      >
-        <UiHint text="Copies per deck that runs it">
-          <b class="font-semibold text-gray-500 dark:text-gray-400">×</b>
-          copies
-        </UiHint>
-        <UiHint
-          text="How often this archetype's decks won their event (1st, or 2nd at 16+ players) with the card minus without, in points. Green or red when the gap is clear; grey when it could be chance; hidden when either side has under 20 decks. Shows what winning lists run, not that the card causes wins"
-        >
-          <b class="font-semibold text-gray-500 dark:text-gray-400">WR ±</b>
-          event wins, with card vs without
-        </UiHint>
-        <UiHint class="flex items-center gap-1" text="Signature card of the archetype">
-          <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">★ SIG</span>
-        </UiHint>
-        <UiHint
-          class="flex items-center gap-1"
-          text="Top tech pick: uncommon, but its decks win well"
-        >
-          <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">TECH</span>
-        </UiHint>
-        <UiHint
-          v-if="prevCardIds?.size"
-          class="flex items-center gap-1"
-          text="Not played by this archetype last series"
-        >
-          <span class="rounded-sm bg-green-600 px-1 font-bold text-white">NEW</span>
-        </UiHint>
-        <UiHint
-          class="flex items-center gap-1"
-          text="Same card under another name: one WR for the group, decks running any version vs none. Hover the group for its decks"
-        >
-          <span
-            class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
-          >
-            ≡
-          </span>
-          same card
-        </UiHint>
-      </p>
-      <div v-else class="mb-3" />
       <ArchetypeCardGrid
+        class="p-3 pt-4 sm:p-4"
         :cards="sec.cards"
         :lift-of="winLift"
         :group-lift-of="groupWinLift"
@@ -133,6 +175,7 @@
       @toggle="showOther = !showOther"
     >
       <ArchetypeCardGrid
+        class="rounded border border-gray-500/10 bg-gray-50 p-3 sm:p-4 dark:border-nalika-border dark:bg-white/[0.02]"
         :cards="otherCards"
         :lift-of="winLift"
         :group-lift-of="groupWinLift"
@@ -152,7 +195,12 @@
       content-class="space-y-4"
       @toggle="showRemoved = !showRemoved"
     >
-      <ArchetypeCardGrid :cards="removedCards" removed @zoom="enlargedCardId = $event" />
+      <ArchetypeCardGrid
+        class="rounded border border-gray-500/10 bg-gray-50 p-3 sm:p-4 dark:border-nalika-border dark:bg-white/[0.02]"
+        :cards="removedCards"
+        removed
+        @zoom="enlargedCardId = $event"
+      />
     </UiCollapsibleSection>
 
     <!-- Decks (hidden, toggle) -->
@@ -254,7 +302,7 @@ const enlargedCardId = ref(null)
 // Featured cards are those in more than FEATURED_MIN of decks (see build-tiers);
 // at STAPLE_MIN and up a card is a given, so it only gets a thumbnail
 const FEATURED_MIN = 0.1
-const STAPLE_MIN = 0.9
+const STAPLE_MIN = 0.85
 const TYPES = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
 
 // Same-effect versions (effectGroup, see build-tiers) stay together: each card
@@ -293,17 +341,35 @@ const cardSections = computed(() =>
     {
       key: 'staples',
       title: 'Staples',
-      subtitle: `in ${STAPLE_MIN * 100}%+ of decks · ${staples.value.length} cards`,
+      range: `${STAPLE_MIN * 100}%+`,
+      blurb: 'core of the list, in almost every deck',
       cards: staples.value,
+      panelClass: tw`border-ruri/15 bg-ruri/[0.03] dark:border-sora/30 dark:bg-sora/[0.07]`,
+      headClass: tw`border-ruri/15 bg-ruri/[0.06] dark:border-sora/25 dark:bg-sora/[0.1]`,
+      titleClass: tw`text-ruri dark:text-sora`,
+      badgeClass: tw`bg-ruri/10 text-ruri dark:bg-sora/15 dark:text-sora`,
     },
     {
       key: 'flex',
       title: 'Flex & tech',
-      subtitle: `in ${FEATURED_MIN * 100}–${STAPLE_MIN * 100}% of decks · ${flex.value.length} cards`,
+      range: `${FEATURED_MIN * 100}–${STAPLE_MIN * 100}%`,
+      blurb: 'where builds differ',
       cards: flex.value,
+      panelClass: tw`border-amber-400/30 bg-amber-50/50 dark:border-amber-400/30 dark:bg-amber-400/[0.07]`,
+      headClass: tw`border-amber-400/30 bg-amber-100/60 dark:border-amber-400/25 dark:bg-amber-400/[0.1]`,
+      titleClass: tw`text-amber-800 dark:text-amber-300`,
+      badgeClass: tw`bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300`,
     },
   ].filter(sec => sec.cards.length),
 )
+
+// Same colours as the deck-curve chart's type legend
+const TYPE_BAR = {
+  UNIT: tw`bg-ruri dark:bg-sky-600`,
+  PILOT: tw`bg-sky-400 dark:bg-sky-300`,
+  COMMAND: tw`bg-amber-400 dark:bg-amber-500`,
+  BASE: tw`bg-emerald-500 dark:bg-emerald-600`,
+}
 
 const avgDeck = computed(() => {
   const decks = props.archetype.deckCount || 1
@@ -311,11 +377,13 @@ const avgDeck = computed(() => {
   return TYPES.map(type => ({
     type,
     label: typeLabel[type],
+    bar: TYPE_BAR[type],
     copies: Math.round(
       all.filter(c => c.type === type).reduce((n, c) => n + (c.totalQty ?? 0), 0) / decks,
     ),
   })).filter(t => t.copies > 0)
 })
+const avgDeckTotal = computed(() => avgDeck.value.reduce((n, t) => n + t.copies, 0) || 1)
 
 // Win rate of this archetype's decks with the card minus those without, in
 // points, as { value, significant } or { value: null, note }.
