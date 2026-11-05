@@ -16,8 +16,12 @@ const IMAGE_BASE = 'https://www.gundam-gcg.com/jp/images/cards/card'
 const BASE_URL = 'https://d.bandai-tcg-plus.com/gcgja/tournament'
 const fromEnv = Number(process.env.BANDAI_CONCURRENCY)
 const CONCURRENCY =
-  Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : Math.min(4, Math.max(1, cpus().length - 1))
+  Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : Math.min(6, Math.max(1, cpus().length - 1))
 const FORCE = process.env.BANDAI_FORCE === '1'
+// A finished series is re-checked for this many days after its end date (late result uploads)
+const graceEnv = Number(process.env.BANDAI_GRACE_DAYS)
+const GRACE_DAYS = Number.isFinite(graceEnv) && graceEnv >= 0 ? graceEnv : 7
+const DAY_MS = 24 * 60 * 60 * 1000
 
 // ── Chrome binary detection ──────────────────────────────────────────────────
 function findChromeBinary() {
@@ -61,6 +65,16 @@ function loadCached() {
   } catch {
     return []
   }
+}
+
+// End date of a series, from its label ("…2026/10/1～2026/10/31") or its latest cached event
+function seriesEndTime(label, cachedSeries) {
+  const m = label.match(/～\s*(\d{4})\/(\d{1,2})\/(\d{1,2})/)
+  if (m) {
+    return Date.UTC(+m[1], +m[2] - 1, +m[3])
+  }
+  const dates = (cachedSeries?.events ?? []).map(e => Date.parse(e.date)).filter(Number.isFinite)
+  return dates.length > 0 ? Math.max(...dates) : null
 }
 
 function extractCardId(imgSrc) {
@@ -169,6 +183,58 @@ function extractPlayersAndDecksJS() {
   return { players, date }
 }
 
+// ── Infinite-scroll helper ───────────────────────────────────────────────────
+const LINK_SELECTOR = 'a[href*="/tournament/sanctioned/"]'
+const PAGE_SIZE = 20 // the site appends links in batches of 20
+
+function readLinks(page) {
+  return page.evaluate(sel => {
+    return Array.from(document.querySelectorAll(sel)).map(a => ({
+      href: a.href,
+      text: a.textContent.trim(),
+    }))
+  }, LINK_SELECTOR)
+}
+
+// Scrolls until no more links load. Waits for the link count to grow instead of sleeping,
+// stops early on a short batch, or when `shouldStop(newLinks)` says the rest is already known.
+async function scrollAllLinks(page, { minLinks = 1, shouldStop } = {}) {
+  await page
+    .waitForFunction(
+      ([sel, min]) => document.querySelectorAll(sel).length >= min,
+      [LINK_SELECTOR, minLinks],
+      { timeout: 15000 },
+    )
+    .catch(() => {})
+  let links = await readLinks(page)
+  let added = links.length
+  for (let i = 0; i < 100 && added >= PAGE_SIZE; i++) {
+    const prev = links.length
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    const grew = await page
+      .waitForFunction(
+        ([sel, p]) => document.querySelectorAll(sel).length > p,
+        [LINK_SELECTOR, prev],
+        { timeout: 3000 },
+      )
+      .then(
+        () => true,
+        () => false,
+      )
+    if (!grew) {
+      break
+    }
+    // Let the rest of the batch render before counting it
+    await page.waitForTimeout(150)
+    links = await readLinks(page)
+    added = links.length - prev
+    if (shouldStop?.(links.slice(prev))) {
+      break
+    }
+  }
+  return links
+}
+
 // ── Concurrency helper ───────────────────────────────────────────────────────
 async function mapConcurrenly(items, fn, limit) {
   const results = Array.from({ length: items.length })
@@ -194,77 +260,52 @@ async function scrape() {
 
   const browser = await chromium.launch({ executablePath: CHROME, headless: true })
   const context = await browser.newContext()
+  // Card data comes from <img> attributes, so the images themselves (and fonts,
+  // and the OneTrust cookie banner) never need to load
+  await context.route('**/*', route => {
+    const req = route.request()
+    const type = req.resourceType()
+    if (
+      type === 'image' ||
+      type === 'font' ||
+      type === 'media' ||
+      req.url().includes('onetrust.com')
+    ) {
+      return route.abort()
+    }
+    return route.continue()
+  })
 
   // ── Level 1: Find series links ────────────────────────────────────────────
   console.log('1. Navigating to tournament listing (sanctioned tab)...')
   const page = await context.newPage()
-  await page.goto(BASE_URL, { waitUntil: 'load', timeout: 30000 })
-  await page.waitForTimeout(3000)
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 })
 
   console.log('2. Clicking sanctioned tab...')
-  // Dismiss cookie banners (may have multiple layers)
-  for (let attempt = 0; attempt < 3; attempt++) {
-    await page
-      .evaluate(() => {
-        for (const b of document.querySelectorAll('button')) {
-          const t = b.textContent.trim()
-          if (t.includes('Accept All') || t === 'Allow All' || t === 'Reject All Cookies') {
-            b.click()
-            break
-          }
+  // The tab button is server-rendered before React hydrates, so an early click can be a
+  // no-op — keep clicking until series links show up
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await page.evaluate(() => {
+      for (const b of document.querySelectorAll('button')) {
+        if (b.textContent.includes('公認大会')) {
+          b.click()
+          break
         }
-      })
-      .catch(() => {})
-    await page.waitForTimeout(500)
-  }
-
-  // Wait for SPA tab buttons to appear
-  await page
-    .waitForFunction(
-      () => {
-        for (const b of document.querySelectorAll('button')) {
-          if (b.textContent.includes('公認大会')) {
-            return true
-          }
-        }
-        return false
-      },
-      { timeout: 15000 },
-    )
-    .catch(() => {})
-
-  await page.evaluate(() => {
-    for (const b of document.querySelectorAll('button')) {
-      if (b.textContent.includes('公認大会')) {
-        b.click()
-        break
       }
-    }
-  })
-  await page.waitForTimeout(2000)
-
-  console.log('3. Scrolling to load all series...')
-  for (let i = 0; i < 20; i++) {
-    const prev = await page.evaluate(
-      () => document.querySelectorAll('a[href*="/tournament/sanctioned/"]').length,
-    )
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-    await page.waitForTimeout(1500)
-    const next = await page.evaluate(
-      () => document.querySelectorAll('a[href*="/tournament/sanctioned/"]').length,
-    )
-    if (next === prev) {
+    })
+    const ok = await page
+      .waitForFunction(sel => document.querySelector(sel), LINK_SELECTOR, { timeout: 1500 })
+      .then(
+        () => true,
+        () => false,
+      )
+    if (ok) {
       break
     }
   }
 
-  console.log('4. Extracting series links...')
-  const links = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('a[href*="/tournament/sanctioned/"]')).map(a => ({
-      href: a.href,
-      text: a.textContent.trim(),
-    })),
-  )
+  console.log('3. Scrolling to load all series...')
+  const links = await scrollAllLinks(page)
 
   const parsed = links.map(l => ({
     href: l.href,
@@ -298,53 +339,61 @@ async function scrape() {
       .trim()
     const seriesValue = cleanLabel.replace(/[^a-zA-Z0-9\u3000-\u9fff]/g, '_')
 
+    // Skip finished series we already have \u2014 no need to open and scroll its page
+    const cachedSeries = cached.find(c => c.url === s.href || c.value === seriesValue)
+    const endTime = seriesEndTime(s.label, cachedSeries)
+    if (
+      !FORCE &&
+      cachedSeries?.events?.length > 0 &&
+      endTime !== null &&
+      Date.now() - endTime > GRACE_DAYS * DAY_MS
+    ) {
+      console.log(
+        `  [${i + 1}/${parsed.length}] SKIP finished series (${cachedSeries.events.length} cached): ${s.label}`,
+      )
+      allSeries.push(cachedSeries)
+      continue
+    }
+
     console.log(`  [${i + 1}/${parsed.length}] Fetching series: ${s.label}...`)
 
     const series = { label: cleanLabel, value: seriesValue, url: s.href, events: [] }
 
     try {
       const sp = await context.newPage()
-      await sp.goto(s.href, { waitUntil: 'load', timeout: 30000 }).catch(() => {})
-      await sp.waitForTimeout(2000)
+      await sp.goto(s.href, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
 
-      // Dismiss cookie banner if present
-      await sp
-        .evaluate(() => {
-          for (const b of document.querySelectorAll('button')) {
-            if (b.textContent.includes('Accept All')) {
-              b.click()
-              break
+      // While a series is still running, newest events load first: once two batches in a
+      // row are all cached, the older ones are too. After it ends, scan fully (grace period)
+      // so late result uploads further down the list are still picked up.
+      const running = !FORCE && endTime !== null && Date.now() <= endTime + DAY_MS
+      let cachedBatches = 0
+      const shopLinks = await scrollAllLinks(sp, {
+        shouldStop: running
+          ? batch => {
+              const allCached = batch.every(l => cachedByUrl.get(l.href)?.players?.length > 0)
+              cachedBatches = allCached ? cachedBatches + 1 : 0
+              return cachedBatches >= 2
             }
-          }
-        })
-        .catch(() => {})
-      await sp.waitForTimeout(500)
-
-      // Scroll to load all events
-      for (let j = 0; j < 20; j++) {
-        const prev = await sp.evaluate(
-          () => document.querySelectorAll('a[href*="/tournament/sanctioned/"]').length,
-        )
-        await sp.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-        await sp.waitForTimeout(1500)
-        const next = await sp.evaluate(
-          () => document.querySelectorAll('a[href*="/tournament/sanctioned/"]').length,
-        )
-        if (next === prev) {
-          break
-        }
-      }
-
-      const shopLinks = await sp.evaluate(() =>
-        Array.from(document.querySelectorAll('a[href*="/tournament/sanctioned/"]')).map(a => ({
-          href: a.href,
-          text: a.textContent.trim(),
-        })),
-      )
+          : undefined,
+      })
       await sp.close()
 
       const eventLinks = shopLinks.filter(l => /\/sanctioned\/[^/]+\/[^/]+/.test(l.href))
-      console.log(`    Found ${eventLinks.length} shop events in series`)
+      const stoppedEarly = cachedBatches >= 2
+      console.log(
+        `    Found ${eventLinks.length} shop events in series${stoppedEarly ? ' (stopped at cached events)' : ''}`,
+      )
+
+      // Early stop only saw the newest links — keep the older cached events too
+      if (stoppedEarly) {
+        const seen = new Set(eventLinks.map(l => l.href))
+        for (const ev of cachedSeries?.events ?? []) {
+          if (!seen.has(ev.url)) {
+            series.events.push(ev)
+          }
+        }
+      }
 
       if (eventLinks.length === 0) {
         allSeries.push(series)
@@ -356,11 +405,11 @@ async function scrape() {
       for (const ev of eventLinks) {
         if (cachedByUrl.get(ev.href)?.players?.length > 0) {
           series.events.push(cachedByUrl.get(ev.href))
-          console.log(`      [${series.events.length}/${eventLinks.length}] SKIP (cached)`)
         } else {
           uncached.push(ev)
         }
       }
+      console.log(`    ${eventLinks.length - uncached.length} cached, ${uncached.length} to scrape`)
 
       // Scrape uncached events in parallel
       if (uncached.length > 0) {
@@ -372,18 +421,6 @@ async function scrape() {
             try {
               await workerPage.goto(ev.href, { waitUntil: 'domcontentloaded', timeout: 15000 })
 
-              // Dismiss cookie banner if present
-              await workerPage
-                .evaluate(() => {
-                  for (const b of document.querySelectorAll('button')) {
-                    if (b.textContent.includes('Accept All')) {
-                      b.click()
-                      break
-                    }
-                  }
-                })
-                .catch(() => {})
-
               // Wait for deck grid (fast path), with scroll fallback for lazy loading
               const hasGrid = await workerPage
                 .waitForSelector('div[class*="grid-tc_repeat"]', { timeout: 6000 })
@@ -394,19 +431,34 @@ async function scrape() {
                 await workerPage.waitForTimeout(1500)
               }
 
-              // Expand deck sections
-              await workerPage.evaluate(() => {
+              // Expand collapsed deck sections (rare — decks are usually shown open)
+              const expanded = await workerPage.evaluate(() => {
+                let n = 0
                 document.querySelectorAll('button').forEach(b => {
                   if (b.textContent.includes('デッキ詳細を開く')) {
                     b.click()
+                    n++
                   }
                 })
+                return n
               })
-              await workerPage.waitForTimeout(600)
+              if (expanded > 0) {
+                await workerPage.waitForTimeout(600)
+              }
 
               // Wait for expanded grids
               await workerPage
                 .waitForSelector('div[class*="grid-tc_repeat"] button img', { timeout: 4000 })
+                .catch(() => {})
+              // The event date (開催日) renders a moment after the deck grid
+              await workerPage
+                .waitForFunction(
+                  () => /開催日[^\n]*\d{4}\/\d{1,2}\/\d{1,2}/.test(document.body.innerText),
+                  undefined,
+                  {
+                    timeout: 3000,
+                  },
+                )
                 .catch(() => {})
 
               const extractResult = await workerPage.evaluate(extractPlayersAndDecksJS)
