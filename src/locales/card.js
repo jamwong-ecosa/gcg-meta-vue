@@ -20,6 +20,7 @@ export default {
       usedOfTotal: '{count} of {total} cards used ({pct}%)',
       new: 'NEW',
       productUnavailable: 'Product info unavailable',
+      products: '{n} product | {n} products',
       group: {
         GD: 'Boosters',
         ST: 'Starter decks',
@@ -94,6 +95,7 @@ export default {
       usedOfTotal: '{total} 張中有 {count} 張被使用（{pct}%）',
       new: '新',
       productUnavailable: '沒有商品資料',
+      products: '{n} 款',
       group: {
         GD: '補充包',
         ST: '預組',

@@ -56,15 +56,50 @@
       </ul>
     </div>
 
-    <div v-if="productGroups.length" class="mt-5 space-y-4 px-1">
+    <div v-if="productGroups.length" class="mt-5 space-y-3 px-1 sm:space-y-4">
       <section v-for="group in productGroups" :key="group.prefix">
-        <h3
-          class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500 zh:text-xs zh:tracking-normal zh:text-gray-500"
-        >
-          {{ group.label }}
+        <!-- Phones: each group folds to one summary line (products, cards used of
+             released), tap to open; sm+ always shows the list -->
+        <h3>
+          <button
+            class="flex w-full items-baseline gap-2 text-left sm:pointer-events-none"
+            :aria-expanded="isOpen(group.prefix)"
+            @click="toggle(group.prefix)"
+          >
+            <span
+              class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500 zh:text-xs zh:tracking-normal zh:text-gray-500"
+            >
+              {{ group.label }}
+            </span>
+            <span class="text-xs text-gray-400 sm:hidden dark:text-gray-500">
+              {{ $t('card.stats.products', group.items.length) }}
+            </span>
+            <span
+              class="ml-auto font-mono text-xs font-bold text-gray-700 tabular-nums sm:hidden dark:text-nalika-text"
+            >
+              {{ group.count }}
+              <span class="font-normal text-gray-400 dark:text-gray-500">/{{ group.total }}</span>
+            </span>
+            <svg
+              class="size-4 shrink-0 self-center text-gray-400 transition-transform sm:hidden"
+              :class="isOpen(group.prefix) && 'rotate-180'"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
         </h3>
         <!-- Column flow so the share ranking reads top-to-bottom, then across -->
-        <ul class="mt-1.5 gap-x-8 sm:columns-2 xl:columns-3">
+        <ul
+          class="mt-1.5 gap-x-8 sm:block sm:columns-2 xl:columns-3"
+          :class="!isOpen(group.prefix) && 'hidden'"
+        >
           <li
             v-for="item in group.items"
             :key="item.name"
@@ -170,9 +205,23 @@ const productGroups = computed(() =>
         })
         // Bars show the share of each product in use, so rank by that share
         .sort((a, b) => b.pct - a.pct || b.count - a.count),
+      // Cards used of released across the group, for its folded summary line
+      count: group.items.reduce((n, item) => n + item.count, 0),
+      total: group.items.reduce((n, item) => n + item.total, 0),
     }))
     .sort((a, b) => rank(a.prefix) - rank(b.prefix)),
 )
+
+// Phones only (sm+ always shows every list): which groups are open
+const openGroups = ref(new Set())
+const isOpen = prefix => openGroups.value.has(prefix)
+function toggle(prefix) {
+  const next = new Set(openGroups.value)
+  if (!next.delete(prefix)) {
+    next.add(prefix)
+  }
+  openGroups.value = next
+}
 
 function rank(prefix) {
   const i = GROUP_ORDER.indexOf(prefix)
