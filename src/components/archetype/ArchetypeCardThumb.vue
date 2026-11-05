@@ -5,7 +5,7 @@
   <UiHint class="flex flex-col" :content="hint">
     <button
       class="group relative flex w-full cursor-zoom-in flex-col text-left"
-      @click="emit('zoom', card.cardId)"
+      @click="emit('zoom', card.cardId, hint)"
     >
       <div class="relative w-full">
         <!-- Tag ring drawn behind the card, flush to its edge: TECH yellow, NEW

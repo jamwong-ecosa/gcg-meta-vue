@@ -67,7 +67,7 @@
           :is-sig="sigIds.has(item.card.cardId)"
           :is-new="!removed && isNew(item.card.cardId)"
           :is-removed="removed"
-          @zoom="emit('zoom', $event)"
+          @zoom="(id, info) => emit('zoom', id, info)"
         />
       </div>
     </div>

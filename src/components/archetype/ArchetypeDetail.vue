@@ -122,11 +122,11 @@
         :deck-count="archetype.deckCount"
         :sig-ids="sigCardIds"
         :is-new="isNewCard"
-        @zoom="enlargedCardId = $event"
+        @zoom="onZoom"
       />
     </section>
 
-    <CardImageOverlay v-model="enlargedCardId" :z-index="1100" />
+    <CardImageOverlay v-model="enlargedCardId" :info="enlargedInfo" :z-index="1100" />
 
     <!-- Deck curve: copies per average deck at each level and cost, by type -->
     <div class="mt-6 grid gap-4 md:grid-cols-2">
@@ -204,7 +204,7 @@
         :deck-count="archetype.deckCount"
         :sig-ids="sigCardIds"
         :is-new="isNewCard"
-        @zoom="enlargedCardId = $event"
+        @zoom="onZoom"
       />
     </UiCollapsibleSection>
 
@@ -221,7 +221,7 @@
         class="rounded border border-gray-500/10 bg-gray-50 p-3 sm:p-4 dark:border-nalika-border dark:bg-white/[0.02]"
         :cards="removedCards"
         removed
-        @zoom="enlargedCardId = $event"
+        @zoom="onZoom"
       />
     </UiCollapsibleSection>
   </div>
@@ -311,6 +311,13 @@ const deckPreviews = computed(() =>
 )
 
 const enlargedCardId = ref(null)
+// The card's hint (stats, tag meanings), shown under the enlarged card since
+// touch screens can't hover for it
+const enlargedInfo = ref(null)
+function onZoom(cardId, info = null) {
+  enlargedInfo.value = info
+  enlargedCardId.value = cardId
+}
 
 // Featured cards are those in more than FEATURED_MIN of decks (see build-tiers);
 // at STAPLE_MIN and up a card is a given, so it only gets a thumbnail
