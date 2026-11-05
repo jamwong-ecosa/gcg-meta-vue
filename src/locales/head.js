@@ -3,6 +3,7 @@
 export default {
   en: {
     site: 'GCG Decks Analysis',
+    imageAlt: 'GCG Decks Analysis: Gundam Card Game tournament meta, tier list from S to D',
     titleFormat: '{page} · GCG Decks Analysis',
     home: {
       title: 'GCG Decks Analysis · Gundam Card Game Tournament Meta',
@@ -27,6 +28,7 @@ export default {
   },
   'zh-HK': {
     site: 'GCG 卡組分析',
+    imageAlt: 'GCG 卡組分析：高達卡牌遊戲賽事環境，牌型由 S 到 D 分級',
     titleFormat: '{page}｜GCG 卡組分析',
     home: {
       title: 'GCG 卡組分析｜高達卡牌遊戲賽事環境',

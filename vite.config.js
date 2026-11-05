@@ -1,6 +1,7 @@
 import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { existsSync, readFileSync } from 'node:fs'
+import process from 'node:process'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, lazyPlugins } from 'vite-plus'
 import vue from '@vitejs/plugin-vue'
@@ -11,6 +12,9 @@ const autoImportGlobalsFile = new URL('./.dev/auto-import-globals.json', import.
 const autoImportGlobals = existsSync(autoImportGlobalsFile)
   ? JSON.parse(readFileSync(autoImportGlobalsFile, 'utf8')).globals
   : {}
+
+// Absolute public site URL for og:url / og:image; set VITE_SITE_URL to override
+process.env.VITE_SITE_URL ||= 'https://gcg.jamwong.me'
 
 export default defineConfig({
   lint: {

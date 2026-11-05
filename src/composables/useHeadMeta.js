@@ -1,6 +1,7 @@
-// Keeps <title>, the meta description and their Open Graph copies in step with
+// Keeps <title>, the meta description and their Open Graph / Twitter copies in step with
 // the current route and UI language. Call once from App.vue
 const OG_LOCALE = { en: 'en_US', 'zh-HK': 'zh_HK' }
+const SITE_URL = import.meta.env.VITE_SITE_URL
 
 function setMeta(attr, key, content) {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`)
@@ -29,6 +30,12 @@ export function useHeadMeta() {
     setMeta('property', 'og:title', title)
     setMeta('property', 'og:description', description)
     setMeta('property', 'og:site_name', t('head.site'))
-    setMeta('property', 'og:locale', OG_LOCALE[i18n.locale.value] ?? 'en_US')
+    const ogLocale = OG_LOCALE[i18n.locale.value] ?? 'en_US'
+    setMeta('property', 'og:locale', ogLocale)
+    setMeta('property', 'og:locale:alternate', ogLocale === 'en_US' ? 'zh_HK' : 'en_US')
+    setMeta('property', 'og:url', `${SITE_URL}${route.fullPath}`)
+    setMeta('property', 'og:image:alt', t('head.imageAlt'))
+    setMeta('name', 'twitter:title', title)
+    setMeta('name', 'twitter:description', description)
   })
 }
