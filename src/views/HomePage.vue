@@ -329,6 +329,10 @@ const updated = computed(() => {
   }
 })
 
+// Signature cards whose copies are within 5% of each other count as equally
+// played; the higher-level one (usually the deck's finisher) gets the picture
+const CLOSE_COPIES = 0.05
+
 const topRows = computed(() => {
   const s = featured.value
   if (!s) {
@@ -338,7 +342,17 @@ const topRows = computed(() => {
   // Archetypes often share a signature card; show a different one where possible
   const usedImages = new Set()
   return s.rows.slice(0, 6).map(row => {
-    const ids = row.sigCardIds ?? []
+    // The most-played signature card (most copies across the archetype's
+    // decks), or the higher-level one when their copies are close, unless an
+    // archetype above already shows it
+    const stats = row.sigCardStats ?? []
+    const ids = (row.sigCardIds ?? [])
+      .map((id, i) => ({ id, ...(stats[i] ?? { copies: 0, level: 0 }) }))
+      .sort((a, b) => {
+        const close = Math.abs(a.copies - b.copies) <= CLOSE_COPIES * Math.max(a.copies, b.copies)
+        return close ? b.level - a.level : b.copies - a.copies
+      })
+      .map(c => c.id)
     const imageCardId = ids.find(id => !usedImages.has(id)) ?? ids[0]
     usedImages.add(imageCardId)
     const idx = archetypes.findIndex(

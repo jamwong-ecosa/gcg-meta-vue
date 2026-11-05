@@ -421,6 +421,12 @@ function formatTierRows(series) {
         colorDots: colorDots(baseCombo),
         sigCards: a.sigCards,
         sigCardIds: a.sigCardIds,
+        // Each signature card's total copies across the archetype's decks and its
+        // level, in sigCardIds order, so the UI can pick which card's art to show
+        sigCardStats: a.sigCardIds.map(id => {
+          const card = [...(a.cards ?? []), ...(a.filteredCards ?? [])].find(c => c.cardId === id)
+          return { copies: card?.totalQty ?? 0, level: Number(card?.level) || 0 }
+        }),
         // Every card the archetype's decks play, for card-number search; moved
         // out to tier-card-ids.json before tiers.json is written
         cardIds: [...new Set([...(a.cards ?? []), ...(a.filteredCards ?? [])].map(c => c.cardId))],
