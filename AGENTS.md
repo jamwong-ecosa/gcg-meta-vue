@@ -90,7 +90,7 @@ source ~/.nvm/nvm.sh && nvm use
 - Chinese copy is Hong Kong usage (卡組, 按, 鼠標, 甚麼); follow the glossary at the top of `src/locales/common.js`
 - Card, archetype and series names are data and stay untranslated
 - `<title>` and meta/OG description per route come from `src/locales/head.js` (keyed by route name), applied by `useHeadMeta()` in `App.vue`; `index.html` holds the zh-HK defaults for crawlers and link previews. A new route needs a `head.<route-name>` entry in both languages
-- Open Graph / Twitter tags use absolute URLs from `VITE_SITE_URL` (defaults to `https://gcg.jamwong.me` in `vite.config.js`). The share image `public/og-image.png` is rendered from `scripts/og/og-image.html` with `node scripts/og/render-og-image.mjs`
+- Open Graph / Twitter tags use absolute URLs from `VITE_SITE_URL` (defaults to `https://gcg.jamwong.me` in `vite.config.js`). The share image `public/og-image-zh.png` is rendered from `scripts/og/og-image.html` with `node scripts/og/render-og-image.mjs`
 
 ## Data pipeline
 

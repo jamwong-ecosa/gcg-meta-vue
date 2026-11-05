@@ -1,4 +1,4 @@
-// Renders scripts/og/og-image.html to public/og-image.png (1200×630) with the
+// Renders scripts/og/og-image.html to public/og-image-zh.png (1200×630) with the
 // Playwright Chromium already used by the scrapers
 import { existsSync, readdirSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -22,7 +22,7 @@ function findChrome() {
 }
 
 const html = fileURLToPath(new URL('./og-image.html', import.meta.url))
-const out = fileURLToPath(new URL('../../public/og-image.png', import.meta.url))
+const out = fileURLToPath(new URL('../../public/og-image-zh.png', import.meta.url))
 
 const browser = await chromium.launch({ executablePath: findChrome() })
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 } })
