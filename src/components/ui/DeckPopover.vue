@@ -23,7 +23,22 @@
           <span v-if="label" class="truncate text-xs font-medium text-gray-600 dark:text-gray-300">
             {{ label }}
           </span>
-          <span class="shrink-0 font-mono text-xxs text-gray-400 tabular-nums">{{ summary }}</span>
+          <!-- Each type's copies: full names with the grid's type colours -->
+          <span
+            class="flex shrink-0 items-baseline gap-x-2.5 text-xs text-gray-500 dark:text-gray-400"
+          >
+            <span
+              v-for="p in summary"
+              :key="p.key"
+              class="flex items-center gap-1 whitespace-nowrap"
+            >
+              <span class="size-2 shrink-0 rounded-[2px]" :class="p.swatch" />
+              {{ p.label }}
+              <b class="font-mono font-bold text-gray-800 tabular-nums dark:text-gray-100">
+                {{ p.n }}
+              </b>
+            </span>
+          </span>
         </div>
         <div
           class="grid"
@@ -85,7 +100,21 @@
                 >
                   {{ label }}
                 </div>
-                <div class="font-mono text-xxs text-gray-400 tabular-nums">{{ summary }}</div>
+                <div
+                  class="mt-0.5 flex flex-wrap items-baseline gap-x-2.5 text-xs text-gray-500 dark:text-gray-400"
+                >
+                  <span
+                    v-for="p in summary"
+                    :key="p.key"
+                    class="flex items-center gap-1 whitespace-nowrap"
+                  >
+                    <span class="size-2 shrink-0 rounded-[2px]" :class="p.swatch" />
+                    {{ p.label }}
+                    <b class="font-mono font-bold text-gray-800 tabular-nums dark:text-gray-100">
+                      {{ p.n }}
+                    </b>
+                  </span>
+                </div>
               </div>
               <div class="flex shrink-0 gap-2">
                 <button
@@ -161,8 +190,6 @@
 <script setup>
 import { onKeyStroke, useEventListener } from '@vueuse/core'
 
-const { t } = useI18n()
-
 const props = defineProps({
   cards: { type: Array, required: true },
   url: { type: String, default: '' },
@@ -202,18 +229,29 @@ const sortedCards = computed(() =>
     }),
 )
 
-// "50 cards · U 24 · P 10 · C 12 · B 4" (copies, not distinct cards)
+// Same colours as the type labels on the archetype card grid
+const TYPE_SWATCH = {
+  UNIT: tw`bg-ruri dark:bg-sky-600`,
+  PILOT: tw`bg-sky-400 dark:bg-sky-300`,
+  COMMAND: tw`bg-amber-400 dark:bg-amber-500`,
+  BASE: tw`bg-emerald-500 dark:bg-emerald-600`,
+}
+
+// Copies per type ("■ Unit 24 · ■ Pilot 10…"), not distinct cards. No total:
+// a deck is always 50
 const summary = computed(() => {
   const byType = {}
-  let total = 0
   for (const c of props.cards) {
     byType[c.type] = (byType[c.type] ?? 0) + c.qty
-    total += c.qty
   }
-  const parts = Object.keys(TYPE_ORDER)
+  return Object.keys(TYPE_ORDER)
     .filter(type => byType[type])
-    .map(type => `${t(`ui.deckSummary.typeShort.${type}`)} ${byType[type]}`)
-  return [t('ui.deckSummary.cards', { n: total }, total), ...parts].join(' · ')
+    .map(type => ({
+      key: type,
+      label: cardTypeName(type),
+      n: byType[type],
+      swatch: TYPE_SWATCH[type],
+    }))
 })
 
 const MAX_COLS = 8

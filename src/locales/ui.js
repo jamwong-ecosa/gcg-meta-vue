@@ -2,11 +2,6 @@ export default {
   en: {
     close: 'Close',
     openDeckPage: 'Open deck page in new tab',
-    deckSummary: {
-      cards: '{n} card | {n} cards',
-      // One-letter card type abbreviations: Unit, Pilot, Command, Base
-      typeShort: { UNIT: 'U', PILOT: 'P', COMMAND: 'C', BASE: 'B' },
-    },
     seriesHeader: {
       events: '{n} event | {n} events',
       wins: '{n} winning deck | {n} winning decks',
@@ -29,10 +24,6 @@ export default {
   'zh-HK': {
     close: '關閉',
     openDeckPage: '在新分頁開啟卡組頁面',
-    deckSummary: {
-      cards: '{n} 張',
-      typeShort: { UNIT: '機', PILOT: '駕', COMMAND: '指', BASE: '基' },
-    },
     seriesHeader: {
       events: '{n} 場賽事',
       wins: '{n} 副冠軍卡組',
