@@ -79,41 +79,14 @@
         </div>
       </div>
 
-      <!-- Signature cards of the top six decks fanned on an arc, #1 in front and
-           centre; each opens its archetype, and lifts and straightens on hover -->
-      <div class="relative flex justify-center max-lg:order-1">
-        <div
-          class="pointer-events-none absolute inset-x-[10%] inset-y-[5%] rounded-full bg-ruri/15 blur-3xl dark:bg-sora/15"
-          aria-hidden="true"
-        />
-        <div class="relative flex items-end pt-4 pb-6">
-          <RouterLink
-            v-for="card in heroCards"
-            :key="card.id"
-            :to="card.to"
-            :title="`#${card.rank} ${card.name}`"
-            class="relative z-(--z) -mx-4 w-20 shrink-0 origin-bottom [transform:translateY(var(--y))_rotate(var(--r))] transition-transform duration-300 hover:z-30 hover:[transform:translateY(-14px)_rotate(0deg)_scale(1.06)] sm:-mx-5 sm:w-28 lg:-mx-4 lg:w-24 xl:-mx-6 xl:w-32"
-            :style="{ '--r': card.rotate, '--y': card.lift, '--z': card.z }"
-          >
-            <img
-              :src="`https://jw-assets.imgix.net/gcg-img/${card.id}.webp?w=320&auto=format,compress`"
-              :alt="card.name"
-              class="aspect-[5/7] w-full rounded-lg object-cover shadow-xl ring-1 shadow-black/25 ring-black/10 dark:ring-white/10"
-            />
-            <!-- On the side the neighbouring card doesn't cover -->
-            <span
-              class="absolute bottom-0 bg-black/75 px-1.5 font-mono text-xs leading-snug font-bold text-white sm:text-sm"
-              :class="
-                card.right
-                  ? 'right-0 rounded-tl-md rounded-br-lg'
-                  : 'left-0 rounded-tr-md rounded-bl-lg'
-              "
-            >
-              #{{ card.rank }}
-            </span>
-          </RouterLink>
-        </div>
-      </div>
+      <!-- The featured series' most played cards, rotating -->
+      <CardMostPlayedCarousel
+        v-if="featured"
+        class="max-lg:order-1"
+        :series-key="featured.value"
+        :series-label="featuredTitle.main"
+        :total-decks="featured.totalDecks"
+      />
     </section>
 
     <!-- Current meta -->
@@ -165,23 +138,25 @@
         </span>
       </RouterLink>
 
-      <div class="mt-4 grid gap-3 md:grid-cols-3 md:gap-4">
+      <!-- One layout at every size: a square crop of the signature card on the left,
+           tier, name and counts on the right -->
+      <div class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4">
         <RouterLink
           v-for="row in topRows"
           :key="row.archetype"
           :to="row.to"
-          class="group flex h-28 overflow-hidden rounded-lg border border-gray-500/15 bg-white transition-colors hover:border-ruri/60 md:h-auto md:flex-col dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/60"
+          class="group flex h-28 overflow-hidden rounded-lg border border-gray-500/15 bg-white transition-colors hover:border-ruri/60 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/60"
         >
-          <div class="w-28 shrink-0 bg-gray-100 md:aspect-[2/1] md:w-auto dark:bg-nalika-bg">
+          <div class="w-28 shrink-0 bg-gray-100 dark:bg-nalika-bg">
             <img
               v-if="row.imageCardId"
-              :src="`https://jw-assets.imgix.net/gcg-img/${row.imageCardId}.webp?fit=crop&ar=2:1&w=480&crop=focalpoint&fp-x=0.5&fp-y=0.38&auto=format,compress`"
+              :src="`https://jw-assets.imgix.net/gcg-img/${row.imageCardId}.webp?fit=crop&ar=1:1&w=224&crop=focalpoint&fp-x=0.5&fp-y=0.36&fp-z=1.5&auto=format,compress`"
               alt=""
               loading="lazy"
               class="h-full w-full object-cover"
             />
           </div>
-          <div class="flex min-w-0 flex-1 flex-col justify-center p-3 md:justify-start">
+          <div class="flex min-w-0 flex-1 flex-col justify-center p-3">
             <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span
                 class="rounded px-2 py-0.5 text-sm leading-none font-bold"
@@ -211,10 +186,7 @@
                 <span v-else>{{ seg.text }}</span>
               </template>
             </div>
-            <!-- Pinned to the bottom so cards in a row line up when a name wraps -->
-            <div
-              class="mt-1.5 text-xs text-gray-500 tabular-nums md:mt-auto md:pt-1.5 dark:text-gray-400"
-            >
+            <div class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
               {{ row.wins }} wins · {{ row.usePct }} of placements
             </div>
           </div>
@@ -367,22 +339,6 @@ const topRows = computed(() => {
 // Fanned hero cards: signature cards of the same top six decks as the Current
 // meta blocks, ranked 5 3 1 2 4 6 from left to right so #1 and #2 sit in the
 // middle (#1 on top), on an arc
-const FAN = [
-  { rank: 5, rotate: '-15deg', lift: '28px', z: 1 },
-  { rank: 3, rotate: '-9deg', lift: '10px', z: 2 },
-  { rank: 1, rotate: '-3deg', lift: '0px', z: 4 },
-  { rank: 2, rotate: '3deg', lift: '0px', z: 3, right: true },
-  { rank: 4, rotate: '9deg', lift: '10px', z: 2, right: true },
-  { rank: 6, rotate: '15deg', lift: '28px', z: 1, right: true },
-]
-const heroCards = computed(() => {
-  const top = topRows.value.filter(r => r.imageCardId)
-  return FAN.filter(f => top[f.rank - 1]).map(f => {
-    const row = top[f.rank - 1]
-    return { ...f, id: row.imageCardId, to: row.to, name: row.archetype }
-  })
-})
-
 const features = [
   {
     title: 'Tier List',
