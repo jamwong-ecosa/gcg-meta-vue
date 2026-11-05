@@ -16,7 +16,7 @@
     />
 
     <div
-      class="relative h-44 w-full overflow-x-clip sm:h-60 lg:h-56 xl:h-64"
+      class="relative h-38 w-full overflow-x-clip sm:h-60 lg:h-56 xl:h-64"
       aria-roledescription="carousel"
     >
       <button

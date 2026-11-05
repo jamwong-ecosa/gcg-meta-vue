@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-340 px-4 py-10 md:px-8 md:py-16">
+  <div class="mx-auto max-w-340 px-4 pt-8 pb-10 md:px-8 md:py-16">
     <!-- Hero -->
     <section class="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
       <div class="max-lg:order-2 max-lg:text-center">
