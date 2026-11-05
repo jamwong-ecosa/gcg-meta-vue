@@ -93,17 +93,17 @@ export default {
       sortBy: {
         newest: 'Newest',
         place: 'Best placement',
-        tech: 'Most tech',
+        tech: 'Most rare picks',
       },
       filter: {
         all: 'All {n}',
         winners: 'Winners {n}',
         other: 'Other {n}',
       },
-      note: 'Flex: cards in that deck that {tech}–{staple}% of these decks play. Tech: under {tech}%. Hover a deck to see its list; tap on phones.',
+      note: 'Flex: cards in that deck that {tech}–{staple}% of these decks play. Rare: under {tech}%. Hover a deck to see its list; tap on phones.',
       unknownEvent: 'Unknown event',
       flexCount: '{n} flex',
-      techCount: '+{n} tech',
+      techCount: '+{n} rare',
       empty: 'No decks here',
     },
     place: {
@@ -241,17 +241,17 @@ export default {
       sortBy: {
         newest: '最新',
         place: '最佳名次',
-        tech: '最多奇招卡',
+        tech: '最多冷門卡',
       },
       filter: {
         all: '全部 {n}',
         winners: '冠軍 {n}',
         other: '其他 {n}',
       },
-      note: '彈性：該卡組中，{tech}–{staple}% 的同牌型卡組有採用的卡。奇招：低於 {tech}%。將鼠標移到卡組可查看卡表；手機請按一下。',
+      note: '彈性：該卡組中，{tech}–{staple}% 的同牌型卡組有採用的卡。冷門：低於 {tech}%。將鼠標移到卡組可查看卡表；手機請按一下。',
       unknownEvent: '未知賽事',
       flexCount: '{n} 彈性',
-      techCount: '+{n} 奇招',
+      techCount: '+{n} 冷門',
       empty: '沒有卡組',
     },
     place: {

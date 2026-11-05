@@ -97,6 +97,8 @@ const props = defineProps({
   // Signature cards of the archetype and (cardId) => played this series only,
   // for the tags in the deck popover
   sigIds: { type: Set, default: () => new Set() },
+  // The archetype's top tech picks, tagged 奇招 as on the archetype cards
+  techIds: { type: Set, default: () => new Set() },
   isNew: { type: Function, default: () => false },
 })
 
@@ -149,15 +151,15 @@ const cardShare = computed(() => {
   return new Map([...counts].map(([id, k]) => [id, k / n]))
 })
 
-// Tags for a card in a deck's popover, matching the archetype cards. TECH and
-// FLEX here mean the same as the chips in the list
+// Tags for a card in a deck's popover: the archetype cards' tags, plus 冷門 for
+// the cards the list's uncommon chip counts (a top tech pick keeps just 奇招)
 function tagsOf(card) {
-  const share = cardShare.value.get(card.cardId) ?? 0
+  const tech = props.techIds.has(card.cardId)
   return {
     sig: props.sigIds.has(card.cardId),
-    tech: props.showTech && share < TECH_SHARE,
+    tech,
     new: props.isNew(card.cardId),
-    flex: props.showTech && share >= TECH_SHARE && share < STAPLE_SHARE,
+    uncommon: props.showTech && !tech && (cardShare.value.get(card.cardId) ?? 0) < TECH_SHARE,
   }
 }
 

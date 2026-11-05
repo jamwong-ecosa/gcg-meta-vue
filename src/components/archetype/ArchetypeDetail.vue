@@ -223,7 +223,12 @@
           {{ archetype.deckCardIds.length }}
         </span>
       </h4>
-      <ArchetypeDeckList :decks="deckPreviews" :sig-ids="sigCardIds" :is-new="isNewCard" />
+      <ArchetypeDeckList
+        :decks="deckPreviews"
+        :sig-ids="sigCardIds"
+        :tech-ids="techCardIds"
+        :is-new="isNewCard"
+      />
     </section>
 
     <!-- Other Cards (collapsible) -->
@@ -378,6 +383,10 @@ const allCards = computed(() => [
   ...(props.archetype.cards ?? []),
   ...(props.archetype.filteredCards ?? []),
 ])
+// Top tech picks (inWinner, see build-tiers): the cards tagged 奇招 here and in deck lists
+const techCardIds = computed(
+  () => new Set(allCards.value.filter(c => c.inWinner).map(c => c.cardId)),
+)
 const featuredIds = computed(() => new Set((props.archetype.cards ?? []).map(c => c.cardId)))
 const groupLeader = computed(() => {
   const map = new Map()

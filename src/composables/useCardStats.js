@@ -116,6 +116,8 @@ const TAG_BADGES = [
   { key: 'tech', class: tw`bg-yellow-400 text-yellow-950` },
   { key: 'new', class: tw`bg-green-600 text-white` },
   { key: 'flex', class: tw`bg-sky-600 text-white` },
+  // Deck lists only: a card few of the archetype's decks play
+  { key: 'uncommon', class: tw`bg-slate-600 text-white` },
 ]
 
 export function tagBadges(tags, titles = {}) {

@@ -73,6 +73,7 @@ export default {
       tech: { text: 'TECH', title: 'Top tech pick: uncommon, but its decks win well' },
       new: { text: 'NEW', title: 'Not played by this archetype last series' },
       flex: { text: 'FLEX', title: 'Flex slot' },
+      uncommon: { text: 'RARE', title: 'Rare pick: few of these decks play it' },
     },
   },
   'zh-HK': {
@@ -148,6 +149,7 @@ export default {
       tech: { text: '奇招', title: '首選奇招：採用不多，但採用的卡組勝率高' },
       new: { text: '新', title: '此牌型上一系列未使用' },
       flex: { text: '彈性', title: '彈性欄位' },
+      uncommon: { text: '冷門', title: '冷門：同牌型卡組中少有採用' },
     },
   },
 }
