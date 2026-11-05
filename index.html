@@ -5,7 +5,21 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GCG Decks Analysis</title>
+    <title>GCG Decks Analysis · Gundam Card Game Tournament Meta</title>
+    <!-- English defaults for crawlers and link previews; useHeadMeta replaces them per page and language -->
+    <meta
+      name="description"
+      content="Gundam Card Game tournament meta: which decks are winning, the cards they run and how the meta shifts each series, built from official results."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GCG Decks Analysis" />
+    <meta property="og:title" content="GCG Decks Analysis · Gundam Card Game Tournament Meta" />
+    <meta
+      property="og:description"
+      content="Gundam Card Game tournament meta: which decks are winning, the cards they run and how the meta shifts each series, built from official results."
+    />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="zh_HK" />
     <script>
       if (localStorage.getItem('dark-mode') === 'true') {
         document.documentElement.classList.add('dark')
@@ -15,6 +29,7 @@
           localStorage.getItem('lang') || (/^zh/i.test(navigator.language) ? 'zh-HK' : 'en')
         if (lang === 'zh-HK') {
           document.documentElement.lang = 'zh-Hant-HK'
+          document.title = 'GCG 卡組分析｜高達卡牌遊戲賽事環境'
         }
       } catch (e) {}
     </script>

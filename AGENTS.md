@@ -89,6 +89,7 @@ source ~/.nvm/nvm.sh && nvm use
 - Text built in JS must be in a `computed` (or called from the template) so it follows a language switch
 - Chinese copy is Hong Kong usage (卡組, 按, 鼠標, 甚麼); follow the glossary at the top of `src/locales/common.js`
 - Card, archetype and series names are data and stay untranslated
+- `<title>` and meta/OG description per route come from `src/locales/head.js` (keyed by route name), applied by `useHeadMeta()` in `App.vue`; `index.html` holds the English defaults for crawlers. A new route needs a `head.<route-name>` entry in both languages
 
 ## Data pipeline
 

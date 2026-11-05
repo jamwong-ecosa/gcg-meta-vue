@@ -80,6 +80,8 @@ const { loadTierData } = useTierData()
 const { seriesOptions, seriesKey } = useSelectedSeries({ pin: false })
 const showSeries = computed(() => !!route.meta.series)
 
+useHeadMeta()
+
 loadTierData()
 
 // Pages offset their sticky bars by the nav height, which grows when the
