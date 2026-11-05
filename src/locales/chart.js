@@ -10,6 +10,8 @@ export default {
       color: 'Color Distribution',
       wins: 'Events Won by Color Combo',
       viewAll: 'View All →',
+      colorTab: 'Usage',
+      winsTab: 'Wins',
     },
     curve: {
       avg: 'avg',
@@ -60,6 +62,8 @@ export default {
       color: '顏色分佈',
       wins: '各顏色組合奪冠率',
       viewAll: '查看全部 →',
+      colorTab: '使用率',
+      winsTab: '奪冠率',
     },
     curve: {
       avg: '平均',
