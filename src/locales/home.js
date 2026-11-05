@@ -41,8 +41,8 @@ export default {
     aboutOfficial: 'Gundam Card Game tournament results',
   },
   'zh-HK': {
-    eyebrow: 'GUNDAM 卡牌遊戲 · 賽事環境',
-    title: 'GCG 卡組分析',
+    eyebrow: 'GCG · 官方賽果數據',
+    title: '高達卡牌遊戲環境分析',
     intro: '目前哪些卡組最常勝出、它們用甚麼卡，以及環境如何隨系列更迭——全部根據官方賽事結果整理。',
     viewTierList: '查看排行榜',
     metaOverview: '環境總覽',

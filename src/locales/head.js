@@ -27,11 +27,11 @@ export default {
     },
   },
   'zh-HK': {
-    site: 'GCG 卡組分析',
-    imageAlt: 'GCG 卡組分析：高達卡牌遊戲賽事環境，牌型由 S 到 D 分級',
-    titleFormat: '{page}｜GCG 卡組分析',
+    site: '高達卡牌遊戲環境分析',
+    imageAlt: '高達卡牌遊戲環境分析：按官方賽果將牌型由 S 到 D 分級的排行榜',
+    titleFormat: '{page}｜高達卡牌遊戲環境分析',
     home: {
-      title: 'GCG 卡組分析｜高達卡牌遊戲賽事環境',
+      title: '高達卡牌遊戲環境分析｜牌型排行榜 · 卡組數據',
       description:
         '高達卡牌遊戲（GUNDAM CARD GAME）賽事環境分析：哪些卡組最常勝出、用甚麼卡，以及每個系列的環境變化，全部根據官方賽果整理。',
     },
