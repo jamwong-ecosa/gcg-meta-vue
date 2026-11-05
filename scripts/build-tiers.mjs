@@ -444,12 +444,16 @@ function formatTierRows(series) {
 // `effectDecks`: decks running this card's effect in any version. A rarely-used
 // version of a common effect (11% M1アストレイ beside 85% ガンタンク) isn't a
 // tech choice, so the upper bound checks the effect, not just this printing.
+// `archetypeWins`: the archetype's winning decks. Decks with the card must win
+// more often than the archetype as a whole, so a tech pick never shows a
+// negative win-rate change (with vs without) in the UI.
 function calculateTechScore(
   wins,
   decks,
   totalArchetypeDecks,
   isVanilla = false,
   effectDecks = decks,
+  archetypeWins = 0,
 ) {
   if (isVanilla) {
     return 0
@@ -459,6 +463,9 @@ function calculateTechScore(
     return 0
   }
   if (wins < 2) {
+    return 0
+  }
+  if (wins / decks <= archetypeWins / totalArchetypeDecks) {
     return 0
   }
   return Math.round((wins / decks) * (1 - inclusionRate) * 1000) / 1000
@@ -532,6 +539,7 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, tot
           count,
           isVanilla,
           group.effectAgg[functionKey(cardId)] ?? cardData.decksIncluded,
+          winnerInfo?.count ?? 0,
         ),
       }
     })

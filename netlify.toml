@@ -2,6 +2,9 @@
 publish = "dist"
 command = "npm run build:tiers && npm run build"
 
+[build.environment]
+CI = "true"
+
 [[redirects]]
 from = "/*"
 to = "/index.html"
