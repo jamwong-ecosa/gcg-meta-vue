@@ -34,9 +34,22 @@
             {{ selectedTier }}
           </div>
 
+          <!-- Bold counts with their units, like the page header's stats line -->
           <div
-            v-if="selectedDetails"
-            class="text-xxs text-gray-500 sm:text-xs md:text-sm dark:text-nalika-text-muted/70"
+            v-if="selectedStats.length"
+            class="flex flex-wrap items-baseline gap-x-2.5 text-xs text-gray-500 md:text-sm dark:text-nalika-text-muted"
+          >
+            <span v-for="(s, i) in selectedStats" :key="i">
+              <b class="font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text">
+                {{ s.n }}
+              </b>
+              {{ s.unit }}
+              <span v-if="s.note" class="text-gray-400 dark:text-gray-500">({{ s.note }})</span>
+            </span>
+          </div>
+          <div
+            v-else-if="selectedDetails"
+            class="text-xs text-gray-500 md:text-sm dark:text-nalika-text-muted/70"
           >
             {{ selectedDetails }}
           </div>
@@ -134,6 +147,7 @@ const selected = computed(() => props.options.find(o => o.value === modelValue.v
 const selectedColors = computed(() => selected.value?.colors ?? [])
 const selectedSegments = computed(() => selected.value?.labelSegments ?? [])
 const selectedDetails = computed(() => selected.value?.details ?? '')
+const selectedStats = computed(() => selected.value?.stats ?? [])
 const selectedTier = computed(() => selected.value?.tier ?? null)
 
 // Hard-stop gradient: one equal band per archetype color

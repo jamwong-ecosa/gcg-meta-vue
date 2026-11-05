@@ -67,6 +67,15 @@ function normalizeCombo(s) {
   return s.replace(/[（）]/g, c => (c === '（' ? '(' : ')')).replace(/\s*\(/g, '(')
 }
 
+// "18 張卡" → { n: '18', unit: '張卡' }: the count bold, the unit as it's translated
+function countStat(key, n) {
+  const text = t(key, n)
+  const at = text.indexOf(String(n))
+  return at < 0
+    ? { n: '', unit: text }
+    : { n: String(n), unit: (text.slice(0, at) + text.slice(at + String(n).length)).trim() }
+}
+
 const archOptions = computed(() => {
   const rows = currentSeriesData.value?.rows ?? []
   const rowOrder = combo => {
@@ -83,6 +92,12 @@ const archOptions = computed(() => {
         decks: t('archetype.deckCount', a.deckCount),
         pct: a.percent,
       }),
+      // Same numbers for the selected archetype, split so the counts can be bold
+      stats: [
+        countStat('archetype.cardCount', a.cardCount),
+        countStat('archetype.winCount', a.winnerDeckCount),
+        { ...countStat('archetype.deckCount', a.deckCount), note: `${a.percent}%` },
+      ],
       colors: comboColors(a.combo),
       labelSegments: buildLabelSegments(a.combo, a.sigCards),
       tier: a.tier || null,
