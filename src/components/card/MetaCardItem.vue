@@ -16,7 +16,7 @@
       <span
         v-if="card.avgQty"
         class="absolute top-0 right-0 rounded-bl-md bg-black/70 px-1.5 font-mono text-base leading-snug font-bold text-white sm:text-lg"
-        title="Copies per deck that runs it"
+        :title="$t('card.copiesPerDeck')"
       >
         ×{{ card.avgQty }}
       </span>

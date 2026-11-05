@@ -4,9 +4,9 @@
   >
     <div class="mb-3 flex items-center justify-between max-sm:flex-col max-sm:items-start">
       <h2
-        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
-        vs Previous Series
+        {{ $t('ui.compare.title') }}
       </h2>
       <div v-if="previousSeries" class="text-xs text-gray-500 dark:text-gray-400">
         {{ previousSeries.label }}
@@ -15,10 +15,10 @@
     <UiStatCompareGrid
       v-if="seriesComparison"
       :metrics="seriesComparison.metrics"
-      :top-color="{ label: 'Top color', ...seriesComparison.topColor }"
+      :top-color="{ label: $t('ui.compare.topColor'), ...seriesComparison.topColor }"
     />
     <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
-      No previous series
+      {{ $t('ui.compare.none') }}
     </p>
   </div>
 </template>

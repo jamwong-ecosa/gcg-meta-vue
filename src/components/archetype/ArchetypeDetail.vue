@@ -7,8 +7,10 @@
     >
       <!-- Average deck: copies per type across all of this archetype's decks, as a
            stacked bar in the deck-curve chart's type colours -->
-      <dt class="font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500">
-        Avg deck
+      <dt
+        class="font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500 zh:tracking-normal zh:text-gray-500"
+      >
+        {{ $t('archetype.detail.avgDeck') }}
       </dt>
       <dd class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <div class="flex h-2 w-40 shrink-0 overflow-hidden rounded-sm sm:w-56" aria-hidden="true">
@@ -27,54 +29,59 @@
             </b>
             {{ t.label }}
           </span>
-          <span class="text-gray-400 dark:text-gray-500">· {{ avgDeckTotal }} cards</span>
+          <span class="text-gray-400 dark:text-gray-500">
+            · {{ $t('archetype.cardCount', avgDeckTotal) }}
+          </span>
         </span>
       </dd>
 
       <!-- Key for both card sections: each badge with its meaning, details on hover -->
       <template v-if="cardSections.length">
-        <dt class="font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500">Key</dt>
+        <dt
+          class="font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500 zh:tracking-normal zh:text-gray-500"
+        >
+          {{ $t('archetype.detail.key') }}
+        </dt>
         <dd class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-          <UiHint class="flex items-center gap-1.5" text="Copies per deck that runs it">
+          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.copiesHint')">
             <span class="rounded-sm bg-black/75 px-1 font-mono font-bold text-white">×4</span>
-            copies per deck
+            {{ $t('archetype.detail.copies') }}
           </UiHint>
-          <UiHint
-            class="flex items-center gap-1.5"
-            text="How often this archetype's decks won their event (1st, or 2nd at 16+ players) with the card minus without, in points. Green or red when the gap is clear; grey when it could be chance; hidden when either side has under 20 decks or there is no gap. Shows what winning lists run, not that the card causes wins"
-          >
-            <span class="font-mono font-semibold text-green-600 dark:text-green-400">WR +2.0</span>
-            wins with the card vs without
+          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.wrHint')">
+            <span class="font-mono font-semibold text-green-600 dark:text-green-400">
+              {{ $t('archetype.badge.wr') }} +2.0
+            </span>
+            {{ $t('archetype.detail.wr') }}
           </UiHint>
-          <UiHint class="flex items-center gap-1.5" text="Signature card of the archetype">
-            <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">★ SIG</span>
-            signature card
+          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.sigHint')">
+            <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">
+              ★ {{ $t('archetype.badge.sig') }}
+            </span>
+            {{ $t('archetype.detail.sig') }}
           </UiHint>
-          <UiHint
-            class="flex items-center gap-1.5"
-            text="Top tech pick: uncommon, but its decks win well"
-          >
-            <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">TECH</span>
-            top tech pick
+          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.techHint')">
+            <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">
+              {{ $t('archetype.badge.tech') }}
+            </span>
+            {{ $t('archetype.detail.tech') }}
           </UiHint>
           <UiHint
             v-if="prevCardIds?.size"
             class="flex items-center gap-1.5"
-            text="Not played by this archetype last series"
+            :text="$t('archetype.detail.newHint')"
           >
-            <span class="rounded-sm bg-green-600 px-1 font-bold text-white">NEW</span>
-            new this series
+            <span class="rounded-sm bg-green-600 px-1 font-bold text-white">
+              {{ $t('archetype.badge.new') }}
+            </span>
+            {{ $t('archetype.detail.new') }}
           </UiHint>
-          <UiHint
-            class="flex items-center gap-1.5"
-            text="Same card under another name: one WR for the group, decks running any version vs none. Hover the group for its decks"
-          >
+          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.sameHint')">
             <span
               class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
             >
               ≡
             </span>
-            same card, other name
+            {{ $t('archetype.detail.same') }}
           </UiHint>
         </dd>
       </template>
@@ -104,7 +111,7 @@
           {{ sec.range }}
         </span>
         <span class="text-xs text-gray-500 dark:text-nalika-text-muted">
-          {{ sec.blurb }} · {{ sec.cards.length }} cards
+          {{ sec.blurb }} · {{ $t('archetype.cardCount', sec.cards.length) }}
         </span>
       </h4>
       <ArchetypeCardGrid
@@ -124,13 +131,13 @@
     <!-- Deck curve: copies per average deck at each level and cost, by type -->
     <div class="mt-6 grid gap-4 md:grid-cols-2">
       <ChartDeckCurve
-        title="Level"
+        :title="$t('archetype.detail.level')"
         field="level"
         :cards="allCards"
         :deck-count="archetype.deckCount"
       />
       <ChartDeckCurve
-        title="Cost"
+        :title="$t('archetype.detail.cost')"
         field="cost"
         :cards="allCards"
         :deck-count="archetype.deckCount"
@@ -141,12 +148,12 @@
     <div v-if="traits.length" class="mt-4">
       <h4 class="mb-1.5 flex flex-wrap items-baseline gap-x-2">
         <span
-          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
         >
-          Traits
+          {{ $t('archetype.detail.traits') }}
         </span>
-        <span class="text-xxs text-gray-400 dark:text-gray-500">
-          cards with the trait, among those in {{ FEATURED_MIN * 100 }}%+ of decks
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          {{ $t('archetype.detail.traitsNote', { pct: FEATURED_MIN * 100 }) }}
         </span>
       </h4>
       <div class="flex flex-wrap gap-1.5">
@@ -168,9 +175,9 @@
     <section v-if="archetype.deckCardIds?.length" class="mt-6">
       <h4 class="mb-2 flex items-baseline gap-2">
         <span
-          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
         >
-          Decks
+          {{ $t('archetype.detail.decks') }}
         </span>
         <span class="font-mono text-xs text-gray-400 tabular-nums dark:text-gray-500">
           {{ archetype.deckCardIds.length }}
@@ -184,7 +191,7 @@
       v-if="otherCards.length"
       :show="showOther"
       :count="otherCards.length"
-      title="Other Cards"
+      :title="$t('archetype.detail.otherCards')"
       content-class="space-y-4"
       root-class="mt-6"
       @toggle="showOther = !showOther"
@@ -206,7 +213,7 @@
       v-if="removedCards.length"
       :show="showRemoved"
       :count="removedCards.length"
-      title="Removed Cards"
+      :title="$t('archetype.detail.removedCards')"
       content-class="space-y-4"
       @toggle="showRemoved = !showRemoved"
     >
@@ -221,6 +228,8 @@
 </template>
 
 <script setup>
+const { t } = useI18n()
+
 const props = defineProps({
   archetype: { type: Object, required: true },
   prevCardIds: { type: Set, default: null },
@@ -344,9 +353,9 @@ const cardSections = computed(() =>
   [
     {
       key: 'staples',
-      title: 'Staples',
+      title: t('archetype.section.staples'),
       range: `${STAPLE_MIN * 100}%+`,
-      blurb: 'core of the list, in almost every deck',
+      blurb: t('archetype.section.staplesBlurb'),
       cards: staples.value,
       panelClass: tw`border-ruri/15 bg-ruri/[0.03] dark:border-sora/30 dark:bg-sora/[0.07]`,
       headClass: tw`border-ruri/15 bg-ruri/[0.06] dark:border-sora/25 dark:bg-sora/[0.1]`,
@@ -355,9 +364,9 @@ const cardSections = computed(() =>
     },
     {
       key: 'flex',
-      title: 'Flex & tech',
+      title: t('archetype.section.flex'),
       range: `${FEATURED_MIN * 100}–${STAPLE_MIN * 100}%`,
-      blurb: 'where builds differ',
+      blurb: t('archetype.section.flexBlurb'),
       cards: flex.value,
       panelClass: tw`border-amber-400/30 bg-amber-50/50 dark:border-amber-400/30 dark:bg-amber-400/[0.07]`,
       headClass: tw`border-amber-400/30 bg-amber-100/60 dark:border-amber-400/25 dark:bg-amber-400/[0.1]`,
@@ -380,7 +389,7 @@ const avgDeck = computed(() => {
   const all = [...(props.archetype.cards ?? []), ...(props.archetype.filteredCards ?? [])]
   return TYPES.map(type => ({
     type,
-    label: typeLabel[type],
+    label: cardTypeName(type),
     bar: TYPE_BAR[type],
     copies: Math.round(
       all.filter(c => c.type === type).reduce((n, c) => n + (c.totalQty ?? 0), 0) / decks,
@@ -410,13 +419,13 @@ function liftFor(withDecks, withWins) {
     return null
   }
   if (withoutDecks === 0) {
-    return { value: null, note: 'Every deck runs it: nothing to compare' }
+    return { value: null, note: t('archetype.lift.everyDeck') }
   }
   if (withoutDecks < LIFT_MIN_SIDE) {
-    return { value: null, note: `Only ${withoutDecks} decks without it: too few to compare` }
+    return { value: null, note: t('archetype.lift.fewWithout', withoutDecks) }
   }
   if (withDecks < LIFT_MIN_SIDE) {
-    return { value: null, note: `Only ${withDecks} decks with it: too few to compare` }
+    return { value: null, note: t('archetype.lift.fewWith', withDecks) }
   }
   const base = wins / decks
   const withoutWins = wins - withWins
@@ -430,13 +439,6 @@ const winLift = card => liftFor(card.decksIncluded ?? 0, card.winnerDeckCount ??
 // For a same-effect group: decks running any version vs decks running none.
 // Per card it would compare against decks running the other version instead.
 const groupWinLift = g => liftFor(g.decks, g.wins)
-
-const typeLabel = {
-  UNIT: 'Unit',
-  PILOT: 'Pilot',
-  COMMAND: 'Command',
-  BASE: 'Base',
-}
 
 // Traits by how many different cards carry them, among the featured cards
 // (staples and flex); ties go to the trait with more copies per deck
@@ -457,11 +459,15 @@ const traits = computed(() => {
   }
   return [...map.values()]
     .sort((a, b) => b.names.length - a.names.length || b.copies - a.copies)
-    .map(t => ({
-      ...t,
+    .map(trait => ({
+      ...trait,
       title: [
-        `${t.name}: ${t.names.length} card${t.names.length === 1 ? '' : 's'}, ${t.copies.toFixed(1)} copies per deck`,
-        ...t.names,
+        t('archetype.detail.traitTitle', {
+          name: trait.name,
+          cards: t('archetype.cardCount', trait.names.length),
+          copies: trait.copies.toFixed(1),
+        }),
+        ...trait.names,
       ].join('\n'),
     }))
 })

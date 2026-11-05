@@ -10,12 +10,13 @@
       >
         <button
           class="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60"
+          :aria-label="$t('ui.close')"
           @click="$emit('close')"
         >
           ×
         </button>
         <h3
-          class="mb-4 text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+          class="mb-4 text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
         >
           {{ title }}
         </h3>
@@ -32,7 +33,9 @@
             <span
               class="w-7 shrink-0 text-center text-xs font-medium text-aisumicha dark:text-nalika-text"
             >
-              {{ item.isOther ? item.abbr : item.colorDots.map(d => d.name[0]).join('') }}
+              {{
+                item.isOther ? item.abbr : item.colorDots.map(d => colorName(d.name)[0]).join('')
+              }}
             </span>
             <div class="h-5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700/70">
               <div

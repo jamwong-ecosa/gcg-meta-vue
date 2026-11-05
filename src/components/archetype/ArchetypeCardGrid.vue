@@ -25,7 +25,7 @@
             v-if="item.typeCont"
             class="font-normal tracking-normal text-gray-400 normal-case max-sm:hidden dark:text-gray-500"
           >
-            cont.
+            {{ $t('archetype.grid.cont') }}
           </span>
           <span
             v-else
@@ -62,7 +62,7 @@
                  are in the hint -->
             <b class="font-bold">≡</b>
             <span v-if="item.group.liftText" :class="item.group.liftClass">
-              <span class="max-sm:hidden">WR</span>
+              <span class="max-sm:hidden">{{ $t('archetype.badge.wr') }}</span>
               {{ item.group.liftText }}
             </span>
           </UiHint>
@@ -100,7 +100,9 @@ const props = defineProps({
 })
 const emit = defineEmits(['zoom'])
 
-const TYPES = { UNIT: 'Unit', PILOT: 'Pilot', COMMAND: 'Command', BASE: 'Base' }
+const { t } = useI18n()
+
+const TYPES = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
 // Same colours as the deck-curve chart's type legend
 const TYPE_STYLE = {
   UNIT: {
@@ -156,19 +158,23 @@ function groupInfo(g) {
     liftText: liftBadge(lift),
     liftClass: liftTone(lift),
     hint: {
-      title: 'Same card, different names',
-      subtitle: 'Same effect and stats',
+      title: t('archetype.group.title'),
+      subtitle: t('archetype.group.subtitle'),
       rows: [
-        { label: 'Decks', value: g.decks, note: `${pct(g.decks)}% · any version` },
-        { label: 'Wins', value: g.wins, note: 'events won' },
-        hasAll && {
-          label: 'All',
-          value: g.allDecks,
-          note: `${pct(g.allDecks)}% · ${size === 2 ? 'run both versions' : `run all ${size} versions`}`,
+        {
+          label: t('archetype.group.decks'),
+          value: g.decks,
+          note: `${pct(g.decks)}% · ${t('archetype.group.anyVersion')}`,
         },
-        liftRow(lift, 'any version vs none'),
+        { label: t('archetype.group.wins'), value: g.wins, note: t('archetype.group.eventsWon') },
+        hasAll && {
+          label: t('archetype.group.all'),
+          value: g.allDecks,
+          note: `${pct(g.allDecks)}% · ${size === 2 ? t('archetype.group.runBoth') : t('archetype.group.runAll', { n: size })}`,
+        },
+        liftRow(lift, t('archetype.group.vsNone')),
       ].filter(Boolean),
-      footnote: lift ? '' : 'WR: win rate of decks running any version vs none',
+      footnote: lift ? '' : t('archetype.group.footnote'),
     },
   }
 }
@@ -191,7 +197,7 @@ function boxClass({ first, last, col }) {
 // same-effect group's members are pulled together where its first (most
 // played) member sits. The first card of each type carries the type label.
 const items = computed(() => {
-  const types = [...new Set([...Object.keys(TYPES), ...props.cards.map(c => c.type)])]
+  const types = [...new Set([...TYPES, ...props.cards.map(c => c.type)])]
   const ordered = types.flatMap(type => {
     const ofType = props.cards.filter(c => c.type === type)
     const placed = new Set()
@@ -224,7 +230,7 @@ const items = computed(() => {
   const startRows = new Set(ordered.flatMap((e, i) => (e.typeFirst ? [rowOf(i)] : [])))
   const labelled = ordered.map((e, i) => {
     const cont = !e.typeFirst && i % cols.value === 0 && startRows.has(rowOf(i))
-    const name = TYPES[e.card.type] ?? e.card.type
+    const name = cardTypeName(e.card.type)
     return { ...e, typeLabel: e.typeFirst || cont ? name : '', typeCont: cont }
   })
   const labelRows = new Set(labelled.flatMap((e, i) => (e.typeLabel ? [rowOf(i)] : [])))

@@ -80,6 +80,16 @@ source ~/.nvm/nvm.sh && nvm use
 - localStorage key `dark-mode` — inline `<script>` in `index.html` prevents FOUC
 - Use `dark:` utilities everywhere (e.g. `dark:bg-gray-900`)
 
+## i18n (English / 繁中 zh-HK)
+
+- `vue-i18n` (Composition API). Instance in `src/i18n/index.js`; locale saved in localStorage key `lang` (defaults to `zh-HK` for any `zh*` browser language), toggled by `UiLangToggle`
+- Messages live in `src/locales/<namespace>.js`, each holding both languages: `export default { en: { ... }, 'zh-HK': { ... } }` → `t('<namespace>.key')`. Keep the key sets identical in both languages
+- Templates use `$t()` / `<i18n-t>`; `<script setup>` uses `useI18n()` (auto-imported); plain JS uses `translate()` from `useLocale.js`
+- Data keys stay English (`'Blue'`, `'UNIT'`, `'Red+White'`); display them with `colorName()`, `cardTypeName()`, `comboName()`
+- Text built in JS must be in a `computed` (or called from the template) so it follows a language switch
+- Chinese copy is Hong Kong usage (卡組, 按, 鼠標, 甚麼); follow the glossary at the top of `src/locales/common.js`
+- Card, archetype and series names are data and stay untranslated
+
 ## Data pipeline
 
 `npm run data` runs the full pipeline:

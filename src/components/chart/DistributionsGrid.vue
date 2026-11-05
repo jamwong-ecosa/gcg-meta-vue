@@ -4,9 +4,9 @@
       class="rounded border border-gray-500/10 bg-shironezumi/3 p-2 dark:border-nalika-border dark:bg-nalika-surface"
     >
       <h2
-        class="mb-3 text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        class="mb-3 text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
-        Tier Distribution
+        {{ $t('chart.dist.tier') }}
       </h2>
       <div class="space-y-2">
         <div v-for="item in tierDist" :key="item.tier" class="flex items-center gap-2">
@@ -37,16 +37,16 @@
     >
       <div class="mb-3 flex items-center justify-between">
         <h2
-          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
         >
-          Color Distribution
+          {{ $t('chart.dist.color') }}
         </h2>
         <button
           v-if="allColorDist.length > colorDist.length"
           class="text-xxs font-medium text-ruri hover:underline"
           @click="viewAllModal = 'colors'"
         >
-          View All →
+          {{ $t('chart.dist.viewAll') }}
         </button>
       </div>
       <div v-if="colorDist.length" class="space-y-2">
@@ -62,7 +62,11 @@
           <span
             class="w-7 shrink-0 text-center text-xs font-medium text-aisumicha dark:text-nalika-text"
           >
-            {{ item.isOther ? item.abbr : item.colorDots.map(d => d.name[0]).join('') }}
+            {{
+              item.isOther
+                ? $t('chart.other')
+                : item.colorDots.map(d => colorName(d.name)[0]).join('')
+            }}
           </span>
           <div class="h-5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700/70">
             <div
@@ -90,7 +94,9 @@
           </span>
         </div>
       </div>
-      <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">No data</p>
+      <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+        {{ $t('chart.noData') }}
+      </p>
     </div>
 
     <div
@@ -98,16 +104,16 @@
     >
       <div class="mb-3 flex items-center justify-between">
         <h2
-          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
         >
-          Events Won by Color Combo
+          {{ $t('chart.dist.wins') }}
         </h2>
         <button
           v-if="allWinRateDist.length > winRateDist.length"
           class="text-xxs font-medium text-ruri hover:underline"
           @click="viewAllModal = 'winrate'"
         >
-          View All →
+          {{ $t('chart.dist.viewAll') }}
         </button>
       </div>
       <div v-if="winRateDist.length" class="space-y-2">
@@ -123,7 +129,7 @@
           <span
             class="w-6 shrink-0 text-center text-xs font-medium text-aisumicha dark:text-nalika-text"
           >
-            {{ item.colorDots.map(d => d.name[0]).join('') }}
+            {{ item.colorDots.map(d => (d.name ? colorName(d.name)[0] : '')).join('') }}
           </span>
           <div class="h-5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700/70">
             <div
@@ -151,7 +157,9 @@
           </span>
         </div>
       </div>
-      <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">No data</p>
+      <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+        {{ $t('chart.noData') }}
+      </p>
     </div>
   </div>
 </template>

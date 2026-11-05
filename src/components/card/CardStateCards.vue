@@ -5,14 +5,14 @@
   >
     <div class="mb-3 flex items-center justify-between max-sm:flex-col max-sm:items-start">
       <h2
-        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
-        Card State vs Previous
+        {{ $t('card.state.title') }}
       </h2>
     </div>
     <UiStatCompareGrid
       :metrics="cardStateComparison.metrics"
-      :top-color="{ label: 'Top used color', ...cardStateComparison.topColor }"
+      :top-color="{ label: $t('card.state.topUsedColor'), ...cardStateComparison.topColor }"
     />
   </div>
 </template>

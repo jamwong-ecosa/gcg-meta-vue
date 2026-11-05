@@ -30,11 +30,16 @@ export function useSeriesComparison({ currentSeries, previousSeries }) {
     const prevTopTierShare = (prev.rows.filter(isTopTier).length / prev.rows.length) * 100
     return {
       metrics: [
-        makeMetric('Events', current.events, prev.events),
-        makeMetric('Total decks', current.totalDecks, prev.totalDecks),
-        makeMetric('Win decks', current.winDecks, prev.winDecks),
-        makeMetric('Archetypes', current.rows.length, prev.rows.length),
-        makeMetric('S + A%', currentTopTierShare, prevTopTierShare, v => `${v.toFixed(1)}%`),
+        makeMetric(translate('meta.compare.events'), current.events, prev.events),
+        makeMetric(translate('meta.compare.totalDecks'), current.totalDecks, prev.totalDecks),
+        makeMetric(translate('meta.compare.winDecks'), current.winDecks, prev.winDecks),
+        makeMetric(translate('meta.compare.archetypes'), current.rows.length, prev.rows.length),
+        makeMetric(
+          translate('meta.compare.topTierShare'),
+          currentTopTierShare,
+          prevTopTierShare,
+          v => `${v.toFixed(1)}%`,
+        ),
       ],
       topColor: { current: topColor, previous: previousTopColor.value },
     }
@@ -67,10 +72,19 @@ export function useSeriesComparison({ currentSeries, previousSeries }) {
       Object.entries(prevState.usedByColor).sort((a, b) => b[1] - a[1])[0]?.[0] || null
     return {
       metrics: [
-        makeMetric('Released', currentState.releasedCards, prevState.releasedCards),
-        makeMetric('Used', currentState.usedCards, prevState.usedCards),
-        makeMetric('Unused', currentState.unusedCards, prevState.unusedCards),
-        makeMetric('Used %', currentUsedPct, prevUsedPct, v => `${v.toFixed(1)}%`),
+        makeMetric(
+          translate('card.stats.released'),
+          currentState.releasedCards,
+          prevState.releasedCards,
+        ),
+        makeMetric(translate('card.stats.used'), currentState.usedCards, prevState.usedCards),
+        makeMetric(translate('card.stats.unused'), currentState.unusedCards, prevState.unusedCards),
+        makeMetric(
+          translate('card.stats.usedPct'),
+          currentUsedPct,
+          prevUsedPct,
+          v => `${v.toFixed(1)}%`,
+        ),
       ],
       topColor: { current: currentTopColor, previous: prevTopColor },
     }

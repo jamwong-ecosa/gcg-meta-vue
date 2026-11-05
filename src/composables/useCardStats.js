@@ -16,8 +16,16 @@ export function useCardStats(card, lift) {
   const statsRows = computed(() => {
     const c = card()
     return [
-      { label: 'Decks', value: c.decksIncluded, note: `${(c.inclusionRate * 100).toFixed(1)}%` },
-      { label: 'Wins', value: c.winnerDeckCount ?? 0, note: 'events won' },
+      {
+        label: translate('card.stat.decks'),
+        value: c.decksIncluded,
+        note: `${(c.inclusionRate * 100).toFixed(1)}%`,
+      },
+      {
+        label: translate('card.stat.wins'),
+        value: c.winnerDeckCount ?? 0,
+        note: translate('card.stat.eventsWon'),
+      },
       liftRow(lift()),
     ].filter(Boolean)
   })
@@ -26,17 +34,18 @@ export function useCardStats(card, lift) {
 }
 
 // Hint row for the win-rate change; null when there is nothing to say
-export function liftRow(lift, vs = 'with it vs without') {
+// `vs` is already translated by the caller
+export function liftRow(lift, vs = translate('card.stat.withVsWithout')) {
   if (!lift) {
     return null
   }
   if (lift.value === null) {
-    return { label: 'WR', value: '—', note: lift.note }
+    return { label: translate('card.stat.wr'), value: '—', note: lift.note }
   }
   return {
-    label: 'WR',
-    value: `${liftValue(lift)} pts`,
-    note: lift.significant ? vs : `${vs}, could be chance`,
+    label: translate('card.stat.wr'),
+    value: translate('card.stat.pts', { value: liftValue(lift) }),
+    note: lift.significant ? vs : translate('card.stat.couldBeChance', { vs }),
     class: lift.significant && lift.value ? liftTone(lift) : tw`text-gray-600 dark:text-gray-300`,
   }
 }
@@ -64,7 +73,7 @@ export function inclusionBarClass(rate) {
 // "WR +3.2" for a win-rate change in points; '' when there is none
 export function liftLabel(lift) {
   const value = liftValue(lift)
-  return value && `WR ${value}`
+  return value && `${translate('card.stat.wr')} ${value}`
 }
 
 // The signed number alone ("+3.2"), for tight spots where "WR" is implied
@@ -101,25 +110,20 @@ export function sharePct(rate) {
 
 // Card tags, styled the same on archetype cards and in deck popovers:
 // `tags` is { sig, tech, new, flex } (booleans); `titles` overrides the tooltips
+// Text and default tooltip come from `card.tag.<key>`
 const TAG_BADGES = [
-  { key: 'sig', text: '★ SIG', title: 'Signature card', class: tw`bg-black/75 text-yellow-300` },
-  {
-    key: 'tech',
-    text: 'TECH',
-    title: 'Top tech pick: uncommon, but its decks win well',
-    class: tw`bg-yellow-400 text-yellow-950`,
-  },
-  {
-    key: 'new',
-    text: 'NEW',
-    title: 'Not played by this archetype last series',
-    class: tw`bg-green-600 text-white`,
-  },
-  { key: 'flex', text: 'FLEX', title: 'Flex slot', class: tw`bg-sky-600 text-white` },
+  { key: 'sig', class: tw`bg-black/75 text-yellow-300` },
+  { key: 'tech', class: tw`bg-yellow-400 text-yellow-950` },
+  { key: 'new', class: tw`bg-green-600 text-white` },
+  { key: 'flex', class: tw`bg-sky-600 text-white` },
 ]
 
 export function tagBadges(tags, titles = {}) {
-  return TAG_BADGES.filter(b => tags[b.key]).map(b => ({ ...b, title: titles[b.key] ?? b.title }))
+  return TAG_BADGES.filter(b => tags[b.key]).map(b => ({
+    ...b,
+    text: translate(`card.tag.${b.key}.text`),
+    title: titles[b.key] ?? translate(`card.tag.${b.key}.title`),
+  }))
 }
 
 // Ring drawn behind the card: TECH yellow, NEW green, both split on the diagonal

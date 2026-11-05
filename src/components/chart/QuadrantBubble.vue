@@ -10,11 +10,11 @@
         <UiMetaTabGroup v-model="mode" :options="modeOptions" />
       </div>
     </div>
-    <p v-if="note" class="mb-1 text-xxs tracking-wider text-gray-400 dark:text-nalika-text-muted">
+    <p v-if="note" class="mb-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
       {{ note }}
     </p>
     <p v-if="!points.length" class="py-4 text-center text-xs text-gray-400 dark:text-gray-500">
-      No data
+      {{ $t('chart.noData') }}
     </p>
     <VueApexCharts
       v-else

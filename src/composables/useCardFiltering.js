@@ -27,24 +27,25 @@ export function useCardFiltering(aggregationResult, totalDecks = ref(0)) {
   const colorFilter = useColorFilter()
   const cardTypeChart = useStorage('gcg-card-type-chart', null)
 
-  const colorTabOptions = [
-    { value: null, label: 'All' },
-    ...Object.entries(COLOR_HEX).map(([label, color]) => ({
-      value: label,
-      label,
-      dotColor: color,
+  // Computed so the labels follow the UI language
+  const colorTabOptions = computed(() => [
+    { value: null, label: translate('card.filter.all') },
+    ...Object.entries(COLOR_HEX).map(([color, hex]) => ({
+      value: color,
+      label: colorName(color),
+      dotColor: hex,
     })),
-  ]
+  ])
 
-  const cardMetricOptions = [
-    { value: 'played', label: 'Most Played' },
-    { value: 'archetype', label: 'Most Archetypes' },
-  ]
+  const cardMetricOptions = computed(() => [
+    { value: 'played', label: translate('card.filter.mostPlayed') },
+    { value: 'archetype', label: translate('card.filter.mostArchetypes') },
+  ])
 
-  const cardTypeOptions = [
-    { value: null, label: 'All' },
-    ...CARD_TYPE_OPTIONS.map(t => ({ value: t, label: t })),
-  ]
+  const cardTypeOptions = computed(() => [
+    { value: null, label: translate('card.filter.all') },
+    ...CARD_TYPE_OPTIONS.map(t => ({ value: t, label: cardTypeName(t) })),
+  ])
 
   const cardItems = computed(() =>
     (aggregationResult.value?.cards ?? []).filter(c => c.totalDecksIncluded >= 20),

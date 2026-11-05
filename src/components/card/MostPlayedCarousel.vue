@@ -28,7 +28,7 @@
         :style="slot.style"
         :tabindex="slot.offset === 0 || slot.hidden ? -1 : 0"
         :aria-hidden="slot.offset !== 0"
-        :aria-label="`Show #${slot.rank} ${slot.card.name}`"
+        :aria-label="$t('card.carousel.show', { rank: slot.rank, name: slot.card.name })"
         @click="goTo(slot.index)"
       >
         <img
@@ -54,19 +54,25 @@
     <!-- What the front card is, and where it ranks -->
     <div v-if="current" class="relative mt-5 w-full max-w-xs text-center" aria-live="polite">
       <p
-        class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70"
+        class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70 zh:text-xs zh:tracking-normal zh:text-gray-500"
       >
-        Most played · {{ seriesLabel }}
+        {{ $t('card.carousel.mostPlayed', { series: seriesLabel }) }}
       </p>
       <p class="mt-1 truncate text-sm font-bold text-sumi dark:text-nalika-text">
         <span class="font-mono text-gray-400 dark:text-gray-500">#{{ active + 1 }}</span>
         {{ current.name }}
       </p>
-      <p class="mt-0.5 text-xs text-gray-500 tabular-nums dark:text-nalika-text-muted">
-        in
-        <b class="font-semibold text-gray-700 dark:text-nalika-text">{{ current.share }}</b>
-        of decks · ×{{ current.avgQty }} per deck
-      </p>
+      <i18n-t
+        keypath="card.carousel.inDecks"
+        tag="p"
+        scope="global"
+        class="mt-0.5 text-xs text-gray-500 tabular-nums dark:text-nalika-text-muted"
+      >
+        <template #share>
+          <b class="font-semibold text-gray-700 dark:text-nalika-text">{{ current.share }}</b>
+        </template>
+        <template #qty>{{ current.avgQty }}</template>
+      </i18n-t>
       <div class="mt-3 flex justify-center gap-1.5">
         <button
           v-for="(c, i) in cards"
@@ -78,7 +84,7 @@
               ? 'w-5 bg-ruri dark:bg-sora'
               : 'w-1.5 bg-gray-300 hover:bg-gray-400 dark:bg-white/20 dark:hover:bg-white/40'
           "
-          :aria-label="`Show #${i + 1} ${c.name}`"
+          :aria-label="$t('card.carousel.show', { rank: i + 1, name: c.name })"
           :aria-current="i === active"
           @click="goTo(i)"
         />

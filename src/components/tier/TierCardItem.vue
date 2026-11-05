@@ -32,7 +32,7 @@
               />
             </span>
             <span class="truncate">{{ headline }}</span>
-            <UiHint v-if="row.darkHorse" class="text-xs" :text="DARK_HORSE_HELP">🐴</UiHint>
+            <UiHint v-if="row.darkHorse" class="text-xs" :text="darkHorseHelp()">🐴</UiHint>
           </div>
           <div
             v-if="cardNames.length"
@@ -52,7 +52,7 @@
                 {{ card.name }}
               </span>
             </template>
-            <UiHint v-if="!headline && row.darkHorse" class="ml-1" :text="DARK_HORSE_HELP">
+            <UiHint v-if="!headline && row.darkHorse" class="ml-1" :text="darkHorseHelp()">
               🐴
             </UiHint>
           </div>
@@ -81,7 +81,7 @@
       <button
         class="my-1.5 ml-2 flex w-10 shrink-0 cursor-pointer items-center justify-center border-l border-gray-500/15 text-gray-400 hover:text-gray-600 dark:border-white/10 dark:text-gray-500 dark:hover:text-gray-300"
         :aria-expanded="open"
-        :aria-label="open ? 'Hide stats' : 'Show stats'"
+        :aria-label="open ? $t('tier.hideStats') : $t('tier.showStats')"
         @click="open = !open"
       >
         <svg
@@ -103,7 +103,9 @@
     <div v-if="open" class="border-t border-gray-500/10 px-3 pt-2 pb-3">
       <dl class="grid grid-cols-3 gap-x-2 gap-y-2">
         <div v-for="s in stats" :key="s.key">
-          <dt class="text-xxs font-semibold tracking-widest text-gray-400 uppercase">
+          <dt
+            class="text-xxs font-semibold tracking-widest text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"
+          >
             {{ s.label }}
           </dt>
           <dd
@@ -119,9 +121,9 @@
             shift === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
           "
         >
-          {{ shift === 'up' ? 'Up' : 'Down' }}
+          {{ shift === 'up' ? $t('tier.shiftUp') : $t('tier.shiftDown') }}
         </b>
-        from {{ row.move.prevTier }} tier (rank {{ row.move.prevRank }}) last series
+        {{ $t('tier.shiftDetail', { tier: row.move.prevTier, rank: row.move.prevRank }) }}
       </p>
     </div>
   </div>
@@ -137,14 +139,18 @@ defineEmits(['detail'])
 
 const open = ref(false)
 
-const stats = computed(() => [
-  { key: 'decks', label: 'Decks', value: props.row.decks },
-  { key: 'wins', label: 'Wins', value: props.row.wins },
-  { key: 'top4', label: 'Top4', value: props.row.top4 },
-  { key: 'use', label: 'Use%', value: props.row.usePct },
-  { key: 'winEv', label: 'Win/Ev', value: props.row.winPerEv },
-  { key: 'winDk', label: 'Win/Dk', value: props.row.winPerDk },
-])
+const { t } = useI18n()
+
+const stats = computed(() =>
+  [
+    { key: 'decks', value: props.row.decks },
+    { key: 'wins', value: props.row.wins },
+    { key: 'top4', value: props.row.top4 },
+    { key: 'use', value: props.row.usePct },
+    { key: 'winEv', value: props.row.winPerEv },
+    { key: 'winDk', value: props.row.winPerDk },
+  ].map(s => ({ ...s, label: t(`tier.col.${s.key}`) })),
+)
 
 // "Red+White（A / B）" → headline "Red+White", cards "A / B". Grouped by color
 // the section header already names the combo, so only the cards are shown
@@ -155,7 +161,7 @@ const nameParts = computed(() => {
 })
 
 const headline = computed(() =>
-  props.hideColor && nameParts.value.cards ? '' : nameParts.value.base,
+  props.hideColor && nameParts.value.cards ? '' : comboName(nameParts.value.base),
 )
 
 const CARD_SEP = ' / '

@@ -17,6 +17,8 @@ const props = defineProps({
   items: { type: Array, default: () => [] },
 })
 
+const { t } = useI18n()
+
 const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
 // One step stronger than the tier pills so bubbles stand out against the quadrant tints
 const TIER_COLORS = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#60a5fa', '#9ca3af']
@@ -39,22 +41,26 @@ const SLEEPER_LABELS = 2
 const MOBILE_MAX_POINTS = 20
 // Percentage points between raw and adjusted Win.Dk before the tooltip shows both
 const ADJ_NOTE_MIN_DIFF = 0.5
-const QUADRANTS = ['Meta', 'Sleeper', 'Niche', 'Trap']
+// [topRight, topLeft, bottomLeft, bottomRight]
+const QUADRANTS = ['meta', 'sleeper', 'niche', 'trap']
 
 // Usage vs Win.Dk first: Win.Ev grows with usage, so Usage - Win.Ev mostly draws a diagonal
-const MODES = [
-  { key: 'usage-winDk', label: 'Usage - Win.Dk', x: 'use', y: 'winDk' },
-  { key: 'usage-winEv', label: 'Usage - Win.Ev', x: 'use', y: 'winEv', minWins: 3 },
+const MODES_BASE = [
+  { key: 'usage-winDk', x: 'use', y: 'winDk' },
+  { key: 'usage-winEv', x: 'use', y: 'winEv', minWins: 3 },
 ]
+const MODES = computed(() =>
+  MODES_BASE.map(m => ({ ...m, label: t(`archetype.quadrant.mode.${m.key}`) })),
+)
 
 // v2 key so everyone lands on the new Usage - Win.Dk default once
 const chartMode = useStorage('gcg-quadrant-mode-v2', 'usage-winDk')
 // A stored mode may have been removed (e.g. the old Top4/Dk mode)
-if (!MODES.some(m => m.key === chartMode.value)) {
-  chartMode.value = MODES[0].key
+if (!MODES_BASE.some(m => m.key === chartMode.value)) {
+  chartMode.value = MODES_BASE[0].key
 }
 
-const config = computed(() => MODES.find(m => m.key === chartMode.value) ?? MODES[0])
+const config = computed(() => MODES_BASE.find(m => m.key === chartMode.value) ?? MODES_BASE[0])
 
 const rows = computed(() =>
   props.items.map(item => ({
@@ -75,18 +81,23 @@ const avgWinDk = computed(() => {
 })
 
 const METRICS = computed(() => ({
-  use: { label: 'Usage Rate (%)', scale: 'sqrt', ref: fairShare.value, refLabel: 'fair share' },
+  use: {
+    label: t('archetype.quadrant.axis.use'),
+    scale: 'sqrt',
+    ref: fairShare.value,
+    refLabel: t('archetype.quadrant.fairShare'),
+  },
   winEv: {
-    label: 'Win Rate / Event (%)',
+    label: t('archetype.quadrant.axis.winEv'),
     scale: 'linear',
     ref: fairShare.value,
-    refLabel: 'fair share',
+    refLabel: t('archetype.quadrant.fairShare'),
   },
   winDk: {
-    label: 'Win Rate / Deck (%, adj.)',
+    label: t('archetype.quadrant.axis.winDk'),
     scale: 'linear',
     ref: avgWinDk.value,
-    refLabel: 'avg',
+    refLabel: t('archetype.quadrant.avg'),
   },
 }))
 
@@ -117,7 +128,7 @@ const axes = computed(() => {
     yRef: my.ref ?? median(parsed.value.map(r => r[cfg.y])),
     xRefLabel: mx.refLabel,
     yRefLabel: my.refLabel,
-    quadrants: QUADRANTS,
+    quadrants: QUADRANTS.map(q => t(`archetype.quadrant.name.${q}`)),
   }
 })
 
@@ -140,7 +151,7 @@ const points = computed(() => {
   const dupes = new Set(names.filter((n, i) => names.indexOf(n) !== i))
   const labelOf = r => {
     const name = shortName(r.archetype)
-    return dupes.has(name) ? `${name} (${r.archetype.split('（')[0]})` : name
+    return dupes.has(name) ? `${name} (${comboName(r.archetype.split('（')[0])})` : name
   }
   return parsed.value.map(r => ({
     x: r[cfg.x],
@@ -154,35 +165,47 @@ const points = computed(() => {
 
 const note = computed(
   () =>
-    `${isMobile.value ? `Top ${MOBILE_MAX_POINTS} archetypes by decks. ` : ''}Meta = popular and winning, Sleeper = winning but under-played, Trap = popular but under-performing. Bubble size = decks. Win.Dk is shrunk toward the ${avgWinDk.value?.toFixed(1) ?? '–'}% average (${PRIOR_DECKS}-deck prior).`,
+    (isMobile.value ? `${t('archetype.quadrant.noteMobile', { n: MOBILE_MAX_POINTS })} ` : '') +
+    t('archetype.quadrant.note', {
+      avg: avgWinDk.value?.toFixed(1) ?? '–',
+      prior: PRIOR_DECKS,
+    }),
 )
 
 function tooltip(r) {
   const colors = r.archetype.split('（')[0]
   const tierIdx = TIER_ORDER.indexOf(r.tier)
   return {
-    title: r.archetype.match(/（(.+?)）/)?.[1] ?? colors,
-    subtitle: colors,
+    title: r.archetype.match(/（(.+?)）/)?.[1] ?? comboName(colors),
+    subtitle: comboName(colors),
     dots: colors.split('+').map(c => COLOR_HEX[c] ?? '#718096'),
     badge: tierIdx >= 0 ? { text: r.tier, color: TIER_COLORS[tierIdx] } : null,
     rows: [
-      { label: 'Usage', value: r.usePct },
+      { label: t('archetype.quadrant.tip.usage'), value: r.usePct },
       {
-        label: 'Win / deck',
+        label: t('archetype.quadrant.tip.winDk'),
         value: r.winPerDk,
         // Only worth showing when the shrinkage moved it, i.e. for small archetypes
         note:
           Math.abs(r.winDk - r.rawWinDk) >= ADJ_NOTE_MIN_DIFF
-            ? `adj. ${r.winDk.toFixed(1)}%`
+            ? t('archetype.quadrant.tip.adj', { v: r.winDk.toFixed(1) })
             : null,
       },
-      { label: 'Win / event', value: r.winPerEv },
-      { label: 'Tier score', value: r.score },
-      { label: 'Decks', value: r.decks },
-      { label: 'Wins', value: r.wins },
-      { label: 'Top 4', value: r.top4 },
+      { label: t('archetype.quadrant.tip.winEv'), value: r.winPerEv },
+      { label: t('archetype.quadrant.tip.score'), value: r.score },
+      { label: t('archetype.quadrant.tip.decks'), value: r.decks },
+      { label: t('archetype.quadrant.tip.wins'), value: r.wins },
+      { label: t('archetype.quadrant.tip.top4'), value: r.top4 },
     ],
   }
+}
+
+// "Red+White" → "紅+白" in zh-HK
+function comboName(combo) {
+  return combo
+    .split('+')
+    .map(c => colorName(c.trim()))
+    .join('+')
 }
 
 // "Red+White（マスターガンダム / シャイニングガンダム）" → "マスターガンダム"

@@ -5,7 +5,7 @@
         <UiMetaTabGroup v-model="filter" :options="filterOptions" />
       </div>
       <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        Sort
+        {{ $t('archetype.decks.sort') }}
         <select
           v-model="sortKey"
           class="rounded border border-gray-500/20 bg-transparent px-1.5 py-0.5 text-xs text-gray-700 dark:border-nalika-border dark:bg-nalika-surface dark:text-nalika-text"
@@ -15,9 +15,8 @@
       </label>
     </div>
 
-    <p v-if="showTech" class="mb-2 text-xxs text-gray-400 dark:text-gray-500">
-      Flex: cards in that deck that {{ TECH_SHARE * 100 }}–{{ STAPLE_SHARE * 100 }}% of these decks
-      play. Tech: under {{ TECH_SHARE * 100 }}%. Hover a deck to see its list; tap on phones.
+    <p v-if="showTech" class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+      {{ $t('archetype.decks.note', { tech: TECH_SHARE * 100, staple: STAPLE_SHARE * 100 }) }}
     </p>
 
     <!-- Columns fill top to bottom so a sorted list reads down, not across -->
@@ -38,7 +37,7 @@
             <span
               class="w-14 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
               :class="placeClass(d)"
-              :title="d.isWinner ? 'Counts as a win' : undefined"
+              :title="d.isWinner ? $t('archetype.decks.countsAsWin') : undefined"
             >
               {{ d.placeLabel }}
             </span>
@@ -54,7 +53,7 @@
               class="min-w-0 flex-1 truncate text-gray-700 dark:text-nalika-text"
               :title="d.shop"
             >
-              {{ d.shop || 'Unknown event' }}
+              {{ d.shop || $t('archetype.decks.unknownEvent') }}
             </span>
             <span
               v-if="showTech"
@@ -62,7 +61,7 @@
               class="w-14 shrink-0 rounded bg-gray-100 px-1.5 text-center font-mono text-xxs text-gray-500 tabular-nums dark:bg-white/5 dark:text-gray-400"
               :title="d.flexNames.join('\n')"
             >
-              {{ d.flex }} flex
+              {{ $t('archetype.decks.flexCount', { n: d.flex }) }}
             </span>
             <span
               v-if="showTech"
@@ -70,7 +69,7 @@
               class="w-14 shrink-0 rounded bg-sora/10 px-1.5 text-center font-mono text-xxs text-ruri tabular-nums dark:bg-sora/15 dark:text-sora"
               :title="d.techNames.join('\n')"
             >
-              +{{ d.tech }} tech
+              {{ $t('archetype.decks.techCount', { n: d.tech }) }}
             </span>
             <span
               v-if="d.url"
@@ -83,15 +82,19 @@
         </UiDeckPopover>
       </li>
     </ul>
-    <p v-else class="py-3 text-xs text-gray-400 dark:text-gray-500">No decks here</p>
+    <p v-else class="py-3 text-xs text-gray-400 dark:text-gray-500">
+      {{ $t('archetype.decks.empty') }}
+    </p>
 
     <button
       v-if="filtered.length > shown.length"
       class="mt-3 w-full cursor-pointer rounded bg-gray-100 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-nalika-text-muted dark:hover:bg-white/10"
       @click="limit += PAGE"
     >
-      Show {{ Math.min(PAGE, filtered.length - shown.length) }} more
-      <span class="text-gray-400">({{ filtered.length - shown.length }} left)</span>
+      {{ $t('archetype.decks.showMore', { n: Math.min(PAGE, filtered.length - shown.length) }) }}
+      <span class="text-gray-400">
+        {{ $t('archetype.decks.left', { n: filtered.length - shown.length }) }}
+      </span>
     </button>
   </div>
 </template>
@@ -107,6 +110,8 @@ const props = defineProps({
   sigIds: { type: Set, default: () => new Set() },
   isNew: { type: Function, default: () => false },
 })
+
+const { t } = useI18n()
 
 const PAGE = 20
 const TECH_SHARE = 0.25
@@ -158,9 +163,9 @@ function placeLabel(place) {
     return '—'
   }
   if (place <= 4) {
-    return ['1st', '2nd', '3rd', '4th'][place - 1]
+    return t(`archetype.place.p${place}`)
   }
-  return place <= 8 ? 'Top 8' : 'Top 16'
+  return place <= 8 ? t('archetype.place.top8') : t('archetype.place.top16')
 }
 
 const rows = computed(() =>
@@ -176,7 +181,7 @@ const rows = computed(() =>
     return {
       ...d,
       shop,
-      placeLabel: d.isWinner && d.place === 1 ? '🏆 1st' : placeText,
+      placeLabel: d.isWinner && d.place === 1 ? `🏆 ${placeText}` : placeText,
       tech: techCards.length,
       techNames: techCards.map(c => c.name),
       flex: flexCards.length,
@@ -190,16 +195,16 @@ const filterOptions = computed(() => {
   const all = rows.value
   const count = fn => all.filter(fn).length
   return [
-    { value: 'all', label: `All ${all.length}` },
-    { value: 'winners', label: `Winners ${count(d => d.isWinner)}` },
-    { value: 'other', label: `Other ${count(d => !d.isWinner)}` },
+    { value: 'all', label: t('archetype.decks.filter.all', { n: all.length }) },
+    { value: 'winners', label: t('archetype.decks.filter.winners', { n: count(d => d.isWinner) }) },
+    { value: 'other', label: t('archetype.decks.filter.other', { n: count(d => !d.isWinner) }) },
   ]
 })
 
 const sortOptions = computed(() => [
-  { value: 'newest', label: 'Newest' },
-  { value: 'place', label: 'Best placement' },
-  ...(props.showTech ? [{ value: 'tech', label: 'Most tech' }] : []),
+  { value: 'newest', label: t('archetype.decks.sortBy.newest') },
+  { value: 'place', label: t('archetype.decks.sortBy.place') },
+  ...(props.showTech ? [{ value: 'tech', label: t('archetype.decks.sortBy.tech') }] : []),
 ])
 
 const FILTERS = {

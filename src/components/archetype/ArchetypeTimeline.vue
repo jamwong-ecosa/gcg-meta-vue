@@ -4,12 +4,12 @@
   >
     <div class="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
       <h2
-        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
-        Archetype Timeline
+        {{ $t('archetype.timeline.title') }}
       </h2>
-      <p v-if="timeline.length > 1" class="text-xxs text-gray-400 dark:text-gray-500">
-        ▲▼ change from the series before
+      <p v-if="timeline.length > 1" class="text-xs text-gray-500 dark:text-gray-400">
+        {{ $t('archetype.timeline.changeNote') }}
       </p>
     </div>
     <!-- One table at every width; phones drop the raw counts and the arrow, and
@@ -25,8 +25,12 @@
           </colgroup>
           <thead>
             <tr class="border-b border-gray-200 text-left dark:border-gray-700">
-              <th class="pr-3 pb-2 font-semibold text-gray-500 dark:text-gray-400">Series</th>
-              <th class="pb-2 font-semibold text-gray-500 dark:text-gray-400">Tier</th>
+              <th class="pr-3 pb-2 font-semibold text-gray-500 dark:text-gray-400">
+                {{ $t('archetype.timeline.series') }}
+              </th>
+              <th class="pb-2 font-semibold text-gray-500 dark:text-gray-400">
+                {{ $t('archetype.timeline.tier') }}
+              </th>
               <th
                 v-for="m in metrics"
                 :key="m.key"
@@ -63,7 +67,7 @@
                     v-if="entry.isCurrent"
                     class="shrink-0 rounded bg-sora/10 px-1.5 text-xxs font-medium text-sora dark:bg-sora/15"
                   >
-                    Viewing
+                    {{ $t('archetype.timeline.viewing') }}
                   </span>
                 </div>
               </td>
@@ -111,7 +115,7 @@
       </div>
     </div>
     <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
-      This archetype only appeared in the current series
+      {{ $t('archetype.timeline.onlyCurrent') }}
     </p>
   </div>
 </template>
@@ -130,41 +134,27 @@ const emit = defineEmits(['navigate'])
 // `scored` metrics are comparable across series (shares, rank) and get a green/red
 // change; raw counts move with event size, so their change stays grey.
 // `invert`: a lower value is better (rank).
+// Labels and help come from `archetype.timeline.metric.<key>`
 const METRICS = [
-  {
-    key: 'rank',
-    label: 'Rank',
-    help: 'Position in the tier list that series',
-    scored: true,
-    invert: true,
-  },
-  {
-    key: 'percent',
-    label: 'Use %',
-    help: 'Share of all decks that series',
-    scored: true,
-    pct: true,
-  },
-  {
-    key: 'winRate',
-    label: 'Win %',
-    help: 'Share of all winning decks that series',
-    scored: true,
-    pct: true,
-  },
-  { key: 'deckCount', label: 'Decks', help: 'Decks registered', wide: true },
-  { key: 'winnerDeckCount', label: 'Wins', help: 'Winning decks' },
-  {
-    key: 'cardCount',
-    label: 'Cards',
-    help: 'Distinct cards played across its decks',
-    wide: true,
-  },
+  { key: 'rank', scored: true, invert: true },
+  { key: 'percent', scored: true, pct: true },
+  { key: 'winRate', scored: true, pct: true },
+  { key: 'deckCount', wide: true },
+  { key: 'winnerDeckCount' },
+  { key: 'cardCount', wide: true },
 ]
+
+const { t } = useI18n()
 
 // Phones get the shares, rank and wins only, so a series fits on one short row
 const isPhone = useMediaQuery('(max-width: 639px)')
-const metrics = computed(() => (isPhone.value ? METRICS.filter(m => !m.wide) : METRICS))
+const metrics = computed(() =>
+  (isPhone.value ? METRICS.filter(m => !m.wide) : METRICS).map(m => ({
+    ...m,
+    label: t(`archetype.timeline.metric.${m.key}.label`),
+    help: t(`archetype.timeline.metric.${m.key}.help`),
+  })),
+)
 
 const timeline = computed(() => {
   const entries = manifest

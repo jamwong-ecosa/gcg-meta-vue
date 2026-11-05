@@ -51,27 +51,29 @@ const PRIOR_DECKS = 10
 const NOTE_MIN_RATE_DIFF = 0.5
 const NOTE_MIN_ARCH_DIFF = 1
 
-const MODES = [
-  {
-    key: 'card-impact',
-    label: 'Card Impact',
-    yLabel: 'Winner Rate vs Archetype (pp)',
-    quadrants: ['Elite', 'Hidden Gem', 'Fringe', 'Overplayed'],
-  },
-  {
-    key: 'card-versatility',
-    label: 'Card Versatility',
-    yLabel: 'Effective Archetypes',
-    quadrants: ['Staples', 'Flex Pick', 'Obscure', 'One-Trick'],
-  },
+const { t } = useI18n()
+
+// Mode keys map to `chart.cardQuad.<i18n>` for labels and quadrant names
+const MODE_KEYS = [
+  { key: 'card-impact', i18n: 'impact' },
+  { key: 'card-versatility', i18n: 'versatility' },
 ]
+const MODES = computed(() =>
+  MODE_KEYS.map(({ key, i18n }) => ({
+    key,
+    i18n,
+    label: t(`chart.cardQuad.${i18n}.label`),
+    yLabel: t(`chart.cardQuad.${i18n}.yLabel`),
+    quadrants: [0, 1, 2, 3].map(i => t(`chart.cardQuad.${i18n}.quadrants[${i}]`)),
+  })),
+)
 
 const chartMode = useStorage('gcg-card-chart-mode', 'card-impact')
-if (!MODES.some(m => m.key === chartMode.value)) {
-  chartMode.value = MODES[0].key
+if (!MODE_KEYS.some(m => m.key === chartMode.value)) {
+  chartMode.value = MODE_KEYS[0].key
 }
 
-const config = computed(() => MODES.find(m => m.key === chartMode.value) ?? MODES[0])
+const config = computed(() => MODES.value.find(m => m.key === chartMode.value) ?? MODES.value[0])
 const isImpact = computed(() => config.value.key === 'card-impact')
 
 const parsed = computed(() =>
@@ -98,13 +100,13 @@ const yKey = computed(() => (isImpact.value ? 'lift' : 'spread'))
 const axes = computed(() => {
   const ys = parsed.value.map(c => c[yKey.value])
   return {
-    xLabel: 'Decks Included',
+    xLabel: t('chart.cardQuad.xLabel'),
     yLabel: config.value.yLabel,
     xScale: 'sqrt',
     xRef: median(parsed.value.map(c => c.totalDecksIncluded)),
     yRef: isImpact.value ? 0 : median(ys),
-    xRefLabel: 'median',
-    yRefLabel: isImpact.value ? 'archetype avg' : 'median',
+    xRefLabel: t('chart.cardQuad.median'),
+    yRefLabel: isImpact.value ? t('chart.cardQuad.archetypeAvg') : t('chart.cardQuad.median'),
     yFormat: isImpact.value ? v => (v > 0 ? `+${trim(v)}` : trim(v)) : undefined,
     quadrants: config.value.quadrants,
   }
@@ -132,37 +134,40 @@ const points = computed(() => {
 })
 
 const note = computed(() => {
-  const scope = `Top ${topN.value} ${props.cardTypeChart ?? ''} cards by decks included`.replace(
-    /\s+/g,
-    ' ',
-  )
-  return isImpact.value
-    ? `${scope}. Y = winner rate minus what the archetypes playing it would predict. Bubble size = archetypes.`
-    : `${scope}. Y = archetypes the card is spread across, weighted by decks. Bubble size = winner decks.`
+  const scope = props.cardTypeChart
+    ? t('chart.cardQuad.scopeType', { n: topN.value, type: cardTypeName(props.cardTypeChart) })
+    : t('chart.cardQuad.scope', { n: topN.value })
+  return t(`chart.cardQuad.${config.value.i18n}.note`, { scope })
 })
 
 function tooltip(c) {
   const sign = c.lift > 0 ? '+' : ''
   return {
     title: c.name,
-    subtitle: `${c.cardId} · ${c.type}`,
+    subtitle: `${c.cardId} · ${cardTypeName(c.type)}`,
     dots: [COLOR_HEX[c.color] ?? '#718096'],
     rows: [
-      { label: 'Decks', value: c.totalDecksIncluded },
-      { label: 'Winner decks', value: c.totalWinnerDecks },
+      { label: t('chart.cardQuad.decks'), value: c.totalDecksIncluded },
+      { label: t('chart.cardQuad.winnerDecks'), value: c.totalWinnerDecks },
       {
-        label: 'Winner rate',
+        label: t('chart.cardQuad.winnerRate'),
         value: `${c.winnerRate.toFixed(1)}%`,
         note:
           Math.abs(c.winnerRate - c.expectedRate) >= NOTE_MIN_RATE_DIFF
-            ? `arch. ${c.expectedRate.toFixed(1)}%`
+            ? t('chart.cardQuad.archRate', { value: c.expectedRate.toFixed(1) })
             : null,
       },
-      { label: 'Lift', value: `${sign}${c.lift.toFixed(1)}pp` },
       {
-        label: 'Archetypes',
+        label: t('chart.cardQuad.lift'),
+        value: t('chart.cardQuad.pp', { value: `${sign}${c.lift.toFixed(1)}` }),
+      },
+      {
+        label: t('chart.cardQuad.archetypes'),
         value: c.archetypeCount,
-        note: c.archetypeCount - c.spread >= NOTE_MIN_ARCH_DIFF ? `eff. ${c.spread}` : null,
+        note:
+          c.archetypeCount - c.spread >= NOTE_MIN_ARCH_DIFF
+            ? t('chart.cardQuad.effective', { value: c.spread })
+            : null,
       },
     ],
   }

@@ -7,37 +7,41 @@
     </div>
 
     <CardMetaCardSection
-      title="Top Signature Cards"
+      :title="$t('card.top.sigTitle')"
       :cards="filteredSigCards"
       ranked
       @toggle-enlarge="enlargedCard = $event"
     >
       <template #tabs>
-        <span class="text-xxs text-gray-400 sm:ml-auto dark:text-gray-500">
-          by decks in the archetypes built around the card
+        <span class="text-xs text-gray-500 sm:ml-auto dark:text-gray-400">
+          {{ $t('card.top.sigBy') }}
         </span>
       </template>
       <!-- Share of decks whose archetype is defined by the card -->
       <template #footer="{ card }">
         <div
           class="mt-2 flex flex-col gap-0.5 font-mono text-xs leading-tight whitespace-nowrap tabular-nums"
-          :title="`${card.name}\nSignature of ${card.archetypeCount} archetypes with ${card.deckCount ?? '?'} decks`"
+          :title="`${card.name}\n${$t('card.top.sigTooltip', { count: card.archetypeCount, decks: card.deckCount ?? '?' })}`"
         >
           <span class="font-bold text-gray-600 dark:text-gray-400">
-            {{ card.deckShare === undefined ? '—' : sharePct(card.deckShare / 100) }}% decks
+            {{
+              $t('card.metaStats.decksPct', {
+                pct: card.deckShare === undefined ? '—' : sharePct(card.deckShare / 100),
+              })
+            }}
           </span>
           <span class="truncate text-sky-700 dark:text-sky-400">
-            {{ card.archetypeCount }} archetype{{ card.archetypeCount === 1 ? '' : 's' }}
+            {{ $t('card.metaStats.archetypes', card.archetypeCount) }}
           </span>
         </div>
       </template>
     </CardMetaCardSection>
 
     <CardMetaCardSection
-      title="Top 10 Cards"
+      :title="$t('card.top.title')"
       :cards="filteredTopCards"
       ranked
-      empty-text="Select a series to view card data"
+      :empty-text="$t('card.top.empty')"
       @toggle-enlarge="enlargedCard = $event"
     >
       <template #tabs>

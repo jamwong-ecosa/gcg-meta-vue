@@ -1,7 +1,7 @@
 <template>
   <div class="mx-auto max-w-340 p-3 max-sm:pb-6 md:p-8">
     <UiSeriesHeader
-      title="Archetype Tier"
+      :title="$t('tier.title')"
       :visible="!!currentSeries"
       :events="currentSeries?.events ?? 0"
       :wins="totalWins"
@@ -13,8 +13,7 @@
       v-if="currentSeries?.preliminary"
       class="mb-1 rounded bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-200/80"
     >
-      Only {{ currentSeries.events }} events so far — tiers are preliminary and will shift as more
-      results come in.
+      {{ $t('tier.preliminary', { n: currentSeries.events }) }}
     </p>
 
     <details class="group mb-2 text-xs text-gray-500 dark:text-gray-400">
@@ -22,34 +21,38 @@
         class="w-fit cursor-pointer list-none text-ruri select-none hover:underline dark:text-sora/80"
       >
         <span class="inline-block transition-transform group-open:rotate-90">▸</span>
-        How to read this table
+        {{ $t('tier.howTo.toggle') }}
       </summary>
       <ul class="mt-2 max-w-3xl list-disc space-y-1 pl-5 leading-relaxed">
-        <li>
-          <b>Score</b>
-          (0–100) ranks archetypes by their share of placed decks, nudged up or down by how well
-          those placements turn into wins. 100 is the strongest archetype this series.
-        </li>
-        <li>
-          <b>Tiers</b>
-          are cut by clustering the scores, so a tier holds archetypes with similar scores and tier
-          sizes vary.
-        </li>
-        <li>
-          <b>Use%</b>
-          is the share of placed decks,
-          <b>Win/Ev</b>
-          the share of events won and
-          <b>Win/Dk</b>
-          wins per placed deck.
-        </li>
-        <li v-if="hasMovement">
-          <b>Δ</b>
-          is the rank change since {{ previousSeries?.label }}: ▲ climbed, ▼ dropped, NEW wasn't
-          placed then.
-        </li>
-        <li>🐴 marks a dark horse: rarely played but winning far more often than average.</li>
-        <li>Hover a column header for its definition, and click it to sort.</li>
+        <i18n-t keypath="tier.howTo.score" tag="li" scope="global">
+          <template #term>
+            <b>{{ $t('tier.howTo.scoreTerm') }}</b>
+          </template>
+        </i18n-t>
+        <i18n-t keypath="tier.howTo.tiers" tag="li" scope="global">
+          <template #term>
+            <b>{{ $t('tier.howTo.tiersTerm') }}</b>
+          </template>
+        </i18n-t>
+        <i18n-t keypath="tier.howTo.stats" tag="li" scope="global">
+          <template #use>
+            <b>{{ $t('tier.col.use') }}</b>
+          </template>
+          <template #winEv>
+            <b>{{ $t('tier.col.winEv') }}</b>
+          </template>
+          <template #winDk>
+            <b>{{ $t('tier.col.winDk') }}</b>
+          </template>
+        </i18n-t>
+        <i18n-t v-if="hasMovement" keypath="tier.howTo.move" tag="li" scope="global">
+          <template #term>
+            <b>Δ</b>
+          </template>
+          <template #series>{{ previousSeries?.label }}</template>
+        </i18n-t>
+        <li>{{ $t('tier.howTo.darkHorse') }}</li>
+        <li>{{ $t('tier.howTo.hover') }}</li>
       </ul>
     </details>
 
@@ -61,13 +64,13 @@
       <input
         v-model="query"
         type="search"
-        placeholder="Search card or color"
+        :placeholder="$t('tier.searchPlaceholder')"
         class="h-8 min-w-0 flex-1 rounded-full border border-gray-200 bg-gray-50 px-3 text-xs text-gray-700 placeholder:text-gray-400 focus:border-sora focus:outline-none sm:max-w-56 sm:flex-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
       />
       <select
         :value="`${sortKey}:${sortDir}`"
         class="h-8 rounded-full border border-gray-200 bg-gray-50 px-2 text-xs text-gray-600 md:hidden dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-        aria-label="Sort"
+        :aria-label="$t('tier.sort')"
         @change="onSortSelect"
       >
         <option
@@ -75,7 +78,7 @@
           :key="opt.key"
           :value="`${opt.key}:${opt.key === 'rank' ? 'asc' : 'desc'}`"
         >
-          Sort: {{ opt.label }}
+          {{ $t('tier.sortBy', { label: $t(opt.labelKey) }) }}
         </option>
       </select>
       <div class="flex basis-full items-center gap-1.5 sm:basis-auto">
@@ -89,11 +92,11 @@
               : 'border-gray-200 text-gray-500 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'
           "
           :aria-pressed="colors.includes(color)"
-          :title="`Only archetypes with ${color}`"
+          :title="$t('tier.onlyColor', { color: colorName(color) })"
           @click="toggleColor(color)"
         >
           <span class="h-2.5 w-2.5 rounded-full" :style="{ background: hex }" />
-          <span class="max-sm:hidden">{{ color }}</span>
+          <span class="max-sm:hidden">{{ colorName(color) }}</span>
         </button>
         <button
           class="ml-auto flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors sm:ml-1"
@@ -109,16 +112,16 @@
             class="inline-block h-3 w-3 rounded-full border"
             :class="groupByColor ? 'border-white/50 bg-white/30' : 'border-gray-400 bg-transparent'"
           />
-          Group by color
+          {{ $t('tier.groupByColor') }}
         </button>
       </div>
       <div v-if="isFiltered" class="flex items-center gap-2 text-xs text-gray-500 sm:ml-auto">
-        <span>{{ shownCount }} of {{ allRows.length }}</span>
+        <span>{{ $t('tier.shownOf', { shown: shownCount, total: allRows.length }) }}</span>
         <button
           class="cursor-pointer text-ruri hover:underline dark:text-sora"
           @click="clearFilters"
         >
-          Clear
+          {{ $t('tier.clear') }}
         </button>
       </div>
     </div>
@@ -153,9 +156,9 @@
       class="mt-6 rounded border border-gray-500/10 bg-shironezumi/2 p-2 dark:border-nalika-border dark:bg-nalika-surface"
     >
       <h2
-        class="mb-2 text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        class="mb-2 text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
-        Color share
+        {{ $t('tier.colorShare') }}
       </h2>
       <ChartSigPieChart
         :rows="allRows"
@@ -169,7 +172,7 @@
       v-if="unassignedDecks?.deckUrls?.length"
       :show="showUnassigned"
       :count="unassignedDecks.count"
-      title="Unassigned Decks"
+      :title="$t('tier.unassigned')"
       @toggle="showUnassigned = !showUnassigned"
     >
       <ArchetypeDeckList :decks="unassignedDeckPreviews" :show-tech="false" />

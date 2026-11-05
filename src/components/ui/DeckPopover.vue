@@ -91,7 +91,7 @@
                 <button
                   v-if="url"
                   class="flex h-8 w-12 items-center justify-center rounded-lg bg-ruri/10 text-ruri dark:bg-sora/15 dark:text-sora"
-                  aria-label="Open deck page in new tab"
+                  :aria-label="$t('ui.openDeckPage')"
                   @click="openUrl"
                 >
                   <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -105,7 +105,7 @@
                 </button>
                 <button
                   class="flex h-8 w-12 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                  aria-label="Close"
+                  :aria-label="$t('ui.close')"
                   @click="closeMobile"
                 >
                   <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -161,6 +161,8 @@
 <script setup>
 import { onKeyStroke, useEventListener } from '@vueuse/core'
 
+const { t } = useI18n()
+
 const props = defineProps({
   cards: { type: Array, required: true },
   url: { type: String, default: '' },
@@ -176,7 +178,6 @@ const pos = ref({ top: 0, left: 0, cols: 8, cardW: 100 })
 let showTimer = null
 
 const TYPE_ORDER = { UNIT: 0, PILOT: 1, COMMAND: 2, BASE: 3 }
-const TYPE_SHORT = { UNIT: 'U', PILOT: 'P', COMMAND: 'C', BASE: 'B' }
 
 const sortedCards = computed(() =>
   [...props.cards]
@@ -210,9 +211,9 @@ const summary = computed(() => {
     total += c.qty
   }
   const parts = Object.keys(TYPE_ORDER)
-    .filter(t => byType[t])
-    .map(t => `${TYPE_SHORT[t]} ${byType[t]}`)
-  return [`${total} cards`, ...parts].join(' · ')
+    .filter(type => byType[type])
+    .map(type => `${t(`ui.deckSummary.typeShort.${type}`)} ${byType[type]}`)
+  return [t('ui.deckSummary.cards', { n: total }, total), ...parts].join(' · ')
 })
 
 const MAX_COLS = 8

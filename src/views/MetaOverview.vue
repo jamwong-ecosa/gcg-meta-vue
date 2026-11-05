@@ -1,7 +1,7 @@
 <template>
   <div class="mx-auto max-w-340 p-3 max-sm:pb-6 md:p-8">
     <UiSeriesHeader
-      title="Meta Overview"
+      :title="$t('meta.title')"
       :visible="!!currentSeries"
       :events="currentSeries?.events ?? 0"
       :wins="totalSeriesWinnerDecks"
@@ -19,7 +19,7 @@
       :visible="!!viewAllModal"
       :items="viewAllModal === 'colors' ? allColorDist : allWinRateDist"
       :mode="viewAllModal || 'colors'"
-      :title="viewAllModal === 'colors' ? 'Color Distribution' : 'Events Won by Color Combo'"
+      :title="viewAllModal === 'colors' ? $t('chart.dist.color') : $t('chart.dist.wins')"
       @close="viewAllModal = null"
     />
 

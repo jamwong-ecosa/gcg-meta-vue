@@ -16,21 +16,24 @@
             v-for="(c, i) in headerCols"
             :key="c.key"
             class="py-2 font-semibold"
-            :class="[
-              i === 0 ? 'rounded-tl-lg pr-4 pl-4' : 'px-3 text-right',
-              c.key === 'tier' ? 'text-right' : '',
-            ]"
+            :class="i === 0 ? 'rounded-tl-lg pr-4 pl-4' : 'px-3'"
             :aria-sort="ariaSort(c.key)"
           >
-            <UiHint :text="TIER_COLUMN_HELP[c.key]">
-              <button
-                class="inline-flex cursor-pointer items-center gap-1 hover:text-white"
-                @click="$emit('sort', sortFieldOf(c.key))"
-              >
-                {{ c.label }}
-                <span class="w-2 text-xxs opacity-80">{{ sortIndicator(c.key) }}</span>
-              </button>
-            </UiHint>
+            <!-- Numeric headers end flush with the numbers below: the sort arrow hangs
+                 into the cell padding, and a label wider than the cell overflows leftward -->
+            <div :class="i === 0 ? '' : 'flex justify-end'">
+              <UiHint :text="tierColumnHelp(c.key)">
+                <button
+                  class="relative inline-flex cursor-pointer items-center whitespace-nowrap hover:text-white"
+                  @click="$emit('sort', sortFieldOf(c.key))"
+                >
+                  {{ c.label }}
+                  <span class="absolute left-full ml-0.5 w-2 text-xxs opacity-80">
+                    {{ sortIndicator(c.key) }}
+                  </span>
+                </button>
+              </UiHint>
+            </div>
           </th>
           <th class="rounded-tr-lg px-1 py-2" />
         </tr>
@@ -39,7 +42,7 @@
       <tbody v-for="section in sections" :key="section.key">
         <tr
           v-if="section.kind !== 'flat'"
-          class="cursor-pointer bg-gray-300/30 text-xs font-semibold text-gray-500 hover:bg-gray-300/50 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/15"
+          class="cursor-pointer bg-gray-300/30 text-xs font-semibold text-gray-700 hover:bg-gray-300/50 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15"
           @click="$emit('toggleSection', section.key)"
         >
           <td :colspan="colCount" class="px-4 py-1.5">
@@ -66,11 +69,16 @@
                 />
                 <span class="ml-1.5">{{ section.label }}</span>
               </span>
-              <span class="font-normal text-gray-400">
-                {{ section.rows.length }} archetype{{ section.rows.length === 1 ? '' : 's' }}
+              <span class="font-normal text-gray-500 dark:text-gray-400">
+                {{ $t('tier.sectionCount', section.rows.length) }}
               </span>
               <span class="ml-auto font-mono font-normal tabular-nums">
-                {{ section.decks.toLocaleString() }} decks · {{ section.wins }} wins
+                {{
+                  $t('tier.sectionTotals', {
+                    decks: $n(section.decks),
+                    wins: $n(section.wins),
+                  })
+                }}
               </span>
             </div>
           </td>
@@ -79,7 +87,7 @@
           <TierTableRow
             v-for="row in section.rows"
             :key="row.archetype"
-            v-memo="[row, hasMovement]"
+            v-memo="[row, hasMovement, locale]"
             :row="row"
             :hide-color="section.kind === 'color'"
             :has-movement="hasMovement"
@@ -94,14 +102,14 @@
           @click="$emit('toggleZeroWins')"
         >
           <td :colspan="colCount" class="px-4 py-3">
-            0 Wins（{{ zeroRows.length }}）{{ showZeroWins ? '−' : '+' }}
+            {{ $t('tier.zeroWins', { n: zeroRows.length, sign: showZeroWins ? '−' : '+' }) }}
           </td>
         </tr>
         <template v-if="showZeroWins">
           <TierTableRow
             v-for="row in zeroRows"
             :key="row.archetype"
-            v-memo="[row, hasMovement]"
+            v-memo="[row, hasMovement, locale]"
             :row="row"
             :has-movement="hasMovement"
             @detail="$emit('detail', $event)"
@@ -112,7 +120,7 @@
       <tbody v-if="!sections.length && !zeroRows.length">
         <tr>
           <td :colspan="colCount" class="px-4 py-8 text-center text-sm text-gray-400">
-            No archetypes match these filters
+            {{ $t('tier.noMatch') }}
           </td>
         </tr>
       </tbody>
@@ -132,21 +140,17 @@ const props = defineProps({
 })
 defineEmits(['detail', 'toggleZeroWins', 'toggleSection', 'sort'])
 
-const numericCols = [
-  { key: 'decks', label: 'Decks' },
-  { key: 'wins', label: 'Wins' },
-  { key: 'top4', label: 'Top4' },
-  { key: 'use', label: 'Use%' },
-  { key: 'winEv', label: 'Win/Ev' },
-  { key: 'winDk', label: 'Win/Dk' },
-  { key: 'score', label: 'Score' },
-]
+const { t, locale } = useI18n()
+
+const numericCols = ['decks', 'wins', 'top4', 'use', 'winEv', 'winDk', 'score'].map(key => ({
+  key,
+}))
 
 // The Archetype and Tier headers both sort by tier order
 const headerCols = computed(() => [
-  { key: 'rank', label: 'Archetype' },
-  ...numericCols,
-  { key: 'tier', label: 'Tier' },
+  { key: 'rank', label: t('tier.col.archetype') },
+  ...numericCols.map(c => ({ ...c, label: t(`tier.col.${c.key}`) })),
+  { key: 'tier', label: t('tier.col.rank') },
   ...(props.hasMovement ? [{ key: 'move', label: 'Δ' }] : []),
 ])
 

@@ -4,9 +4,9 @@
   >
     <div class="mb-3 flex items-center justify-between gap-1">
       <h2
-        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
-        Card stats
+        {{ $t('card.stats.title') }}
       </h2>
       <div v-if="seriesTimeline" class="text-xs text-gray-500 tabular-nums dark:text-gray-400">
         {{ seriesTimeline }}
@@ -16,7 +16,7 @@
     <dl class="grid grid-cols-3 gap-x-6 px-1 sm:w-fit sm:gap-x-10">
       <div v-for="s in summary" :key="s.label" class="min-w-0">
         <dt
-          class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500"
+          class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500 zh:text-xs zh:tracking-normal zh:text-gray-500"
         >
           {{ s.label }}
         </dt>
@@ -32,21 +32,23 @@
     </dl>
 
     <div v-if="colorCounts.length" class="mt-5 px-1">
-      <h3 class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500">
-        Used by color
+      <h3
+        class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500 zh:text-xs zh:tracking-normal zh:text-gray-500"
+      >
+        {{ $t('card.stats.usedByColor') }}
       </h3>
       <div class="mt-2 flex h-2 gap-px overflow-hidden rounded-full">
         <span
           v-for="item in colorCounts"
           :key="item.color"
           :style="{ flexGrow: item.count, background: item.hex }"
-          :title="`${item.color}: ${item.count}`"
+          :title="`${colorName(item.color)}: ${item.count}`"
         />
       </div>
       <ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
         <li v-for="item in colorCounts" :key="item.color" class="flex items-center gap-1.5">
           <span class="h-2 w-2 rounded-full" :style="{ background: item.hex }" />
-          <span class="text-gray-500 dark:text-gray-400">{{ item.color }}</span>
+          <span class="text-gray-500 dark:text-gray-400">{{ colorName(item.color) }}</span>
           <span class="font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text">
             {{ item.count }}
           </span>
@@ -57,7 +59,7 @@
     <div v-if="productGroups.length" class="mt-5 space-y-4 px-1">
       <section v-for="group in productGroups" :key="group.prefix">
         <h3
-          class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500"
+          class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500 zh:text-xs zh:tracking-normal zh:text-gray-500"
         >
           {{ group.label }}
         </h3>
@@ -67,7 +69,9 @@
             v-for="item in group.items"
             :key="item.name"
             class="mb-1 grid break-inside-avoid grid-cols-[3.25rem_minmax(0,1fr)_3rem_3.5rem] items-baseline gap-2 text-xs"
-            :title="`${item.count} of ${item.total} cards used (${item.pct}%)`"
+            :title="
+              $t('card.stats.usedOfTotal', { count: item.count, total: item.total, pct: item.pct })
+            "
           >
             <span class="font-mono text-xxs text-gray-400 dark:text-gray-500">{{ item.code }}</span>
             <span class="flex min-w-0 items-center gap-1.5">
@@ -78,7 +82,7 @@
                 v-if="item.isNew"
                 class="shrink-0 rounded bg-green-100 px-1 text-xxs font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300"
               >
-                NEW
+                {{ $t('card.stats.new') }}
               </span>
             </span>
             <span
@@ -101,7 +105,7 @@
       </section>
     </div>
     <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
-      Product info unavailable
+      {{ $t('card.stats.productUnavailable') }}
     </p>
   </div>
 </template>
@@ -117,7 +121,8 @@ const {
   seriesTimeline,
 } = inject('meta')
 
-const GROUP_LABELS = { GD: 'Boosters', ST: 'Starter decks', EB: 'Extra boosters' }
+const { t, te } = useI18n()
+
 const GROUP_ORDER = ['GD', 'ST', 'EB']
 
 const colorFilter = useColorFilter()
@@ -140,9 +145,13 @@ const summary = computed(() => {
   const total = totalCardCount.value
   const used = usedCardCount.value
   return [
-    { label: 'Released', value: total },
-    { label: 'Used', value: used, pct: percentOf(used, total) },
-    { label: 'Unused', value: total - used, pct: percentOf(total - used, total) },
+    { label: t('card.stats.released'), value: total },
+    { label: t('card.stats.used'), value: used, pct: percentOf(used, total) },
+    {
+      label: t('card.stats.unused'),
+      value: total - used,
+      pct: percentOf(total - used, total),
+    },
   ]
 })
 
@@ -151,7 +160,9 @@ const productGroups = computed(() =>
   archetypeProductGroups.value
     .map(group => ({
       prefix: group.prefix,
-      label: GROUP_LABELS[group.prefix] ?? group.prefix,
+      label: te(`card.stats.group.${group.prefix}`)
+        ? t(`card.stats.group.${group.prefix}`)
+        : group.prefix,
       items: group.items
         .map(item => {
           const [, code, title] = item.name.match(/^\[(.+?)\]\s*(.*)$/) ?? [null, '', item.name]

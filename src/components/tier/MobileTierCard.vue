@@ -4,7 +4,7 @@
       <button
         v-if="section.kind !== 'flat'"
         :ref="el => registerStuck(el, section.key)"
-        class="sticky z-30 flex w-full cursor-pointer items-center gap-2 rounded px-2.5 py-1.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400"
+        class="sticky z-30 flex w-full cursor-pointer items-center gap-2 rounded px-2.5 py-1.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"
         :class="
           stuckIds.has(section.key)
             ? 'bg-gray-200 dark:bg-nalika-surface'
@@ -36,9 +36,16 @@
           />
           <span class="ml-1">{{ section.label }}</span>
         </span>
-        <span class="font-normal text-gray-400">({{ section.rows.length }})</span>
+        <span class="font-normal text-gray-500 dark:text-gray-400">
+          ({{ section.rows.length }})
+        </span>
         <span class="ml-auto font-mono font-normal tabular-nums">
-          {{ section.decks.toLocaleString() }} decks · {{ section.wins }} wins
+          {{
+            $t('tier.sectionTotals', {
+              decks: $n(section.decks),
+              wins: $n(section.wins),
+            })
+          }}
         </span>
       </button>
       <template v-if="!collapsed.has(section.key)">
@@ -57,7 +64,7 @@
       v-if="!sections.length && !zeroRows.length"
       class="py-8 text-center text-sm text-gray-400 dark:text-gray-500"
     >
-      No archetypes match these filters
+      {{ $t('tier.noMatch') }}
     </p>
 
     <button
@@ -65,7 +72,7 @@
       class="w-full cursor-pointer py-2 text-center text-xs font-medium text-ruri"
       @click="$emit('toggleZeroWins')"
     >
-      0 Wins（{{ zeroRows.length }}）{{ showZeroWins ? '−' : '+' }}
+      {{ $t('tier.zeroWins', { n: zeroRows.length, sign: showZeroWins ? '−' : '+' }) }}
     </button>
     <template v-if="showZeroWins">
       <TierCardItem

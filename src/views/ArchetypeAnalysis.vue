@@ -1,7 +1,7 @@
 <template>
   <div class="mx-auto max-w-340 p-3 max-sm:pb-6 md:p-8">
     <UiSeriesHeader
-      title="Archetype Analysis"
+      :title="$t('archetype.analysis.title')"
       :visible="!!currentSeriesData"
       :events="currentSeriesData?.events ?? 0"
       :wins="currentSeriesData?.winDecks ?? 0"
@@ -28,7 +28,9 @@
         :removed-cards="removedCards"
       />
     </template>
-    <p v-else class="text-sm text-gray-400 dark:text-gray-500">Select a series and archetype</p>
+    <p v-else class="text-sm text-gray-400 dark:text-gray-500">
+      {{ $t('archetype.analysis.empty') }}
+    </p>
   </div>
 </template>
 
@@ -46,6 +48,7 @@ function comboColors(combo) {
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 
 const { tierData, loadTierData } = useTierData()
 const { start, finish } = useLoadingBar()
@@ -74,7 +77,12 @@ const archOptions = computed(() => {
   return (seriesManifest.value?.archetypes ?? [])
     .map((a, i) => ({
       value: String(i),
-      details: `${a.cardCount} cards · ${a.winnerDeckCount} wins · ${a.deckCount} decks (${a.percent}%)`,
+      details: t('archetype.analysis.details', {
+        cards: t('archetype.cardCount', a.cardCount),
+        wins: t('archetype.winCount', a.winnerDeckCount),
+        decks: t('archetype.deckCount', a.deckCount),
+        pct: a.percent,
+      }),
       colors: comboColors(a.combo),
       labelSegments: buildLabelSegments(a.combo, a.sigCards),
       tier: a.tier || null,

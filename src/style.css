@@ -4,8 +4,12 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Chinese UI (<html lang="zh-Hant-HK">): CJK needs more size and no wide caps tracking */
+@custom-variant zh (&:lang(zh));
+
 @theme {
   --font-display: 'Roboto Mono', 'Noto Sans TC', monospace;
+  --font-mono: 'Roboto Mono', 'Noto Sans TC', monospace;
 
   --text-xxs: 0.625rem;
 

@@ -46,20 +46,7 @@ export function tierShift(prevTier, tier) {
   return to < from ? 'up' : 'down'
 }
 
-// Hover help for tier table headers and mobile stat labels
-export const TIER_COLUMN_HELP = {
-  rank: 'Tier order: strongest archetype first',
-  decks: 'Placed decks: top 8 (top 16 at larger events) of each event',
-  wins: 'Events won (1st place)',
-  top4: 'Top-4 finishes',
-  use: 'Usage: share of all placed decks',
-  winEv: 'Win rate per event: share of all events this archetype won',
-  winDk: 'Win rate per deck: wins ÷ placed decks',
-  score:
-    'Tier score, 0–100 relative to the strongest archetype: placement share, nudged by how well placements convert into wins',
-  tier: 'Tiers are cut by clustering the scores, so tier sizes vary',
-  move: 'Rank change since the previous series',
-}
+// Hover help for tier table headers and mobile stat labels (keys of `tier.help`)
+export const tierColumnHelp = key => translate(`tier.help.${key}`)
 
-export const DARK_HORSE_HELP =
-  'Dark horse: under 2% of placed decks, but converting placements into wins at least 30% better than average'
+export const darkHorseHelp = () => translate('tier.help.darkHorse')

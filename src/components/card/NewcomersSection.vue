@@ -1,8 +1,8 @@
 <template>
   <CardMetaCardSection
-    title="Newcomers"
+    :title="$t('card.newcomers.title')"
     :cards="recentlyUsedCards"
-    empty-text="No new cards used"
+    :empty-text="$t('card.newcomers.empty')"
     @toggle-enlarge="enlargedCard = $event"
   >
     <template #footer="{ card }">

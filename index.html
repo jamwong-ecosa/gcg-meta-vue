@@ -10,6 +10,13 @@
       if (localStorage.getItem('dark-mode') === 'true') {
         document.documentElement.classList.add('dark')
       }
+      try {
+        var lang =
+          localStorage.getItem('lang') || (/^zh/i.test(navigator.language) ? 'zh-HK' : 'en')
+        if (lang === 'zh-HK') {
+          document.documentElement.lang = 'zh-Hant-HK'
+        }
+      } catch (e) {}
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

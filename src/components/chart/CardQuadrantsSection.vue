@@ -3,9 +3,9 @@
     class="mb-6 rounded border border-gray-500/10 bg-shironezumi/3 p-2 dark:border-nalika-border dark:bg-nalika-surface"
   >
     <h2
-      class="mb-3 text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+      class="mb-3 text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
     >
-      Card Quadrants
+      {{ $t('chart.cardQuad.title') }}
     </h2>
     <ChartCardQuadrantChart
       :card-items="filteredCardItems"

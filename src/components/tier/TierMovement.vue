@@ -19,10 +19,12 @@ const props = defineProps({
   compact: { type: Boolean, default: false },
 })
 
+const { t } = useI18n()
+
 const moveText = computed(() => {
   const m = props.move
   if (m?.isNew) {
-    return 'NEW'
+    return t('tier.moveNew')
   }
   if (!m?.delta) {
     return '–'
@@ -44,9 +46,15 @@ const moveClass = computed(() => {
 const moveTitle = computed(() => {
   const m = props.move
   if (m?.isNew) {
-    return 'New this series'
+    return t('tier.moveNewTitle')
   }
-  const tierPart = m.prevTier !== props.tier ? `, tier ${m.prevTier} → ${props.tier}` : ''
-  return `Rank ${m.prevRank} → ${props.rank}${tierPart}`
+  return m.prevTier !== props.tier
+    ? t('tier.moveTitleTier', {
+        from: m.prevRank,
+        to: props.rank,
+        fromTier: m.prevTier,
+        toTier: props.tier,
+      })
+    : t('tier.moveTitle', { from: m.prevRank, to: props.rank })
 })
 </script>

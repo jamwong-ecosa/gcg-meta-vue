@@ -2,17 +2,18 @@ import { useStorage } from '@vueuse/core'
 
 const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
 
-// Sortable fields; 'rank' is the tier order (strongest first)
+// Sortable fields; 'rank' is the tier order (strongest first). Labels are
+// `tier.col.*` keys, translated where they render
 export const TIER_SORT_OPTIONS = [
-  { key: 'rank', label: 'Tier' },
-  { key: 'score', label: 'Score' },
-  { key: 'use', label: 'Use%' },
-  { key: 'winEv', label: 'Win/Ev' },
-  { key: 'winDk', label: 'Win/Dk' },
-  { key: 'decks', label: 'Decks' },
-  { key: 'wins', label: 'Wins' },
-  { key: 'top4', label: 'Top4' },
-  { key: 'move', label: 'Change' },
+  { key: 'rank', labelKey: 'tier.col.rank' },
+  { key: 'score', labelKey: 'tier.col.score' },
+  { key: 'use', labelKey: 'tier.col.use' },
+  { key: 'winEv', labelKey: 'tier.col.winEv' },
+  { key: 'winDk', labelKey: 'tier.col.winDk' },
+  { key: 'decks', labelKey: 'tier.col.decks' },
+  { key: 'wins', labelKey: 'tier.col.wins' },
+  { key: 'top4', labelKey: 'tier.col.top4' },
+  { key: 'move', labelKey: 'tier.col.move' },
 ]
 
 // Filtering, sorting and sectioning for the tier page. Both the desktop table
@@ -63,7 +64,11 @@ export function useTierList({ allRows, previousSeries }) {
 
   function matches(r) {
     const q = query.value.trim().toLowerCase()
-    if (q && !r.archetype.toLowerCase().includes(q)) {
+    if (
+      q &&
+      !r.archetype.toLowerCase().includes(q) &&
+      !comboName(r.colors).toLowerCase().includes(q)
+    ) {
       return false
     }
     const rowColors = r.colors.split('+')
@@ -99,7 +104,7 @@ export function useTierList({ allRows, previousSeries }) {
           map.set(r.colors, {
             key: `color-${r.colors}`,
             kind: 'color',
-            label: r.colors,
+            label: comboName(r.colors),
             colorDots: r.colorDots,
             rows: [],
             decks: 0,
@@ -122,7 +127,6 @@ export function useTierList({ allRows, previousSeries }) {
           key: `tier-${tier}`,
           kind: 'tier',
           tier,
-          label: `${tier} tier`,
           rows: tierRows,
           decks: tierRows.reduce((s, r) => s + r.decks, 0),
           wins: tierRows.reduce((s, r) => s + r.wins, 0),

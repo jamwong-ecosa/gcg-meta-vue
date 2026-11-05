@@ -28,10 +28,10 @@ export function useSeriesState() {
       return null
     }
     if (!min) {
-      return `Until ${max}`
+      return translate('ui.timeline.until', { date: max })
     }
     if (!max) {
-      return `From ${min}`
+      return translate('ui.timeline.from', { date: min })
     }
     return `${min} → ${max}`
   })

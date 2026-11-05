@@ -4,20 +4,19 @@
     <section class="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
       <div class="max-lg:order-2 max-lg:text-center">
         <p
-          class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70"
+          class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70 zh:text-sm zh:tracking-wide"
         >
-          Gundam Card Game · Tournament meta
+          {{ $t('home.eyebrow') }}
         </p>
         <h1
           class="mt-2 text-3xl font-bold tracking-tight text-sumi md:text-4xl dark:text-nalika-text"
         >
-          GCG Decks Analysis
+          {{ $t('home.title') }}
         </h1>
         <p
           class="mt-3 max-w-lg text-sm leading-relaxed text-gray-600 max-lg:mx-auto dark:text-nalika-text-muted"
         >
-          Which decks are winning right now, which cards they run, and how the meta shifts from one
-          series to the next — built from official tournament results.
+          {{ $t('home.intro') }}
         </p>
 
         <div class="mt-6 flex flex-wrap gap-3 max-lg:justify-center">
@@ -25,13 +24,13 @@
             :to="{ name: 'tier', query: seriesQuery }"
             class="rounded-full bg-ruri px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-ruri/85 dark:bg-sora dark:text-nalika-bg dark:hover:bg-sora/85"
           >
-            View tier list
+            {{ $t('home.viewTierList') }}
           </RouterLink>
           <RouterLink
             :to="{ name: 'meta', query: seriesQuery }"
             class="rounded-full bg-gray-100 px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-nalika-surface dark:text-nalika-text dark:hover:bg-nalika-header"
           >
-            Meta overview
+            {{ $t('home.metaOverview') }}
           </RouterLink>
         </div>
 
@@ -66,13 +65,16 @@
               aria-hidden="true"
             />
             <span>
-              Results through
-              <time
-                :datetime="updated.date"
-                class="font-medium text-gray-700 dark:text-nalika-text"
-              >
-                {{ updated.label }}
-              </time>
+              <i18n-t keypath="home.resultsThrough" scope="global">
+                <template #date>
+                  <time
+                    :datetime="updated.date"
+                    class="font-medium text-gray-700 dark:text-nalika-text"
+                  >
+                    {{ updated.label }}
+                  </time>
+                </template>
+              </i18n-t>
               <span class="ml-1.5 text-gray-400 dark:text-gray-500">· {{ updated.ago }}</span>
             </span>
           </p>
@@ -95,9 +97,9 @@
            name beside it, one line of counts. No tier-list link here — the hero's
            "View tier list" already opens this same series -->
       <p
-        class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70"
+        class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70 zh:text-sm zh:tracking-wide"
       >
-        Current meta
+        {{ $t('home.currentMeta') }}
       </p>
       <h2
         class="mt-1 flex flex-wrap items-baseline gap-x-2 text-2xl font-bold text-sumi md:text-3xl dark:text-nalika-text"
@@ -111,14 +113,14 @@
         </span>
       </h2>
       <p class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
-        {{ featured.events.toLocaleString() }} events · {{ featuredRange }}
+        {{ $t('home.eventsRange', { n: $n(featured.events), range: featuredRange }) }}
       </p>
 
       <!-- A status line, not a CTA: the whole row opens the in-progress series' tiers -->
       <RouterLink
         v-if="inProgress"
         :to="{ name: 'tier', query: { series: inProgress.value } }"
-        :title="`Preliminary tiers for ${inProgress.label}`"
+        :title="$t('home.preliminaryTitle', { label: inProgress.label })"
         class="group mt-4 flex items-center gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/25 dark:text-amber-200/80 dark:hover:bg-amber-900/40"
       >
         <span class="relative flex h-2 w-2 shrink-0" aria-hidden="true">
@@ -126,9 +128,13 @@
           <span class="relative h-2 w-2 rounded-full bg-amber-500" />
         </span>
         <span class="min-w-0 flex-1">
-          <b>{{ inProgress.label }}</b>
-          in progress · {{ inProgress.events }} events
-          <span class="max-sm:hidden">so far, tiers are preliminary</span>
+          <i18n-t keypath="home.inProgress" scope="global">
+            <template #label>
+              <b>{{ inProgress.label }}</b>
+            </template>
+            <template #n>{{ inProgress.events }}</template>
+          </i18n-t>
+          <span class="max-sm:hidden">{{ $t('home.inProgressNote') }}</span>
         </span>
         <span
           class="shrink-0 text-amber-600/70 transition-transform group-hover:translate-x-0.5 dark:text-amber-300/60"
@@ -175,7 +181,7 @@
                   :style="{ background: dot.hex }"
                 />
               </span>
-              <span class="truncate">{{ row.colors }}</span>
+              <span class="truncate">{{ comboName(row.colors) }}</span>
             </div>
             <!-- Wrap between card names, never inside one -->
             <div
@@ -187,7 +193,7 @@
               </template>
             </div>
             <div class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
-              {{ row.wins }} wins · {{ row.usePct }} of placements
+              {{ $t('home.rowStats', { wins: row.wins, use: row.usePct }) }}
             </div>
           </div>
         </RouterLink>
@@ -196,7 +202,9 @@
 
     <!-- Explore -->
     <section class="mt-14 md:mt-20">
-      <h2 class="text-xl font-bold text-sumi md:text-2xl dark:text-nalika-text">Explore</h2>
+      <h2 class="text-xl font-bold text-sumi md:text-2xl dark:text-nalika-text">
+        {{ $t('home.explore') }}
+      </h2>
       <div class="mt-4 grid gap-3 sm:grid-cols-3">
         <RouterLink
           v-for="feature in features"
@@ -208,7 +216,7 @@
             <h3
               class="text-sm font-bold text-gray-700 group-hover:text-ruri dark:text-nalika-text dark:group-hover:text-sora"
             >
-              {{ feature.title }}
+              {{ $t(`home.features.${feature.key}.title`) }}
             </h3>
             <span
               class="text-gray-400 transition-colors group-hover:text-ruri dark:group-hover:text-sora"
@@ -217,7 +225,7 @@
             </span>
           </div>
           <p class="mt-1.5 text-xs leading-relaxed text-gray-500 dark:text-nalika-text-muted">
-            {{ feature.description }}
+            {{ $t(`home.features.${feature.key}.description`) }}
           </p>
         </RouterLink>
       </div>
@@ -227,25 +235,27 @@
     <p
       class="mt-14 border-t border-gray-500/10 pt-6 text-xs leading-relaxed text-gray-400 md:mt-20 dark:border-nalika-border dark:text-gray-500"
     >
-      Results come from the official
-      <!-- v-text keeps template whitespace out of the underlined link text -->
-      <a
-        href="https://www.gundam-gcg.com/jp/events/tournament-results/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="underline underline-offset-2 hover:text-ruri dark:hover:text-sora"
-        v-text="'Gundam Card Game tournament results'"
-      />
-      and
-      <a
-        href="https://d.bandai-tcg-plus.com/gcgja/tournament"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="underline underline-offset-2 hover:text-ruri dark:hover:text-sora"
-        v-text="'Bandai TCG+'"
-      />
-      — both list each event's placed decks (top 8, or top 16 at larger events). Tiers rank
-      archetypes by how often they place, nudged by how often those placements turn into wins.
+      <i18n-t keypath="home.about" scope="global">
+        <!-- v-text keeps template whitespace out of the underlined link text -->
+        <template #official>
+          <a
+            href="https://www.gundam-gcg.com/jp/events/tournament-results/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline underline-offset-2 hover:text-ruri dark:hover:text-sora"
+            v-text="$t('home.aboutOfficial')"
+          />
+        </template>
+        <template #bandai>
+          <a
+            href="https://d.bandai-tcg-plus.com/gcgja/tournament"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline underline-offset-2 hover:text-ruri dark:hover:text-sora"
+            v-text="'Bandai TCG+'"
+          />
+        </template>
+      </i18n-t>
     </p>
   </div>
 </template>
@@ -253,6 +263,7 @@
 <script setup>
 import manifest from '$data/archetypes/index.json'
 
+const { t, locale } = useI18n()
 const { tierData, loadTierData } = useTierData()
 await loadTierData()
 
@@ -279,9 +290,15 @@ const seriesQuery = computed(() => (featured.value ? { series: featured.value.va
 const totals = computed(() => {
   const series = tierData.value
   return [
-    { label: 'Placed decks', value: series.reduce((n, s) => n + s.totalDecks, 0).toLocaleString() },
-    { label: 'Events', value: series.reduce((n, s) => n + s.events, 0).toLocaleString() },
-    { label: 'Series', value: series.length },
+    {
+      label: t('home.totals.decks'),
+      value: series.reduce((n, s) => n + s.totalDecks, 0).toLocaleString(locale.value),
+    },
+    {
+      label: t('home.totals.events'),
+      value: series.reduce((n, s) => n + s.events, 0).toLocaleString(locale.value),
+    },
+    { label: t('home.totals.series'), value: series.length },
   ]
 })
 
@@ -303,8 +320,12 @@ const updated = computed(() => {
   )
   return {
     date,
-    label: then.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    ago: new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(-days, 'day'),
+    label: then.toLocaleDateString(locale.value, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }),
+    ago: new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' }).format(-days, 'day'),
     fresh: days <= 7,
   }
 })
@@ -340,23 +361,8 @@ const topRows = computed(() => {
 // meta blocks, ranked 5 3 1 2 4 6 from left to right so #1 and #2 sit in the
 // middle (#1 on top), on an arc
 const features = [
-  {
-    title: 'Tier List',
-    to: 'tier',
-    description:
-      'Every archetype ranked S to D by how often it places and converts placements into wins.',
-  },
-  {
-    title: 'Analysis',
-    to: 'archetype-analysis',
-    description:
-      'One archetype in depth: its record across series, card choices, and the deck lists behind it.',
-  },
-  {
-    title: 'Meta Overview',
-    to: 'meta',
-    description:
-      'Card usage, color and level/cost distributions, and how this series compares to the last.',
-  },
+  { key: 'tier', to: 'tier' },
+  { key: 'analysis', to: 'archetype-analysis' },
+  { key: 'meta', to: 'meta' },
 ]
 </script>

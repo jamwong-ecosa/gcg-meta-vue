@@ -38,7 +38,7 @@
         <UiHint
           v-if="row.darkHorse"
           class="shrink-0 rounded bg-amber-100 px-1 text-xs dark:bg-amber-900/40"
-          :text="DARK_HORSE_HELP"
+          :text="darkHorseHelp()"
         >
           🐴
         </UiHint>
@@ -62,7 +62,11 @@
         <span
           v-if="shift"
           class="flex shrink-0 items-center gap-0.5"
-          :title="`${shift === 'up' ? 'Up' : 'Down'} from ${row.move.prevTier} tier last series`"
+          :title="
+            $t(shift === 'up' ? 'tier.shiftTitleUp' : 'tier.shiftTitleDown', {
+              tier: row.move.prevTier,
+            })
+          "
         >
           <span
             class="rounded px-1 py-px text-xxs leading-none font-bold opacity-55"

@@ -4,7 +4,7 @@
   >
     <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <h2
-        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
         {{ title }}
       </h2>
@@ -27,7 +27,7 @@
       </CardMetaCardItem>
     </div>
     <p v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
-      {{ emptyText }}
+      {{ emptyText || $t('card.noData') }}
     </p>
     <slot name="bottom" />
   </div>
@@ -37,7 +37,7 @@
 defineProps({
   title: { type: String, required: true },
   cards: { type: Array, default: () => [] },
-  emptyText: { type: String, default: 'No data' },
+  emptyText: { type: String, default: '' },
   // Show #1, #2… on the cards
   ranked: { type: Boolean, default: false },
 })

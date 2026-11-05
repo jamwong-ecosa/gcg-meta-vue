@@ -5,12 +5,14 @@
     class="mt-2 flex flex-col gap-0.5 font-mono text-xs leading-tight whitespace-nowrap tabular-nums"
     :title="title"
   >
-    <span class="font-bold text-gray-600 dark:text-gray-400">{{ sharePct(deckShare) }}% decks</span>
+    <span class="font-bold text-gray-600 dark:text-gray-400">
+      {{ $t('card.metaStats.decksPct', { pct: sharePct(deckShare) }) }}
+    </span>
     <span
       v-if="showArchetypes && card.effectiveArchetypes"
       class="truncate text-sky-700 dark:text-sky-400"
     >
-      {{ spread }} archetype{{ spread === 1 ? '' : 's' }}
+      {{ $t('card.metaStats.archetypes', spread) }}
     </span>
     <span v-else :class="winClass">{{ winText }}</span>
   </div>
@@ -43,10 +45,15 @@ const winShare = computed(() =>
   props.totalWins ? (props.card.totalWinnerDecks ?? 0) / props.totalWins : 0,
 )
 
+const { t } = useI18n()
+
 const winText = computed(() =>
   props.totalWins < COUNT_BELOW_WINS
-    ? `${props.card.totalWinnerDecks ?? 0}/${props.totalWins} wins`
-    : `${sharePct(winShare.value)}% wins`,
+    ? t('card.metaStats.winsCount', {
+        wins: props.card.totalWinnerDecks ?? 0,
+        total: props.totalWins,
+      })
+    : t('card.metaStats.winsPct', { pct: sharePct(winShare.value) }),
 )
 
 // Winning decks expected if the card's decks won at the series rate
@@ -70,13 +77,19 @@ const title = computed(() => {
   const c = props.card
   const lines = [
     c.name,
-    `In ${c.totalDecksIncluded} of ${props.totalDecks} decks (${(deckShare.value * 100).toFixed(1)}%)`,
-    `In ${c.totalWinnerDecks} of ${props.totalWins} winning decks (${(winShare.value * 100).toFixed(1)}%)${significant.value ? '' : ', within chance'}`,
+    t('card.metaStats.inDecks', {
+      count: c.totalDecksIncluded,
+      total: props.totalDecks,
+      pct: (deckShare.value * 100).toFixed(1),
+    }),
+    t('card.metaStats.inWinDecks', {
+      count: c.totalWinnerDecks,
+      total: props.totalWins,
+      pct: (winShare.value * 100).toFixed(1),
+    }) + (significant.value ? '' : t('card.metaStats.withinChance')),
   ]
   if (c.effectiveArchetypes) {
-    lines.push(
-      `Played in ${c.archetypeCount} archetypes; spread like ~${c.effectiveArchetypes} equal ones`,
-    )
+    lines.push(t('card.metaStats.spread', { count: c.archetypeCount, eff: c.effectiveArchetypes }))
   }
   return lines.join('\n')
 })

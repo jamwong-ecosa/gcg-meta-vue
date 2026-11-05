@@ -5,12 +5,12 @@
   >
     <div class="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
       <h2
-        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted"
+        class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
         {{ title }}
       </h2>
       <span class="font-mono text-xs text-gray-500 tabular-nums dark:text-nalika-text-muted">
-        avg
+        {{ $t('chart.curve.avg') }}
         <b class="text-gray-700 dark:text-nalika-text">{{ average }}</b>
       </span>
     </div>
@@ -26,7 +26,7 @@
         v-for="(bar, i) in bars"
         :key="bar.value"
         class="group relative flex h-full flex-1 cursor-default flex-col items-center justify-end"
-        :aria-label="`${title} ${bar.value}: ${bar.total.toFixed(1)} copies`"
+        :aria-label="$t('chart.curve.copies', { title, value: bar.value, n: bar.total.toFixed(1) })"
         @mouseenter="hovered = bar.value"
         @focus="hovered = bar.value"
         @click="pinned = pinned === bar.value ? null : bar.value"
@@ -60,7 +60,7 @@
           :style="{ bottom: `${barHeight(bar) + 22}px` }"
         >
           <div class="mb-1 font-semibold text-gray-800 dark:text-nalika-text">
-            {{ title }} {{ bar.value }} · {{ bar.total.toFixed(1) }} copies
+            {{ $t('chart.curve.head', { title, value: bar.value, n: bar.total.toFixed(1) }) }}
           </div>
           <div
             v-for="c in bar.cards.slice(0, POPOVER_CARDS)"
@@ -75,7 +75,7 @@
             <span class="font-mono text-gray-400 tabular-nums">{{ c.copies.toFixed(1) }}</span>
           </div>
           <div v-if="bar.cards.length > POPOVER_CARDS" class="mt-0.5 text-gray-400">
-            +{{ bar.cards.length - POPOVER_CARDS }} more
+            {{ $t('chart.curve.more', { n: bar.cards.length - POPOVER_CARDS }) }}
           </div>
         </div>
       </button>
@@ -91,14 +91,14 @@
       </span>
     </div>
 
-    <div class="mt-2 text-xxs">
-      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-gray-500">
+    <div class="mt-2 text-xs">
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-gray-600 dark:text-gray-300">
         <span v-for="t in usedTypes" :key="t" class="flex items-center gap-1">
           <span class="inline-block h-2.5 w-2.5 rounded-sm" :class="TYPE_STYLE[t].bar" />
-          {{ TYPE_STYLE[t].label }}
+          {{ cardTypeName(t) }}
         </span>
-        <span class="text-gray-400">
-          · copies per average deck · hover or tap a bar for its cards
+        <span class="text-gray-500 dark:text-gray-400">
+          {{ $t('chart.curve.legend') }}
         </span>
       </div>
     </div>
@@ -124,10 +124,10 @@ const POPOVER_CARDS = 12
 const BAR_MAX = 125
 
 const TYPE_STYLE = {
-  UNIT: { label: 'Unit', bar: tw`bg-ruri dark:bg-sky-600` },
-  PILOT: { label: 'Pilot', bar: tw`bg-sky-400 dark:bg-sky-300` },
-  COMMAND: { label: 'Command', bar: tw`bg-amber-400 dark:bg-amber-500` },
-  BASE: { label: 'Base', bar: tw`bg-emerald-500 dark:bg-emerald-600` },
+  UNIT: { bar: tw`bg-ruri dark:bg-sky-600` },
+  PILOT: { bar: tw`bg-sky-400 dark:bg-sky-300` },
+  COMMAND: { bar: tw`bg-amber-400 dark:bg-amber-500` },
+  BASE: { bar: tw`bg-emerald-500 dark:bg-emerald-600` },
 }
 const TYPES = Object.keys(TYPE_STYLE)
 

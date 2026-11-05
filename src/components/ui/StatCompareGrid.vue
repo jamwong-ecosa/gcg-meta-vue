@@ -1,7 +1,9 @@
 <template>
   <dl class="grid grid-cols-2 gap-x-6 gap-y-4 px-1 pb-1 md:grid-cols-3 lg:grid-cols-6">
     <div v-for="m in metrics" :key="m.label" class="min-w-0">
-      <dt class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500">
+      <dt
+        class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500 zh:text-xs zh:tracking-normal zh:text-gray-500"
+      >
         {{ m.label }}
       </dt>
       <dd class="mt-1 flex flex-wrap items-baseline gap-x-2">
@@ -16,12 +18,14 @@
         </span>
       </dd>
       <dd class="mt-0.5 text-xs text-gray-400 tabular-nums dark:text-gray-500">
-        prev {{ m.format(m.previous) }}
+        {{ $t('ui.compare.prev', { value: m.format(m.previous) }) }}
       </dd>
     </div>
 
     <div v-if="topColor" class="min-w-0">
-      <dt class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500">
+      <dt
+        class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500 zh:text-xs zh:tracking-normal zh:text-gray-500"
+      >
         {{ topColor.label }}
       </dt>
       <dd class="mt-1 flex items-center gap-1">
@@ -32,11 +36,15 @@
           :style="{ background: COLOR_HEX[c] }"
         />
         <span class="ml-0.5 truncate text-lg font-bold text-gray-700 dark:text-nalika-text">
-          {{ topColor.current || '—' }}
+          {{ comboName(topColor.current) }}
         </span>
       </dd>
       <dd class="mt-0.5 truncate text-xs text-gray-400 dark:text-gray-500">
-        {{ topColor.current === topColor.previous ? 'same' : `was ${topColor.previous || '—'}` }}
+        {{
+          topColor.current === topColor.previous
+            ? $t('ui.compare.same')
+            : $t('ui.compare.was', { value: comboName(topColor.previous) })
+        }}
       </dd>
     </div>
   </dl>
@@ -50,11 +58,13 @@ defineProps({
   topColor: { type: Object, default: null },
 })
 
+const { t } = useI18n()
+
 const isSame = m => m.format(m.current) === m.format(m.previous)
 
 function deltaText(m) {
   if (isSame(m)) {
-    return 'same'
+    return t('ui.compare.same')
   }
   return `${m.diff > 0 ? '+' : ''}${m.format(m.diff)}`
 }
@@ -70,5 +80,10 @@ function deltaClass(m) {
 
 function colorsOf(combo) {
   return (combo ?? '').split('+').filter(c => COLOR_HEX[c])
+}
+
+// "Red+White" → "Red+White" / "紅+白"
+function comboName(combo) {
+  return combo ? combo.split('+').map(colorName).join('+') : '—'
 }
 </script>

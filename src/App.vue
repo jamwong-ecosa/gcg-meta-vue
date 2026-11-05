@@ -12,38 +12,41 @@
             class="max-sm:text-sm"
             :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
           >
-            Home
+            {{ $t('common.nav.home') }}
           </RouterLink>
           <RouterLink
             :to="{ path: '/tier', query: { series: $route.query.series } }"
             class="max-sm:text-sm"
             :active-class="tw`font-bold text-ruri dark:text-sora`"
           >
-            Tier
+            {{ $t('common.nav.tier') }}
           </RouterLink>
           <RouterLink
             :to="{ path: '/archetype-analysis', query: { series: $route.query.series } }"
             class="max-sm:text-sm"
             :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
           >
-            Analysis
+            {{ $t('common.nav.analysis') }}
           </RouterLink>
           <RouterLink
             :to="{ path: '/meta', query: { series: $route.query.series } }"
             class="max-sm:text-sm"
             :exact-active-class="tw`font-bold text-ruri dark:text-sora`"
           >
-            Meta
+            {{ $t('common.nav.meta') }}
           </RouterLink>
         </div>
-        <div class="flex flex-1 items-center justify-end gap-4">
+        <div class="flex min-w-0 flex-1 items-center justify-end gap-4 md:pl-6">
           <UiGeneralDropdown
             v-if="showSeries"
             v-model="seriesKey"
             class="max-w-sm min-w-0 flex-1 max-lg:hidden"
             :options="seriesOptions"
           />
-          <UiDarkToggle />
+          <div class="flex shrink-0 items-center gap-1">
+            <UiLangToggle />
+            <UiDarkToggle />
+          </div>
         </div>
       </div>
       <UiGeneralDropdown
@@ -58,7 +61,9 @@
       <Suspense @resolve="onResolve">
         <component :is="Component" />
         <template #fallback>
-          <div class="py-12 text-center text-sm text-gray-400 dark:text-gray-500">Loading…</div>
+          <div class="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+            {{ $t('common.loading') }}
+          </div>
         </template>
       </Suspense>
     </RouterView>

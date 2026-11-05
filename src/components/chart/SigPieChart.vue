@@ -88,7 +88,7 @@
             :style="{ background: COLOR_HEX[c] || '#9ca3af' }"
           />
         </span>
-        <span class="truncate text-gray-700 dark:text-gray-300">{{ s.label }}</span>
+        <span class="truncate text-gray-700 dark:text-gray-300">{{ comboName(s.label) }}</span>
         <span
           class="ml-auto shrink-0 text-right font-mono text-gray-500 tabular-nums dark:text-gray-400"
         >
@@ -115,6 +115,12 @@ const IMG_SCALE = 0.8
 const VIEWBOX = `${CX - OUTER_R - 2} ${CY - OUTER_R - 2} ${OUTER_R * 2 + 4} ${OUTER_R * 2 + 4}`
 const uid = `pie-${Math.random().toString(36).slice(2, 8)}`
 const hovered = ref(null)
+
+const { t } = useI18n()
+
+// "Red+White" → "紅+白" in Chinese; 'Other' is the bucket for the rest
+const comboName = label =>
+  label === 'Other' ? t('chart.other') : label.split('+').map(colorName).join('+')
 
 function polarToCartesian(r, angle) {
   return { x: CX + r * Math.cos(angle), y: CY + r * Math.sin(angle) }
@@ -257,9 +263,11 @@ const sliceLabels = computed(() =>
       const mid = (s.startAngle + s.endAngle) / 2
       const pos = polarToCartesian(OUTER_R * 0.68, mid)
       const colors = s.label === 'Other' ? [] : s.label.split('+')
-      const text = `${s.label === 'Other' ? 'Other ' : ''}${Math.round(s.pct)}%`
-      // pill: padding + 8 per dot + ~5.5 per glyph at font-size 9
-      const w = 12 + colors.length * 8 + text.length * 5.5
+      const pct = Math.round(s.pct)
+      const text = s.label === 'Other' ? t('chart.pie.other', { pct }) : `${pct}%`
+      // pill: padding + 8 per dot + ~5.5 per Latin glyph (~9 per CJK one) at font-size 9
+      const textW = [...text].reduce((n, ch) => n + (ch.charCodeAt(0) > 0x2e80 ? 9 : 5.5), 0)
+      const w = 12 + colors.length * 8 + textW
       return {
         x: pos.x,
         y: pos.y,

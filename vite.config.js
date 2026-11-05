@@ -215,7 +215,7 @@ export default defineConfig({
   },
   plugins: lazyPlugins(() => [
     AutoImport({
-      imports: ['vue', 'vue-router'],
+      imports: ['vue', 'vue-router', { 'vue-i18n': ['useI18n'] }],
       dirs: ['./src/utils', './src/composables'],
       eslintrc: { enabled: true, filepath: './.dev/auto-import-globals.json' },
       vueTemplate: true,
