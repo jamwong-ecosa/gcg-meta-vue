@@ -103,8 +103,6 @@ export default {
       flexCount: '{n} flex',
       techCount: '+{n} tech',
       empty: 'No decks here',
-      showMore: 'Show {n} more',
-      left: '({n} left)',
     },
     place: {
       p1: '1st',
@@ -251,8 +249,6 @@ export default {
       flexCount: '{n} 彈性',
       techCount: '+{n} 奇招',
       empty: '沒有卡組',
-      showMore: '再顯示 {n} 副',
-      left: '（剩餘 {n} 副）',
     },
     place: {
       p1: '冠軍',

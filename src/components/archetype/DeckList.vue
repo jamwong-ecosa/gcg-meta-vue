@@ -19,78 +19,76 @@
       {{ $t('archetype.decks.note', { tech: TECH_SHARE * 100, staple: STAPLE_SHARE * 100 }) }}
     </p>
 
-    <!-- Columns fill top to bottom so a sorted list reads down, not across -->
-    <ul v-if="shown.length" class="gap-x-6 lg:columns-2">
-      <li
-        v-for="d in shown"
-        :key="d.idx"
-        class="break-inside-avoid border-b border-gray-500/8 dark:border-white/5"
-      >
-        <UiDeckPopover :cards="d.cards" :url="d.url" :label="d.popoverLabel" :tags-of="tagsOf">
-          <component
-            :is="d.url ? 'a' : 'div'"
-            :href="d.url || undefined"
-            :target="d.url ? '_blank' : undefined"
-            :rel="d.url ? 'noopener' : undefined"
-            class="group flex items-center gap-3 rounded px-1.5 py-1.5 text-xs hover:bg-gray-100/70 dark:hover:bg-white/5"
-          >
-            <span
-              class="w-14 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
-              :class="placeClass(d)"
+    <!-- Scrolls inside its own box; more rows render as the end comes into view,
+         so there is nothing to click. Two columns read across (newspaper
+         columns would split one scrolling box into two unrelated halves) -->
+    <div
+      v-if="shown.length"
+      ref="scrollBox"
+      class="max-h-[28rem] overflow-y-auto overscroll-contain rounded border border-gray-500/10 px-1 dark:border-white/5"
+    >
+      <ul class="grid gap-x-6 lg:grid-cols-2">
+        <li v-for="d in shown" :key="d.idx" class="border-b border-gray-500/8 dark:border-white/5">
+          <UiDeckPopover :cards="d.cards" :url="d.url" :label="d.popoverLabel" :tags-of="tagsOf">
+            <component
+              :is="d.url ? 'a' : 'div'"
+              :href="d.url || undefined"
+              :target="d.url ? '_blank' : undefined"
+              :rel="d.url ? 'noopener' : undefined"
+              class="group flex items-center gap-3 rounded px-1.5 py-1.5 text-xs hover:bg-gray-100/70 dark:hover:bg-white/5"
             >
-              {{ d.placeLabel }}
-            </span>
-            <!-- Month-day on phones; the year is the series' anyway -->
-            <span class="shrink-0 font-mono text-gray-500 tabular-nums sm:w-20 dark:text-gray-400">
-              <span class="sm:hidden">{{ d.date?.slice(5) ?? '—' }}</span>
-              <span class="max-sm:hidden">{{ d.date ?? '—' }}</span>
-            </span>
-            <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-nalika-text">
-              {{ d.shop || $t('archetype.decks.unknownEvent') }}
-            </span>
-            <span
-              v-if="showTech"
-              :class="{ invisible: !d.flex }"
-              class="w-14 shrink-0 rounded bg-gray-100 px-1.5 text-center font-mono text-xxs text-gray-500 tabular-nums dark:bg-white/5 dark:text-gray-400"
-            >
-              {{ $t('archetype.decks.flexCount', { n: d.flex }) }}
-            </span>
-            <span
-              v-if="showTech"
-              :class="{ invisible: !d.tech }"
-              class="w-14 shrink-0 rounded bg-sora/10 px-1.5 text-center font-mono text-xxs text-ruri tabular-nums dark:bg-sora/15 dark:text-sora"
-            >
-              {{ $t('archetype.decks.techCount', { n: d.tech }) }}
-            </span>
-            <span
-              v-if="d.url"
-              class="shrink-0 text-gray-300 group-hover:text-ruri max-sm:hidden dark:text-gray-600 dark:group-hover:text-sora"
-              aria-hidden="true"
-            >
-              ↗
-            </span>
-          </component>
-        </UiDeckPopover>
-      </li>
-    </ul>
+              <span
+                class="w-14 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
+                :class="placeClass(d)"
+              >
+                {{ d.placeLabel }}
+              </span>
+              <!-- Month-day on phones; the year is the series' anyway -->
+              <span
+                class="shrink-0 font-mono text-gray-500 tabular-nums sm:w-20 dark:text-gray-400"
+              >
+                <span class="sm:hidden">{{ d.date?.slice(5) ?? '—' }}</span>
+                <span class="max-sm:hidden">{{ d.date ?? '—' }}</span>
+              </span>
+              <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-nalika-text">
+                {{ d.shop || $t('archetype.decks.unknownEvent') }}
+              </span>
+              <span
+                v-if="showTech"
+                :class="{ invisible: !d.flex }"
+                class="w-14 shrink-0 rounded bg-gray-100 px-1.5 text-center font-mono text-xxs text-gray-500 tabular-nums dark:bg-white/5 dark:text-gray-400"
+              >
+                {{ $t('archetype.decks.flexCount', { n: d.flex }) }}
+              </span>
+              <span
+                v-if="showTech"
+                :class="{ invisible: !d.tech }"
+                class="w-14 shrink-0 rounded bg-sora/10 px-1.5 text-center font-mono text-xxs text-ruri tabular-nums dark:bg-sora/15 dark:text-sora"
+              >
+                {{ $t('archetype.decks.techCount', { n: d.tech }) }}
+              </span>
+              <span
+                v-if="d.url"
+                class="shrink-0 text-gray-300 group-hover:text-ruri max-sm:hidden dark:text-gray-600 dark:group-hover:text-sora"
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+            </component>
+          </UiDeckPopover>
+        </li>
+      </ul>
+      <div v-if="filtered.length > shown.length" ref="more" class="h-px" aria-hidden="true" />
+    </div>
     <p v-else class="py-3 text-xs text-gray-400 dark:text-gray-500">
       {{ $t('archetype.decks.empty') }}
     </p>
-
-    <button
-      v-if="filtered.length > shown.length"
-      class="mt-3 w-full cursor-pointer rounded bg-gray-100 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-nalika-text-muted dark:hover:bg-white/10"
-      @click="limit += PAGE"
-    >
-      {{ $t('archetype.decks.showMore', { n: Math.min(PAGE, filtered.length - shown.length) }) }}
-      <span class="text-gray-400">
-        {{ $t('archetype.decks.left', { n: filtered.length - shown.length }) }}
-      </span>
-    </button>
   </div>
 </template>
 
 <script setup>
+import { useIntersectionObserver } from '@vueuse/core'
+
 const props = defineProps({
   // [{ idx, url, cards, isWinner, date, shop, place }]
   decks: { type: Array, required: true },
@@ -104,7 +102,8 @@ const props = defineProps({
 
 const { t } = useI18n()
 
-const PAGE = 20
+// Rows rendered at a time; the next batch renders as the list's end scrolls in
+const PAGE = 40
 const TECH_SHARE = 0.25
 // Below this share a card is flex rather than a staple (as on the archetype cards)
 const STAPLE_SHARE = 0.85
@@ -123,7 +122,20 @@ const sortKey = ref('newest')
 const limit = ref(PAGE)
 watch([filter, sortKey], () => {
   limit.value = PAGE
+  scrollBox.value?.scrollTo({ top: 0 })
 })
+
+const scrollBox = useTemplateRef('scrollBox')
+const more = useTemplateRef('more')
+useIntersectionObserver(
+  more,
+  ([entry]) => {
+    if (entry?.isIntersecting) {
+      limit.value += PAGE
+    }
+  },
+  { root: scrollBox, rootMargin: '0px 0px 200px 0px' },
+)
 
 // Share of these decks that play each card
 const cardShare = computed(() => {
