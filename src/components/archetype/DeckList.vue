@@ -37,29 +37,21 @@
             <span
               class="w-14 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
               :class="placeClass(d)"
-              :title="d.isWinner ? $t('archetype.decks.countsAsWin') : undefined"
             >
               {{ d.placeLabel }}
             </span>
             <!-- Month-day on phones; the year is the series' anyway -->
-            <span
-              class="shrink-0 font-mono text-gray-500 tabular-nums sm:w-20 dark:text-gray-400"
-              :title="d.date"
-            >
+            <span class="shrink-0 font-mono text-gray-500 tabular-nums sm:w-20 dark:text-gray-400">
               <span class="sm:hidden">{{ d.date?.slice(5) ?? '—' }}</span>
               <span class="max-sm:hidden">{{ d.date ?? '—' }}</span>
             </span>
-            <span
-              class="min-w-0 flex-1 truncate text-gray-700 dark:text-nalika-text"
-              :title="d.shop"
-            >
+            <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-nalika-text">
               {{ d.shop || $t('archetype.decks.unknownEvent') }}
             </span>
             <span
               v-if="showTech"
               :class="{ invisible: !d.flex }"
               class="w-14 shrink-0 rounded bg-gray-100 px-1.5 text-center font-mono text-xxs text-gray-500 tabular-nums dark:bg-white/5 dark:text-gray-400"
-              :title="d.flexNames.join('\n')"
             >
               {{ $t('archetype.decks.flexCount', { n: d.flex }) }}
             </span>
@@ -67,7 +59,6 @@
               v-if="showTech"
               :class="{ invisible: !d.tech }"
               class="w-14 shrink-0 rounded bg-sora/10 px-1.5 text-center font-mono text-xxs text-ruri tabular-nums dark:bg-sora/15 dark:text-sora"
-              :title="d.techNames.join('\n')"
             >
               {{ $t('archetype.decks.techCount', { n: d.tech }) }}
             </span>
@@ -183,9 +174,7 @@ const rows = computed(() =>
       shop,
       placeLabel: d.isWinner && d.place === 1 ? `🏆 ${placeText}` : placeText,
       tech: techCards.length,
-      techNames: techCards.map(c => c.name),
       flex: flexCards.length,
-      flexNames: flexCards.map(c => c.name),
       popoverLabel: [placeText, d.date, shop].filter(Boolean).join(' · '),
     }
   }),
