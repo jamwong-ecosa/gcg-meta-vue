@@ -42,47 +42,86 @@
         >
           {{ $t('archetype.detail.key') }}
         </dt>
-        <dd class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.copiesHint')">
-            <span class="rounded-sm bg-black/75 px-1 font-mono font-bold text-white">×4</span>
-            {{ $t('archetype.detail.copies') }}
-          </UiHint>
-          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.wrHint')">
-            <span class="font-mono font-semibold text-green-600 dark:text-green-400">
-              {{ $t('archetype.badge.wr') }} +2.0
-            </span>
-            {{ $t('archetype.detail.wr') }}
-          </UiHint>
-          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.sigHint')">
-            <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">
-              ★ {{ $t('archetype.badge.sig') }}
-            </span>
-            {{ $t('archetype.detail.sig') }}
-          </UiHint>
-          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.techHint')">
-            <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">
-              {{ $t('archetype.badge.tech') }}
-            </span>
-            {{ $t('archetype.detail.tech') }}
-          </UiHint>
-          <UiHint
-            v-if="prevCardIds?.size"
-            class="flex items-center gap-1.5"
-            :text="$t('archetype.detail.newHint')"
+        <dd>
+          <!-- Mobile: folded behind a toggle, and when open one badge per row with
+               the badges in a fixed column so the meanings line up -->
+          <button
+            class="flex cursor-pointer items-center gap-1 font-medium text-ruri sm:hidden"
+            :aria-expanded="keyOpen"
+            @click="keyOpen = !keyOpen"
           >
-            <span class="rounded-sm bg-green-600 px-1 font-bold text-white">
-              {{ $t('archetype.badge.new') }}
-            </span>
-            {{ $t('archetype.detail.new') }}
-          </UiHint>
-          <UiHint class="flex items-center gap-1.5" :text="$t('archetype.detail.sameHint')">
-            <span
-              class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
+            {{ keyOpen ? $t('archetype.detail.keyHide') : $t('archetype.detail.keyShow') }}
+            <svg
+              class="size-3.5 transition-transform"
+              :class="keyOpen && 'rotate-180'"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
             >
-              ≡
-            </span>
-            {{ $t('archetype.detail.same') }}
-          </UiHint>
+              <path
+                fill-rule="evenodd"
+                d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+          <div
+            class="flex-wrap items-center gap-x-4 gap-y-1.5 max-sm:mt-2 max-sm:flex-col max-sm:items-start max-sm:gap-y-2 sm:flex"
+            :class="keyOpen ? 'flex' : 'hidden'"
+          >
+            <UiHint :class="KEY_ITEM" :text="$t('archetype.detail.copiesHint')">
+              <span :class="KEY_BADGE">
+                <span class="rounded-sm bg-black/75 px-1 font-mono font-bold text-white">×4</span>
+              </span>
+              {{ $t('archetype.detail.copies') }}
+            </UiHint>
+            <UiHint :class="KEY_ITEM" :text="$t('archetype.detail.wrHint')">
+              <span :class="KEY_BADGE">
+                <span class="font-mono font-semibold text-green-600 dark:text-green-400">
+                  {{ $t('archetype.badge.wr') }} +2.0
+                </span>
+              </span>
+              {{ $t('archetype.detail.wr') }}
+            </UiHint>
+            <UiHint :class="KEY_ITEM" :text="$t('archetype.detail.sigHint')">
+              <span :class="KEY_BADGE">
+                <span class="rounded-sm bg-black/70 px-1 font-bold text-yellow-300">
+                  ★ {{ $t('archetype.badge.sig') }}
+                </span>
+              </span>
+              {{ $t('archetype.detail.sig') }}
+            </UiHint>
+            <UiHint :class="KEY_ITEM" :text="$t('archetype.detail.techHint')">
+              <span :class="KEY_BADGE">
+                <span class="rounded-sm bg-yellow-400 px-1 font-bold text-yellow-950">
+                  {{ $t('archetype.badge.tech') }}
+                </span>
+              </span>
+              {{ $t('archetype.detail.tech') }}
+            </UiHint>
+            <UiHint
+              v-if="prevCardIds?.size"
+              :class="KEY_ITEM"
+              :text="$t('archetype.detail.newHint')"
+            >
+              <span :class="KEY_BADGE">
+                <span class="rounded-sm bg-green-600 px-1 font-bold text-white">
+                  {{ $t('archetype.badge.new') }}
+                </span>
+              </span>
+              {{ $t('archetype.detail.new') }}
+            </UiHint>
+            <UiHint :class="KEY_ITEM" :text="$t('archetype.detail.sameHint')">
+              <span :class="KEY_BADGE">
+                <span
+                  class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
+                >
+                  ≡
+                </span>
+              </span>
+              {{ $t('archetype.detail.same') }}
+            </UiHint>
+          </div>
         </dd>
       </template>
     </dl>
@@ -110,7 +149,8 @@
         >
           {{ sec.range }}
         </span>
-        <span class="text-xs text-gray-500 dark:text-nalika-text-muted">
+        <!-- Own row on mobile, so every section's header has the same shape -->
+        <span class="text-xs text-gray-500 max-sm:basis-full dark:text-nalika-text-muted">
           {{ sec.blurb }} · {{ $t('archetype.cardCount', sec.cards.length) }}
         </span>
       </h4>
@@ -239,6 +279,12 @@ const props = defineProps({
 const isNewCard = cardId => props.prevCardIds?.size > 0 && !props.prevCardIds.has(cardId)
 
 const { showOther, showRemoved } = useCollapseState()
+
+// Badge key: folded on mobile until asked for; desktop always shows it inline
+const keyOpen = ref(false)
+const KEY_ITEM = tw`flex items-center gap-1.5 max-sm:gap-2`
+// Fixed badge column on mobile so the meanings start in one line
+const KEY_BADGE = tw`flex shrink-0 max-sm:w-17`
 
 const sigCardIds = computed(() => new Set(props.archetype.sigCardIds ?? []))
 

@@ -2,7 +2,7 @@
   <div
     class="mb-6 rounded border border-gray-500/10 bg-shironezumi/2 p-2 dark:border-nalika-border dark:bg-nalika-surface"
   >
-    <div class="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+    <div class="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-2 pt-1">
       <h2
         class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
       >
@@ -12,20 +12,21 @@
         {{ $t('archetype.timeline.changeNote') }}
       </p>
     </div>
-    <!-- One table at every width; phones drop the raw counts and the arrow, and
-         split the series name over two lines -->
+    <!-- One table at every width; phones keep only the comparable metrics (rank and
+         shares), drop the arrow and split the series name over two lines. The first
+         and last columns are inset so the row highlight doesn't run text to its edge -->
     <div v-if="timeline.length > 1">
       <div>
         <table class="w-full table-fixed text-xs">
           <colgroup>
             <col />
             <col class="w-9 sm:w-14" />
-            <col v-for="m in metrics" :key="m.key" class="w-[58px] sm:w-[72px]" />
+            <col v-for="m in metrics" :key="m.key" class="w-16 sm:w-[72px]" />
             <col v-if="!isPhone" class="w-6" />
           </colgroup>
           <thead>
             <tr class="border-b border-gray-200 text-left dark:border-gray-700">
-              <th class="pr-3 pb-2 font-semibold text-gray-500 dark:text-gray-400">
+              <th class="pr-3 pb-2 pl-2 font-semibold text-gray-500 dark:text-gray-400">
                 {{ $t('archetype.timeline.series') }}
               </th>
               <th class="pb-2 font-semibold text-gray-500 dark:text-gray-400">
@@ -34,7 +35,7 @@
               <th
                 v-for="m in metrics"
                 :key="m.key"
-                class="pb-2 pl-2 text-right font-semibold text-gray-500 sm:pl-3 dark:text-gray-400"
+                class="pb-2 pl-2 text-right font-semibold text-gray-500 last:pr-2 sm:pl-3 dark:text-gray-400"
                 :title="m.help"
               >
                 {{ m.label }}
@@ -54,7 +55,7 @@
               "
               @click="goToEntry(entry)"
             >
-              <td class="py-2 pr-3 pl-1 align-baseline dark:text-nalika-text">
+              <td class="py-2 pr-3 pl-2 align-baseline dark:text-nalika-text">
                 <div v-if="isPhone" class="min-w-0 leading-tight">
                   <div class="truncate font-medium">{{ entry.labelMain }}</div>
                   <div v-if="entry.labelSub" class="truncate text-xxs text-gray-400">
@@ -82,7 +83,7 @@
               <td
                 v-for="cell in entry.cells"
                 :key="cell.key"
-                class="py-2 pl-2 text-right align-baseline sm:pl-3"
+                class="py-2 pl-2 text-right align-baseline last:pr-2 sm:pl-3"
               >
                 <div
                   class="font-mono leading-tight text-gray-700 tabular-nums dark:text-nalika-text"
@@ -139,17 +140,18 @@ const METRICS = [
   { key: 'rank', scored: true, invert: true },
   { key: 'percent', scored: true, pct: true },
   { key: 'winRate', scored: true, pct: true },
-  { key: 'deckCount', wide: true },
+  { key: 'deckCount' },
   { key: 'winnerDeckCount' },
-  { key: 'cardCount', wide: true },
+  { key: 'cardCount' },
 ]
 
 const { t } = useI18n()
 
-// Phones get the shares, rank and wins only, so a series fits on one short row
+// Phones get rank and the two shares only (the ones with a change), so a series
+// fits on one short row with room to breathe
 const isPhone = useMediaQuery('(max-width: 639px)')
 const metrics = computed(() =>
-  (isPhone.value ? METRICS.filter(m => !m.wide) : METRICS).map(m => ({
+  (isPhone.value ? METRICS.filter(m => m.scored) : METRICS).map(m => ({
     ...m,
     label: t(`archetype.timeline.metric.${m.key}.label`),
     help: t(`archetype.timeline.metric.${m.key}.help`),

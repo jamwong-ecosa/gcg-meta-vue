@@ -18,6 +18,8 @@ export default {
     detail: {
       avgDeck: 'Avg deck',
       key: 'Key',
+      keyShow: 'Show',
+      keyHide: 'Hide',
       copies: 'copies per deck',
       copiesHint: 'Copies per deck that runs it',
       wr: 'wins with the card vs without',
@@ -166,6 +168,8 @@ export default {
     detail: {
       avgDeck: '平均卡組',
       key: '圖例',
+      keyShow: '顯示',
+      keyHide: '收起',
       copies: '每副投入張數',
       copiesHint: '有採用此卡的卡組平均投入張數',
       wr: '有此卡與無此卡的奪冠差距',
