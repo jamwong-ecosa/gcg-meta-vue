@@ -1,6 +1,6 @@
 <template>
   <tr
-    class="group cursor-pointer text-aisumicha odd:bg-gray-100/15 even:bg-gray-100/45 hover:bg-gray-200/50 dark:text-nalika-text-muted dark:odd:bg-gray-100/10 dark:even:bg-white/3 dark:hover:bg-white/15"
+    class="group cursor-pointer border-t border-gray-500/10 text-aisumicha hover:bg-sky-50 dark:border-white/[0.06] dark:text-nalika-text-muted dark:hover:bg-sky-400/10"
     @click="$emit('detail', row)"
   >
     <td class="py-2 pr-4 pl-4">
