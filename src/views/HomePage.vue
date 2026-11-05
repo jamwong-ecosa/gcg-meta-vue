@@ -38,7 +38,7 @@
         <!-- One panel at every size: the three counts, biggest first, split by hairlines;
              how fresh the data is sits underneath as a quiet status line -->
         <div
-          class="mt-8 max-w-lg overflow-hidden rounded-xl border border-gray-500/15 bg-white/70 shadow-sm shadow-black/[0.03] backdrop-blur-sm max-lg:mx-auto dark:border-nalika-border dark:bg-nalika-surface/80"
+          class="mt-8 max-w-lg overflow-hidden rounded-lg border border-gray-500/15 bg-white/70 shadow-sm shadow-black/[0.03] backdrop-blur-sm max-lg:mx-auto dark:border-nalika-border dark:bg-nalika-surface/80"
         >
           <dl class="grid grid-cols-3 divide-x divide-gray-500/10 dark:divide-nalika-border">
             <div
