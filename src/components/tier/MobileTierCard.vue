@@ -3,14 +3,12 @@
     <template v-for="section in sections" :key="section.key">
       <button
         v-if="section.kind !== 'flat'"
-        :ref="el => registerStuck(el, section.key)"
         class="sticky z-30 flex w-full cursor-pointer items-center gap-2 rounded border-l-4 border-transparent py-1.5 pl-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"
-        :class="
-          stuckIds.has(section.key)
-            ? 'bg-gray-200 dark:bg-nalika-surface'
-            : 'bg-gray-300/40 dark:bg-white/15'
-        "
-        :style="{ top: groupTop }"
+        :class="section.kind === 'tier' ? tierBandClass(section.tier) : COLOR_BAND_BASE"
+        :style="{
+          top: groupTop,
+          ...(section.kind === 'tier' ? {} : colorBandStyle(section.colorDots)),
+        }"
         :aria-expanded="!collapsed.has(section.key)"
         @click="$emit('toggleSection', section.key)"
       >
@@ -111,6 +109,4 @@ defineProps({
   groupTop: { type: String, default: 'var(--nav-h)' },
 })
 defineEmits(['detail', 'toggleZeroWins', 'toggleSection'])
-
-const { stuckIds, register: registerStuck } = useStuck()
 </script>

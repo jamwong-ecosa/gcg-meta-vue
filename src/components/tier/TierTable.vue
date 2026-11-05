@@ -42,10 +42,16 @@
       <tbody v-for="section in sections" :key="section.key">
         <tr
           v-if="section.kind !== 'flat'"
-          class="cursor-pointer bg-gray-300/30 text-xs font-semibold text-gray-700 hover:bg-gray-300/50 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15"
+          class="cursor-pointer text-xs font-semibold text-gray-700 dark:text-gray-300"
+          :class="section.kind === 'tier' ? tierBandClass(section.tier) : COLOR_BAND_BASE"
           @click="$emit('toggleSection', section.key)"
         >
-          <td :colspan="colCount" class="px-4 py-1.5">
+          <!-- A colour group's blend goes on the cell: one gradient across the row -->
+          <td
+            :colspan="colCount"
+            class="px-4 py-1.5"
+            :style="section.kind === 'tier' ? {} : colorBandStyle(section.colorDots)"
+          >
             <div class="flex items-center gap-2">
               <span
                 class="inline-block w-3 text-center transition-transform"

@@ -22,6 +22,32 @@ export function tierBorderClass(tier) {
   return map[tier] || tw`border-gray-300 dark:border-gray-700`
 }
 
+// Group bar behind a tier's rows (tier table, mobile cards): a light wash of
+// the tier's colour, lighter than its pill. Opaque, dark mode included (the
+// colour mixed into the surface), since the mobile bar is sticky and rows scroll under it
+export function tierBandClass(tier) {
+  const map = {
+    S: tw`bg-[color-mix(in_oklab,var(--color-red-500)_4%,var(--color-white))] dark:bg-[color-mix(in_oklab,var(--color-red-500)_6%,var(--color-nalika-surface))]`,
+    A: tw`bg-[color-mix(in_oklab,var(--color-orange-500)_4%,var(--color-white))] dark:bg-[color-mix(in_oklab,var(--color-orange-500)_6%,var(--color-nalika-surface))]`,
+    B: tw`bg-[color-mix(in_oklab,var(--color-amber-500)_5%,var(--color-white))] dark:bg-[color-mix(in_oklab,var(--color-amber-500)_6%,var(--color-nalika-surface))]`,
+    C: tw`bg-[color-mix(in_oklab,var(--color-green-500)_4%,var(--color-white))] dark:bg-[color-mix(in_oklab,var(--color-green-500)_6%,var(--color-nalika-surface))]`,
+    D: tw`bg-[color-mix(in_oklab,var(--color-blue-500)_4%,var(--color-white))] dark:bg-[color-mix(in_oklab,var(--color-blue-500)_6%,var(--color-nalika-surface))]`,
+  }
+  return map[tier] || tw`bg-gray-100 dark:bg-white/10`
+}
+
+// Group bar for a colour-combo group (group by colour): its colours blended left
+// to right, each lightly mixed into the surface (white, or the dark surface) so
+// the bar stays opaque like the tier bars. Pair the style with COLOR_BAND_BASE
+export const COLOR_BAND_BASE = tw`[--band-base:var(--color-white)] dark:[--band-base:var(--color-nalika-surface)]`
+export function colorBandStyle(dots = []) {
+  const tints = dots.map(d => `color-mix(in oklab, ${d.hex} 6%, var(--band-base))`)
+  if (!tints.length) {
+    return {}
+  }
+  return { background: tints.length > 1 ? `linear-gradient(90deg, ${tints.join(', ')})` : tints[0] }
+}
+
 export function tierPillClass(tier) {
   const map = {
     S: tw`bg-red-100 text-red-700 dark:bg-red-800/50 dark:text-red-300/90`,
