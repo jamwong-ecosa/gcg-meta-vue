@@ -20,11 +20,11 @@
         <path :d="s.path" :fill="s.color" />
         <image
           v-if="s.showImage"
-          :href="s.imgUrl"
-          :x="s.imgX"
-          :y="s.imgY"
-          :width="SIZE * s.imgScale"
-          :height="SIZE * s.imgScale"
+          :href="s.img.url"
+          :x="s.img.x"
+          :y="s.img.y"
+          :width="s.img.size"
+          :height="s.img.size"
           :clip-path="`url(#${uid}-clip-${i})`"
           preserveAspectRatio="xMidYMid slice"
         />
@@ -109,8 +109,9 @@ const props = defineProps({
 const CX = 120
 const CY = 120
 const OUTER_R = 100
-const SIZE = 240
-const IMG_SCALE = 0.8
+// Image pixels per viewBox unit: the chart is up to 26rem (416px) wide for a
+// ~204-unit viewBox, times 2 for high-density screens
+const PX_PER_UNIT = 4
 // Crop the viewBox to the circle (plus room for the stroke) so the pie fills its box
 const VIEWBOX = `${CX - OUTER_R - 2} ${CY - OUTER_R - 2} ${OUTER_R * 2 + 4} ${OUTER_R * 2 + 4}`
 const uid = `pie-${Math.random().toString(36).slice(2, 8)}`
@@ -136,6 +137,56 @@ function slicePath(startAngle, endAngle) {
     `A ${OUTER_R} ${OUTER_R} 0 ${largeArc} 1 ${end.x} ${end.y}`,
     'Z',
   ].join(' ')
+}
+
+// A slice's card art: a square crop around the unit's face (see cardFace).
+// The square is a little bigger than the slice so it can shift, and slides as
+// close as it can to putting the face at the slice's visual centre while still
+// covering the whole slice. A face near the edge of its crop ends up off-centre
+// rather than the art being blown up. Fetched at its display size
+const FACE_R = 0.45
+// Image size as a multiple of the slice's bounding box: the smallest that lands
+// the face inside the slice wins, so the art is only enlarged when it must be
+const SLACKS = [1.3, 1.5, 1.8]
+function sliceImage(cardId, startAngle, endAngle) {
+  const points = [
+    { x: CX, y: CY },
+    polarToCartesian(OUTER_R, startAngle),
+    polarToCartesian(OUTER_R, endAngle),
+  ]
+  // The arc bulges out to the circle's edge wherever it passes a right angle
+  for (let k = Math.ceil(startAngle / (Math.PI / 2)); k * (Math.PI / 2) <= endAngle; k++) {
+    points.push(polarToCartesian(OUTER_R, k * (Math.PI / 2)))
+  }
+  const xs = points.map(p => p.x)
+  const ys = points.map(p => p.y)
+  const box = { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }
+  const boxSize = Math.max(box.x1 - box.x0, box.y1 - box.y0)
+  // Where the face is in the crop (0–1), and where it should go in the slice
+  const { u, v } = cardFace(cardId, 0)
+  const target = polarToCartesian(OUTER_R * FACE_R, (startAngle + endAngle) / 2)
+  // Is a point inside the slice, clear of the rim?
+  const inSlice = ({ x, y }) => {
+    if (Math.hypot(x - CX, y - CY) > OUTER_R * 0.85) {
+      return false
+    }
+    let angle = Math.atan2(y - CY, x - CX)
+    while (angle < startAngle) {
+      angle += 2 * Math.PI
+    }
+    return angle <= endAngle
+  }
+  // Put the face on the target, then pull the square back until it covers the slice
+  const place = size => {
+    const fit = (want, lo, hi) => Math.min(lo, Math.max(hi - size, want))
+    const x = fit(target.x - u * size, box.x0, box.x1)
+    const y = fit(target.y - v * size, box.y0, box.y1)
+    return { x, y, size, face: { x: x + u * size, y: y + v * size } }
+  }
+  const spots = SLACKS.map(k => place(boxSize * k))
+  const { x, y, size } = spots.find(p => inSlice(p.face)) ?? spots.at(-1)
+  const px = Math.min(800, Math.ceil((size * PX_PER_UNIT) / 50) * 50)
+  return { x, y, size, url: cardFace(cardId, px).url }
 }
 
 const totalDecks = computed(() => props.rows.reduce((s, r) => s + r.decks, 0))
@@ -190,9 +241,7 @@ const chartSlices = computed(() => {
     const firstColor = isOther ? null : g.colors.split('+')[0]
     const color = firstColor ? COLOR_HEX[firstColor] || '#9ca3af' : '#9ca3af'
     const pct = ((g.decks / total) * 100).toFixed(1)
-    let imgUrl = null
-    let imgX = null
-    let imgY = null
+    let img = null
     let sigCardId
     if (isOther) {
       sigCardId = 'EXRP-002'
@@ -206,48 +255,18 @@ const chartSlices = computed(() => {
       usedSigIds.add(sigCardId)
     }
     if (sigCardId) {
-      const midAngle = (currentAngle + endAngle) / 2
-      const imageCenterDistance = OUTER_R * 0.35
-      const cropShift =
-        10 + // baseline — all slices shift at least 10px outward
-        20 * (0.5 - 0.5 * Math.cos(midAngle)) + // more shift on left side (cos < 0)
-        15 * Math.sin(midAngle) * Math.max(0, Math.cos(midAngle)) // extra for bottom-right
-      // Final cropShift values at cardinal directions:
-      //   Left=30  Top=20  Right=10  Bottom=20
-      //   Bottom-right=44  Bottom-left=36  Top-left=28  Top-right=10
-      const extraX =
-        -70 * Math.max(0, Math.cos(midAngle)) * Math.max(0, Math.sin(midAngle)) + // bottom-right: shift left
-        -80 * Math.max(0, -Math.cos(midAngle)) * Math.max(0, Math.sin(midAngle)) // bottom-left: shift left
-      imgX =
-        CX +
-        (imageCenterDistance + cropShift) * Math.cos(midAngle) -
-        SIZE / 2 +
-        extraX +
-        (SIZE * (1 - IMG_SCALE)) / 2
-      const extraY =
-        -30 * Math.max(0, Math.cos(midAngle)) * Math.max(0, Math.sin(midAngle)) + // bottom-right: shift up
-        25 * Math.max(0, -Math.cos(midAngle)) * Math.max(0, Math.sin(midAngle)) // bottom-left: shift down
-      imgY =
-        CY +
-        (imageCenterDistance + cropShift) * Math.sin(midAngle) -
-        SIZE / 2 +
-        extraY +
-        (SIZE * (1 - IMG_SCALE)) / 2
-      imgUrl = `https://jw-assets.imgix.net/gcg-img/${sigCardId}.webp?w=600&fit=crop&ar=3:2&crop=faces,focalpoint&fp-x=0.5&fp-y=0.1&auto=format,compress`
+      img = sliceImage(sigCardId, currentAngle, endAngle)
     }
     const slice = {
       path,
       color,
-      imgUrl,
-      imgX,
-      imgY,
+      img,
       label: g.colors,
       decks: g.decks,
       pct,
       startAngle: currentAngle,
       endAngle,
-      showImage: !!imgUrl && sweep > MIN_SWEEP,
-      imgScale: IMG_SCALE,
+      showImage: !!img && sweep > MIN_SWEEP,
       sigCardId,
     }
     currentAngle = endAngle
