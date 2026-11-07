@@ -203,8 +203,8 @@ const productGroups = computed(() =>
           const [, code, title] = item.name.match(/^\[(.+?)\]\s*(.*)$/) ?? [null, '', item.name]
           return { ...item, code, title, pct: percentOf(item.count, item.total) }
         })
-        // Bars show the share of each product in use, so rank by that share
-        .sort((a, b) => b.pct - a.pct || b.count - a.count),
+        // Release order keeps each product in a fixed spot; the bars already show usage
+        .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })),
       // Cards used of released across the group, for its folded summary line
       count: group.items.reduce((n, item) => n + item.count, 0),
       total: group.items.reduce((n, item) => n + item.total, 0),
