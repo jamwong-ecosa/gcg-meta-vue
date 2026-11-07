@@ -1,14 +1,14 @@
 <template>
   <!-- The series' most played cards as a rotating fan: the front card sits in the
        middle, its neighbours fan out to each side, and every few seconds the fan
-       slides one card along (wrapping round). Pauses on hover or focus, and stays
-       still for reduced motion; side cards and the dots jump to a card -->
+       slides one card along (wrapping round). Pauses on hover or keyboard focus;
+       side cards and the dots jump to a card -->
   <div
     class="relative flex flex-col items-center"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
-    @focusin="hovered = true"
-    @focusout="hovered = false"
+    @focusin="focused = $event.target.matches(':focus-visible')"
+    @focusout="focused = false"
   >
     <div
       class="pointer-events-none absolute inset-x-[10%] inset-y-[5%] rounded-full bg-ruri/15 blur-3xl dark:bg-sora/15"
@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-import { useIntervalFn, usePreferredReducedMotion, useDocumentVisibility } from '@vueuse/core'
+import { useIntervalFn, useDocumentVisibility } from '@vueuse/core'
 
 const props = defineProps({
   seriesKey: { type: String, required: true },
@@ -171,7 +171,9 @@ function goTo(i) {
 }
 
 const hovered = ref(false)
-const motion = usePreferredReducedMotion()
+// Only keyboard focus pauses: a mouse click leaves focus on the button, which
+// would otherwise keep the fan paused after the pointer has left
+const focused = ref(false)
 const visibility = useDocumentVisibility()
 const { pause, resume, isActive } = useIntervalFn(
   () => {
@@ -183,7 +185,7 @@ const { pause, resume, isActive } = useIntervalFn(
   { immediate: false },
 )
 watchEffect(() => {
-  const run = !hovered.value && motion.value !== 'reduce' && visibility.value === 'visible'
+  const run = !hovered.value && !focused.value && visibility.value === 'visible'
   if (run && !isActive.value) {
     resume()
   } else if (!run && isActive.value) {
