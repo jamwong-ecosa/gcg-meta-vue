@@ -15,6 +15,7 @@
     "scrape:cards": "node scripts/scrape-cards.mjs",
     "scrape:tournament": "node scripts/scrape-tournaments.mjs",
     "scrape:bandai": "node scripts/scrape-tournaments-bandai-plus.mjs",
+    "download:images": "node scripts/download-images.mjs",
     "build:tiers": "node scripts/build-tiers.mjs",
     "data": "node scripts/scrape-products.mjs && node scripts/scrape-cards.mjs && node scripts/scrape-tournaments.mjs && node scripts/build-tiers.mjs",
     "postinstall": "node scripts/generate.mjs"
