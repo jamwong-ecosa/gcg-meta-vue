@@ -13,21 +13,38 @@
       </div>
     </div>
 
-    <dl class="grid grid-cols-3 gap-x-6 px-1 sm:w-fit sm:gap-x-10">
-      <div v-for="s in summary" :key="s.label" class="min-w-0">
+    <dl
+      class="grid grid-cols-3 divide-x divide-gray-500/10 px-1 sm:w-fit sm:grid-cols-[repeat(3,minmax(9rem,auto))] dark:divide-nalika-border"
+    >
+      <div v-for="s in summary" :key="s.label" class="min-w-0 px-3 first:pl-0 sm:px-6">
         <dt
           class="text-xxs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500 zh:text-xs zh:tracking-normal zh:text-gray-500"
         >
           {{ s.label }}
         </dt>
         <dd class="mt-1 flex items-baseline gap-1.5">
-          <span class="text-lg font-bold text-gray-700 tabular-nums dark:text-nalika-text">
+          <span
+            class="text-xl font-bold text-gray-700 tabular-nums sm:text-2xl dark:text-nalika-text"
+          >
             {{ s.value }}
           </span>
-          <span v-if="s.pct != null" class="text-xs text-gray-400 tabular-nums dark:text-gray-500">
+          <span
+            v-if="s.pct != null"
+            class="text-xs font-semibold text-gray-400 tabular-nums dark:text-gray-500"
+          >
             {{ s.pct }}%
           </span>
         </dd>
+        <div
+          v-if="s.pct != null"
+          class="mt-1.5 h-1 overflow-hidden rounded-full bg-gray-200/70 dark:bg-gray-700"
+        >
+          <span
+            class="block h-full rounded-full"
+            :class="s.muted ? 'bg-gray-300 dark:bg-gray-600' : 'bg-gray-500 dark:bg-gray-400'"
+            :style="{ width: `${s.pct}%` }"
+          />
+        </div>
       </div>
     </dl>
 
@@ -75,9 +92,17 @@
               {{ $t('card.stats.products', group.items.length) }}
             </span>
             <span
-              class="ml-auto font-mono text-xs font-bold text-gray-700 tabular-nums sm:hidden dark:text-nalika-text"
+              class="ml-auto h-1.5 w-12 shrink-0 self-center overflow-hidden rounded-full bg-gray-200/70 sm:hidden dark:bg-gray-700"
             >
-              {{ group.count }}
+              <span
+                class="block h-full rounded-full bg-gray-400 dark:bg-gray-500"
+                :style="{ width: `${percentOf(group.count, group.total)}%` }"
+              />
+            </span>
+            <span
+              class="w-16 text-right font-mono text-xs font-bold text-gray-700 tabular-nums sm:hidden dark:text-nalika-text"
+            >
+              <span>{{ group.count }}</span>
               <span class="font-normal text-gray-400 dark:text-gray-500">/{{ group.total }}</span>
             </span>
             <svg
@@ -95,7 +120,7 @@
             </svg>
           </button>
         </h3>
-        <!-- Column flow so the share ranking reads top-to-bottom, then across -->
+        <!-- Column flow so set numbers read top-to-bottom, then across -->
         <ul
           class="mt-1.5 gap-x-8 sm:block sm:columns-2 xl:columns-3"
           :class="!isOpen(group.prefix) && 'hidden'"
@@ -186,6 +211,7 @@ const summary = computed(() => {
       label: t('card.stats.unused'),
       value: total - used,
       pct: percentOf(total - used, total),
+      muted: true,
     },
   ]
 })
