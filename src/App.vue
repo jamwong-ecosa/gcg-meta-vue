@@ -139,7 +139,10 @@ watchEffect(() => {
   }
 })
 
+const { start: startPrefetch } = usePrefetch()
+
 function onResolve() {
   finish()
+  startPrefetch()
 }
 </script>
