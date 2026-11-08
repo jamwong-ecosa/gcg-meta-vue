@@ -1,7 +1,7 @@
 <template>
   <!-- One grid so rows fill the width; the type label sits over the first card
        of each type and of each row a type wraps onto, and only rows holding one
-       get the room for it on top. On phones a type never wraps mid-row.
+       get the room for it on top. A type never wraps mid-row.
        Cards that play the same (same effect and stats) stay in sort order inside
        one dashed box with one win-rate change; when the group runs past the end
        of a row it breaks, and each row draws its own piece of the box -->
@@ -205,14 +205,13 @@ const items = computed(() => {
       typeCount: ofType.length,
     }))
   })
-  // On narrow grids (phones) a type never wraps mid-row: it shares the row
-  // with the type before it only if it fits in the rest of that row, else it
-  // starts a fresh row. Wider grids pack types freely to fill the width
-  const breakTypes = cols.value <= 4
+  // A type never wraps mid-row: it shares the row with the type before it
+  // only if it fits in the rest of that row, else it starts a fresh row, so a
+  // type is never left with a single stray card dangling at the row's end
   let cursor = 0
   const pos = ordered.map(e => {
     const used = cursor % cols.value
-    if (breakTypes && e.typeFirst && used && e.typeCount > cols.value - used) {
+    if (e.typeFirst && used && e.typeCount > cols.value - used) {
       cursor += cols.value - used
     }
     return cursor++
@@ -233,7 +232,7 @@ const items = computed(() => {
   return labelled.map((e, i) => {
     const labelRow = labelRows.has(rowOf(i))
     const col = pos[i] % cols.value
-    const newRow = breakTypes && e.typeFirst && col === 0
+    const newRow = e.typeFirst && col === 0
     const type = e.card.type
     const base = {
       ...e,
