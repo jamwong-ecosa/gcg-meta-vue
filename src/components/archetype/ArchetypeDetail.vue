@@ -29,9 +29,6 @@
             </b>
             {{ t.label }}
           </span>
-          <span class="text-gray-400 dark:text-gray-500">
-            · {{ $t('archetype.cardCount', avgDeckTotal) }}
-          </span>
         </span>
       </dd>
 
