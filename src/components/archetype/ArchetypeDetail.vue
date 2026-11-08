@@ -13,7 +13,7 @@
         {{ $t('archetype.detail.avgDeck') }}
       </dt>
       <dd class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-        <div class="flex h-2 w-40 shrink-0 overflow-hidden rounded-sm sm:w-56" aria-hidden="true">
+        <div class="flex h-2 w-full shrink-0 overflow-hidden rounded-sm sm:w-56" aria-hidden="true">
           <div
             v-for="t in avgDeck"
             :key="t.type"
@@ -449,14 +449,29 @@ const TYPE_BAR = {
 const avgDeck = computed(() => {
   const decks = props.archetype.deckCount || 1
   const all = [...(props.archetype.cards ?? []), ...(props.archetype.filteredCards ?? [])]
-  return TYPES.map(type => ({
-    type,
-    label: cardTypeName(type),
-    bar: TYPE_BAR[type],
-    copies: Math.round(
-      all.filter(c => c.type === type).reduce((n, c) => n + (c.totalQty ?? 0), 0) / decks,
-    ),
-  })).filter(t => t.copies > 0)
+  const rows = TYPES.map(type => {
+    const exact =
+      all.filter(c => c.type === type).reduce((n, c) => n + (c.totalQty ?? 0), 0) / decks
+    return {
+      type,
+      label: cardTypeName(type),
+      bar: TYPE_BAR[type],
+      exact,
+      copies: Math.floor(exact),
+    }
+  })
+  // Largest-remainder rounding so the parts add up to the rounded total (50)
+  // instead of drifting to 49/51 when each type is rounded on its own.
+  const target = Math.round(rows.reduce((n, r) => n + r.exact, 0))
+  let left = target - rows.reduce((n, r) => n + r.copies, 0)
+  for (const r of [...rows].sort((a, b) => (b.exact % 1) - (a.exact % 1))) {
+    if (left <= 0) {
+      break
+    }
+    r.copies++
+    left--
+  }
+  return rows.filter(t => t.copies > 0)
 })
 const avgDeckTotal = computed(() => avgDeck.value.reduce((n, t) => n + t.copies, 0) || 1)
 
