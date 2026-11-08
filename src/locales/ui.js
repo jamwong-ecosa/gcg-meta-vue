@@ -2,6 +2,10 @@ export default {
   en: {
     close: 'Close',
     openDeckPage: 'Open deck page in new tab',
+    update: {
+      available: 'A new version is available.',
+      reload: 'Refresh',
+    },
     seriesHeader: {
       events: '{n} event | {n} events',
       wins: '{n} winning deck | {n} winning decks',
@@ -24,6 +28,10 @@ export default {
   'zh-HK': {
     close: '關閉',
     openDeckPage: '在新分頁開啟卡組頁面',
+    update: {
+      available: '有新版本可用。',
+      reload: '重新載入',
+    },
     seriesHeader: {
       events: '{n} 場賽事',
       wins: '{n} 副冠軍卡組',

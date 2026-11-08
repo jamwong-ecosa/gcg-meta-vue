@@ -102,6 +102,8 @@
         </template>
       </Suspense>
     </RouterView>
+
+    <UiUpdateBanner />
   </div>
 </template>
 
