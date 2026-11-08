@@ -117,11 +117,13 @@ const points = computed(() => {
   const ref = axes.value.yRef ?? 0
   const byDecks = [...parsed.value].sort((a, b) => b.totalDecksIncluded - a.totalDecksIncluded)
   const byOutlier = [...parsed.value].sort((a, b) => Math.abs(b[y] - ref) - Math.abs(a[y] - ref))
+  // Candidates only: names that would overlap a bubble or another name are
+  // dropped when the chart places them. Desktop offers every card; phones only
+  // the most played and the outliers
   const labeled = new Set(
-    [
-      ...byDecks.slice(0, isMobile.value ? 2 : 4),
-      ...byOutlier.slice(0, isMobile.value ? 2 : 3),
-    ].map(c => c.cardId),
+    (isMobile.value ? [...byDecks.slice(0, 4), ...byOutlier.slice(0, 3)] : parsed.value).map(
+      c => c.cardId,
+    ),
   )
   return parsed.value.map(c => ({
     x: c.totalDecksIncluded,
