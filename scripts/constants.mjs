@@ -1,6 +1,5 @@
-// Rank strings for winner / top-4 counting
+// Rank string for winner counting
 export const WINNER = '優勝'
-export const TOP4 = ['優勝', '準優勝', '3位', '4位']
 
 // Card color → hex mapping for UI dot rendering
 export const COLOR_HEX = {

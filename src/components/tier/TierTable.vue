@@ -148,7 +148,7 @@ defineEmits(['detail', 'toggleZeroWins', 'toggleSection', 'sort'])
 
 const { t, locale } = useI18n()
 
-const numericCols = ['decks', 'wins', 'top4', 'use', 'winEv', 'winDk', 'score'].map(key => ({
+const numericCols = ['decks', 'wins', 'use', 'winEv', 'winDk', 'score'].map(key => ({
   key,
 }))
 

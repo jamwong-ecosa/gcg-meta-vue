@@ -48,7 +48,6 @@ export function useSeriesState() {
       score: r.score,
       decks: r.decks,
       wins: r.wins,
-      top4: r.top4,
       tier: r.tier,
     })),
   )

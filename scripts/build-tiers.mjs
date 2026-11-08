@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs'
 import * as ss from 'simple-statistics'
-import { WINNER, TOP4, COLOR_HEX, TYPE_ORDER, TYPE_PICK_ORDER } from './constants.mjs'
+import { WINNER, COLOR_HEX, TYPE_ORDER, TYPE_PICK_ORDER } from './constants.mjs'
 
 // Winner rule: 優勝 always counts as a win. For events with ≥16 players,
 // 準優勝 (2nd place) also counts as a winner.
@@ -235,7 +235,7 @@ function groupByCombo(players, { init, accumulate }) {
 
 // ── Archetype grouping ───────────────────────────────────────────────────────
 
-function buildArchetypeMaps(allPlayers, winners, top4Players) {
+function buildArchetypeMaps(allPlayers, winners) {
   const comboArchetypes = groupByCombo(allPlayers, {
     init: sigCardIds => ({
       sigCardIds,
@@ -271,17 +271,12 @@ function buildArchetypeMaps(allPlayers, winners, top4Players) {
     },
   })
 
-  const top4ByCombo = groupByCombo(top4Players, {
-    init: () => 0,
-    accumulate: count => count + 1,
-  })
-
-  return { comboArchetypes, winnersByCombo, top4ByCombo }
+  return { comboArchetypes, winnersByCombo }
 }
 
 // ── Series metadata ──────────────────────────────────────────────────────────
 
-// Filters out empty decks, splits players into all/winners/top4 buckets
+// Filters out empty decks, splits players into all/winners buckets
 function getSeriesMetadata(series) {
   const allPlayers = series.events.flatMap(e =>
     e.players
@@ -295,8 +290,7 @@ function getSeriesMetadata(series) {
       })),
   )
   const winners = allPlayers.filter(isWinner)
-  const top4Players = allPlayers.filter(p => TOP4.includes(p.rank))
-  return { allPlayers, winners, top4Players }
+  return { allPlayers, winners }
 }
 
 function getSeriesEventDateRange(series) {
@@ -409,7 +403,6 @@ function formatTierRows(series) {
       const useRate = (a.deckCount / series.totalDecks) * 100
       const winRateEvent = (a.winnerDeckCount / series.totalEvents) * 100
       const winRateDeck = (a.winnerDeckCount / a.deckCount) * 100
-      const top4PerDeck = a.deckCount > 0 ? (a.top4 ?? 0) / a.deckCount : 0
       const baseCombo = a.combo.split(' (')[0]
       const sigPart = a.combo.match(/\((.+)\)/)?.[1]
       // Fullwidth parens for display consistency in Japanese UI
@@ -432,11 +425,9 @@ function formatTierRows(series) {
         cardIds: [...new Set([...(a.cards ?? []), ...(a.filteredCards ?? [])].map(c => c.cardId))],
         decks: a.deckCount,
         wins: a.winnerDeckCount,
-        top4: a.top4 ?? 0,
         usePct: `${useRate.toFixed(1)}%`,
         winPerEv: `${winRateEvent.toFixed(1)}%`,
         winPerDk: `${winRateDeck.toFixed(1)}%`,
-        t4PerDk: `${(top4PerDeck * 100).toFixed(1)}%`,
         score: a.tierScore,
         tier: a.tierLabel,
         darkHorse: a.darkHorse ?? false,
@@ -512,10 +503,9 @@ function computeFeatureBadges(topCards) {
 
 // Full card analysis per archetype: aggregates card stats, computes tech scores,
 // selects featured cards, extracts signature cards from combo key.
-function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, totalAll) {
+function buildArchetypeDetails(comboArchetypes, winnersByCombo, totalAll) {
   return Object.entries(comboArchetypes).map(([combo, group]) => {
     const winnerInfo = winnersByCombo[combo]
-    const top4Count = top4ByCombo[combo] ?? 0
     const count = group.count
     const cardAgg = group.cardAgg
 
@@ -622,7 +612,6 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, top4ByCombo, tot
       deckCount: count,
       percent: +((count / totalAll) * 100).toFixed(1),
       winnerDeckCount: winnerInfo?.count ?? 0,
-      top4: top4Count,
       cards: topCards,
       filteredCards,
       featureBadges,
@@ -678,21 +667,12 @@ function buildCardState(mainDetails, eventMaxDate) {
 // ── Phase: Process one series ────────────────────────────────────────────────
 
 function processSeries(series) {
-  const { allPlayers, winners, top4Players } = getSeriesMetadata(series)
+  const { allPlayers, winners } = getSeriesMetadata(series)
   const { eventMinDate, eventMaxDate } = getSeriesEventDateRange(series)
 
-  const { comboArchetypes, winnersByCombo, top4ByCombo } = buildArchetypeMaps(
-    allPlayers,
-    winners,
-    top4Players,
-  )
+  const { comboArchetypes, winnersByCombo } = buildArchetypeMaps(allPlayers, winners)
 
-  const archetypeDetails = buildArchetypeDetails(
-    comboArchetypes,
-    winnersByCombo,
-    top4ByCombo,
-    allPlayers.length,
-  )
+  const archetypeDetails = buildArchetypeDetails(comboArchetypes, winnersByCombo, allPlayers.length)
 
   // Filter to archetypes with at least 3 decks
   const minSize = 3
@@ -908,7 +888,7 @@ function processSeries(series) {
     a.darkHorse = darkHorseSet.has(a.combo)
   }
 
-  // Lightweight manifest for dropdown navigation — no card/feature details, no top4
+  // Lightweight manifest for dropdown navigation — no card/feature details
   const manifestEntry = {
     value: series.value,
     label: series.label,

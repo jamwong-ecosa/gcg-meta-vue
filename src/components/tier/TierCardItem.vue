@@ -101,7 +101,7 @@
     </div>
 
     <div v-if="open" class="border-t border-gray-500/10 px-3 pt-2 pb-3">
-      <dl class="grid grid-cols-3 gap-x-2 gap-y-2">
+      <dl class="grid grid-cols-4 gap-x-2">
         <div v-for="s in stats" :key="s.key">
           <dt
             class="text-xxs font-semibold tracking-widest text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"
@@ -145,8 +145,6 @@ const stats = computed(() =>
   [
     { key: 'decks', value: props.row.decks },
     { key: 'wins', value: props.row.wins },
-    { key: 'top4', value: props.row.top4 },
-    { key: 'use', value: props.row.usePct },
     { key: 'winEv', value: props.row.winPerEv },
     { key: 'winDk', value: props.row.winPerDk },
   ].map(s => ({ ...s, label: t(`tier.col.${s.key}`) })),
