@@ -50,14 +50,18 @@
                 : 'text-[13px] text-gray-800 dark:text-nalika-text'
             "
           >
-            <!-- break-keep stops Japanese wrapping mid-name, so lines break at the
-                 slash (or a space inside a long name); the nbsp keeps the slash
-                 at the end of the line rather than starting the next one -->
+            <!-- Each name is an inline-block, so one that doesn't fit the rest of the
+                 line moves down whole instead of breaking at a "・" inside it; only a
+                 name wider than the row wraps inside itself. The slash sits in the
+                 block before it, so it ends a line rather than starting the next -->
             <template v-for="(card, ci) in cardNames" :key="ci">
-              <span v-if="ci > 0">{{ CARD_SEP }}</span>
-              <span :class="card.color ? 'font-medium' : ''" :style="{ color: card.color }">
-                {{ card.name }}
+              <span class="inline-block max-w-full">
+                <span :class="card.color ? 'font-medium' : ''" :style="{ color: card.color }">
+                  {{ card.name }}
+                </span>
+                <template v-if="ci < cardNames.length - 1">{{ CARD_SEP }}</template>
               </span>
+              <template v-if="ci < cardNames.length - 1">{{ ' ' }}</template>
             </template>
             <UiHint
               v-if="!headline && row.darkHorse"
@@ -174,7 +178,7 @@ const headline = computed(() =>
   props.hideColor && nameParts.value.cards ? '' : comboName(nameParts.value.base),
 )
 
-const CARD_SEP = ' / '
+const CARD_SEP = '\u00a0/'
 
 const cardNames = computed(() =>
   nameParts.value.cards
