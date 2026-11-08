@@ -48,12 +48,12 @@
           }"
         >
           <div v-for="card in sortedCards" :key="card.cardId" class="relative">
-            <span v-if="card.ring" class="absolute -inset-[3px] rounded-lg" :class="card.ring" />
-            <div class="relative aspect-[3/4] overflow-hidden rounded-md">
+            <span v-if="card.ring" class="absolute -inset-[3px]" :class="card.ring" />
+            <div class="relative aspect-[5/7] overflow-hidden">
               <img
                 :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
                 :alt="card.name"
-                class="w-full object-cover"
+                class="block aspect-[5/7] w-full object-cover"
               />
               <span
                 class="absolute top-0 right-0 rounded-bl-md bg-black/65 px-1.5 leading-tight font-bold text-white select-none"
@@ -147,16 +147,12 @@
             </div>
             <div class="grid grid-cols-4 gap-2">
               <div v-for="card in sortedCards" :key="card.cardId" class="relative">
-                <span
-                  v-if="card.ring"
-                  class="absolute -inset-[3px] rounded-[10px]"
-                  :class="card.ring"
-                />
-                <div class="relative aspect-[3/4] overflow-hidden rounded-lg">
+                <span v-if="card.ring" class="absolute -inset-[3px]" :class="card.ring" />
+                <div class="relative aspect-[5/7] overflow-hidden">
                   <img
                     :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
                     :alt="card.name"
-                    class="w-full object-cover"
+                    class="block aspect-[5/7] w-full object-cover"
                     loading="lazy"
                   />
                   <span
@@ -267,7 +263,7 @@ const OFFSET = 4
 function popoverSize(cols, rows, cardW) {
   return {
     width: cols * cardW + (cols - 1) * GAP + 2 * (PAD + BORDER),
-    height: HEADER_H + (rows * (cardW * 4)) / 3 + (rows - 1) * GAP + 2 * (PAD + BORDER),
+    height: HEADER_H + (rows * (cardW * 7)) / 5 + (rows - 1) * GAP + 2 * (PAD + BORDER),
   }
 }
 
@@ -287,7 +283,7 @@ function place(rect) {
   const full = popoverSize(cols, rows, MAX_CARD_W).height
   const side = full <= below || below >= above ? 'below' : 'above'
   const space = side === 'below' ? below : above
-  const fitW = ((space - HEADER_H - (rows - 1) * GAP - 2 * (PAD + BORDER)) / rows) * (3 / 4)
+  const fitW = ((space - HEADER_H - (rows - 1) * GAP - 2 * (PAD + BORDER)) / rows) * (5 / 7)
   const cardW = Math.floor(Math.max(MIN_CARD_W, Math.min(MAX_CARD_W, fitW)))
   const { width, height } = popoverSize(cols, rows, cardW)
 
