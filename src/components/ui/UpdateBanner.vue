@@ -41,6 +41,7 @@ const CHECK_EVERY_MS = 60 * 60 * 1000
 const MIN_GAP_MS = 60 * 1000
 
 const router = useRouter()
+let swRegistration = null
 
 // Browsers only look for a new service worker on a full page load, which an
 // installed app left open never does: check hourly, whenever it comes back to
@@ -65,6 +66,27 @@ const { needRefresh, updateServiceWorker } = useRegisterSW({
       }
     })
     router.afterEach(check)
+    swRegistration = registration
   },
+})
+
+// A page still running an old version asks for page chunks the new deploy has
+// removed. Switch to the new version (or reload once) instead of failing
+const RELOAD_KEY = 'chunk-reload'
+router.afterEach(() => sessionStorage.removeItem(RELOAD_KEY))
+router.onError(async (error, to) => {
+  if (!/dynamically imported module|Importing a module script failed/i.test(error?.message)) {
+    return
+  }
+  if (sessionStorage.getItem(RELOAD_KEY)) {
+    return
+  }
+  sessionStorage.setItem(RELOAD_KEY, '1')
+  await swRegistration?.update().catch(() => {})
+  if (swRegistration?.waiting) {
+    await updateServiceWorker(true)
+  } else {
+    window.location.assign(to.fullPath)
+  }
 })
 </script>
