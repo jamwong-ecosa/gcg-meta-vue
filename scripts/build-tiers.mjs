@@ -471,10 +471,10 @@ function calculateTechScore(
   return Math.round((wins / decks) * (1 - inclusionRate) * 1000) / 1000
 }
 
-// Featured cards: everything in more than 10% of the archetype's decks. Rarer
+// Featured cards: everything in more than 15% of the archetype's decks. Rarer
 // cards go to "Other Cards" — no per-type quota, so a pilot in 3 decks isn't
 // featured beside the staples just to fill a slot.
-const FEATURED_MIN_INCLUSION = 0.1
+const FEATURED_MIN_INCLUSION = 0.15
 function selectTopCards(allCards) {
   return allCards.filter(
     c => TYPE_PICK_ORDER.includes(c.type) && c.inclusionRate > FEATURED_MIN_INCLUSION,

@@ -370,7 +370,7 @@ function onZoom(cardId, info = null) {
 
 // Featured cards are those in more than FEATURED_MIN of decks (see build-tiers);
 // at STAPLE_MIN and up a card is a given, so it only gets a thumbnail
-const FEATURED_MIN = 0.1
+const FEATURED_MIN = 0.15
 const STAPLE_MIN = 0.85
 const TYPES = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
 
