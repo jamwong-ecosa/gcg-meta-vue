@@ -54,14 +54,13 @@
                 {{ d.shop || $t('archetype.decks.unknownEvent') }}
               </span>
               <!-- Tag counts as pills like the trait chips, tinted in the card tags'
-                   colours: 奇招, 冷門, 彈性; empty ones are left out. Phones skip
-                   彈性 to leave the shop name room -->
+                   colours: 奇招, 冷門, 彈性; empty ones are left out -->
               <span v-if="showTech" class="flex shrink-0 items-center gap-1">
                 <span
                   v-for="chip in chipsOf(d)"
                   :key="chip.key"
                   class="flex items-baseline gap-1 rounded-full border px-1.5 text-xxs whitespace-nowrap"
-                  :class="[chip.class, { 'max-sm:hidden': chip.key === 'flex' }]"
+                  :class="chip.class"
                 >
                   {{ chip.label }}
                   <b class="font-mono font-bold tabular-nums">{{ chip.n }}</b>
