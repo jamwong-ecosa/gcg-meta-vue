@@ -163,6 +163,8 @@
       />
     </section>
 
+    <slot name="after-cards" />
+
     <CardImageOverlay v-model="enlargedCardId" :info="enlargedInfo" :z-index="1100" />
 
     <!-- Deck curve: copies per average deck at each level and cost, by type -->

@@ -16,17 +16,20 @@
     </div>
 
     <template v-if="selectedArchetype">
-      <ArchetypeTimeline
-        :combo="selectedArchetype.combo"
-        :current-series-key="seriesKey"
-        @navigate="onTimelineNavigate"
-      />
       <ArchetypeDetail
         :key="`${seriesKey}-${archKey}`"
         :archetype="selectedArchetype"
         :prev-card-ids="prevCardIds"
         :removed-cards="removedCards"
-      />
+      >
+        <template #after-cards>
+          <ArchetypeTimeline
+            :combo="selectedArchetype.combo"
+            :current-series-key="seriesKey"
+            @navigate="onTimelineNavigate"
+          />
+        </template>
+      </ArchetypeDetail>
     </template>
     <p v-else class="text-sm text-gray-400 dark:text-gray-500">
       {{ $t('archetype.analysis.empty') }}
