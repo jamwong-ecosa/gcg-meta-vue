@@ -14,7 +14,7 @@ export default {
       none: 'No previous series',
       same: 'same',
       was: 'was {value}',
-      prev: 'prev {value}',
+      prev: 'prev',
     },
     timeline: {
       until: 'Until {date}',
@@ -36,7 +36,7 @@ export default {
       none: '沒有上一系列',
       same: '持平',
       was: '原為 {value}',
-      prev: '上期 {value}',
+      prev: '上期',
     },
     timeline: {
       until: '至 {date}',
