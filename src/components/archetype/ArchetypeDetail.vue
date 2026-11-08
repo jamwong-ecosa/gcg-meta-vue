@@ -228,6 +228,7 @@
         :sig-ids="sigCardIds"
         :tech-ids="techCardIds"
         :is-new="isNewCard"
+        :group-of="effectGroupOf"
       />
     </section>
 
@@ -399,6 +400,11 @@ const groupLeader = computed(() => {
   return map
 })
 const anchorOf = card => groupLeader.value.get(card.effectGroup?.id) ?? card
+// Card id → its same-effect group id, so deck lists count versions as one card
+const effectGroupIds = computed(
+  () => new Map(allCards.value.filter(c => c.effectGroup).map(c => [c.cardId, c.effectGroup.id])),
+)
+const effectGroupOf = cardId => effectGroupIds.value.get(cardId) ?? cardId
 const featured = computed(() =>
   allCards.value.filter(c => featuredIds.value.has(anchorOf(c).cardId)),
 )

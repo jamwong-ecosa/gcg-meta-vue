@@ -99,6 +99,8 @@ const props = defineProps({
   // The archetype's top tech picks, tagged 奇招 as on the archetype cards
   techIds: { type: Set, default: () => new Set() },
   isNew: { type: Function, default: () => false },
+  // (cardId) => same-effect group id; versions of one card share their play rate
+  groupOf: { type: Function, default: cardId => cardId },
 })
 
 const { t } = useI18n()
@@ -138,12 +140,12 @@ useIntersectionObserver(
   { root: scrollBox, rootMargin: '0px 0px 200px 0px' },
 )
 
-// Share of these decks that play each card
+// Share of these decks that play each card, in any same-effect version
 const cardShare = computed(() => {
   const counts = new Map()
   for (const d of props.decks) {
-    for (const c of d.cards) {
-      counts.set(c.cardId, (counts.get(c.cardId) ?? 0) + 1)
+    for (const key of new Set(d.cards.map(c => props.groupOf(c.cardId)))) {
+      counts.set(key, (counts.get(key) ?? 0) + 1)
     }
   }
   const n = props.decks.length || 1
@@ -154,7 +156,7 @@ const cardShare = computed(() => {
 // 冷門 for the cards the row's chips count (a top tech pick keeps just 奇招)
 function tagsOf(card) {
   const tech = props.techIds.has(card.cardId)
-  const share = cardShare.value.get(card.cardId) ?? 0
+  const share = cardShare.value.get(props.groupOf(card.cardId)) ?? 0
   const counted = props.showTech && !tech
   return {
     sig: props.sigIds.has(card.cardId),
