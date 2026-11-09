@@ -26,7 +26,9 @@
         v-for="(bar, i) in bars"
         :key="bar.value"
         class="group relative flex h-full flex-1 cursor-default flex-col items-center justify-end"
-        :aria-label="$t('chart.curve.copies', { title, value: bar.value, n: bar.total.toFixed(1) })"
+        :aria-label="
+          $t('chart.curve.copies', { title, value: bar.value, n: copiesLabel(bar.total) })
+        "
         @mouseenter="hovered = bar.value"
         @focus="hovered = bar.value"
         @click="pinned = pinned === bar.value ? null : bar.value"
@@ -36,7 +38,7 @@
           class="mb-0.5 font-mono text-xxs text-gray-500 tabular-nums dark:text-nalika-text-muted"
           :class="{ 'font-bold text-gray-800 dark:text-nalika-text': bar.value === active }"
         >
-          {{ bar.total.toFixed(1) }}
+          {{ copiesLabel(bar.total) }}
         </span>
         <div
           class="flex w-full flex-col-reverse overflow-hidden rounded-t transition-opacity"
@@ -60,7 +62,7 @@
           :style="{ bottom: `${barHeight(bar) + 22}px` }"
         >
           <div class="mb-1 font-semibold text-gray-800 dark:text-nalika-text">
-            {{ $t('chart.curve.head', { title, value: bar.value, n: bar.total.toFixed(1) }) }}
+            {{ $t('chart.curve.head', { title, value: bar.value, n: copiesLabel(bar.total) }) }}
           </div>
           <div
             v-for="c in bar.cards.slice(0, POPOVER_CARDS)"
@@ -72,7 +74,7 @@
               :class="TYPE_STYLE[c.type].bar"
             />
             <span class="min-w-0 flex-1 truncate">{{ c.name }}</span>
-            <span class="font-mono text-gray-400 tabular-nums">{{ c.copies.toFixed(1) }}</span>
+            <span class="font-mono text-gray-400 tabular-nums">{{ copiesLabel(c.copies) }}</span>
           </div>
           <div v-if="bar.cards.length > POPOVER_CARDS" class="mt-0.5 text-gray-400">
             {{ $t('chart.curve.more', { n: bar.cards.length - POPOVER_CARDS }) }}
@@ -179,6 +181,10 @@ const bars = computed(() => {
     }
   })
 })
+
+// Whole copies per deck, with "<1" so an amount that rounds to 0 still reads
+// as present
+const copiesLabel = n => (n < 0.5 ? '<1' : String(Math.round(n)))
 
 const maxTotal = computed(() => Math.max(1, ...bars.value.map(b => b.total)))
 const barHeight = bar => (bar.total / maxTotal.value) * BAR_MAX

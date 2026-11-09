@@ -16,17 +16,20 @@
     </div>
 
     <template v-if="selectedArchetype">
-      <ArchetypeTimeline
-        :combo="selectedArchetype.combo"
-        :current-series-key="seriesKey"
-        @navigate="onTimelineNavigate"
-      />
       <ArchetypeDetail
         :key="`${seriesKey}-${archKey}`"
         :archetype="selectedArchetype"
         :prev-card-ids="prevCardIds"
         :removed-cards="removedCards"
-      />
+      >
+        <template #after-cards>
+          <ArchetypeTimeline
+            :combo="selectedArchetype.combo"
+            :current-series-key="seriesKey"
+            @navigate="onTimelineNavigate"
+          />
+        </template>
+      </ArchetypeDetail>
     </template>
     <p v-else class="text-sm text-gray-400 dark:text-gray-500">
       {{ $t('archetype.analysis.empty') }}
@@ -130,24 +133,10 @@ const prevCards = ref(null)
 async function loadPrevArchetype(seriesVal, combo) {
   prevCardIds.value = null
   prevCards.value = null
-  const currentEntry = manifest.find(s => s.value === seriesVal)
-  if (!currentEntry?.eventMinDate) {
+  const path = prevArchetypePath(seriesVal, combo)
+  if (!path) {
     return
   }
-  const prevEntry = manifest
-    .filter(
-      s => s.value !== seriesVal && s.eventMaxDate && s.eventMaxDate < currentEntry.eventMinDate,
-    )
-    .sort((a, b) => b.eventMaxDate.localeCompare(a.eventMaxDate))[0]
-  if (!prevEntry) {
-    return
-  }
-  const prevArch = prevEntry.archetypes.find(a => a.combo === combo)
-  if (!prevArch) {
-    return
-  }
-  const prevIdx = prevEntry.archetypes.indexOf(prevArch)
-  const path = `/data-processed/archetypes/${prevEntry.value}/${prevIdx}.json`
   try {
     const mod = await archModules[path]?.()
     const data = mod?.default ?? null
@@ -186,9 +175,14 @@ async function loadArchetype(seriesVal, archIdx) {
   start()
   try {
     const path = `/data-processed/archetypes/${seriesVal}/${archIdx}.json`
-    const mod = await archModules[path]?.()
+    // The combo is in the manifest, so the previous series' file loads alongside
+    const combo = archetypeCombo(seriesVal, archIdx)
+    const [mod] = await Promise.all([
+      archModules[path]?.(),
+      combo ? loadPrevArchetype(seriesVal, combo) : null,
+    ])
     selectedArchetype.value = mod?.default ?? null
-    if (selectedArchetype.value) {
+    if (selectedArchetype.value && !combo) {
       await loadPrevArchetype(seriesVal, selectedArchetype.value.combo)
     }
   } catch {

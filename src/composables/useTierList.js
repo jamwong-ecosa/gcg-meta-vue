@@ -13,7 +13,6 @@ export const TIER_SORT_OPTIONS = [
   { key: 'winDk', labelKey: 'tier.col.winDk' },
   { key: 'decks', labelKey: 'tier.col.decks' },
   { key: 'wins', labelKey: 'tier.col.wins' },
-  { key: 'top4', labelKey: 'tier.col.top4' },
   { key: 'move', labelKey: 'tier.col.move' },
 ]
 

@@ -195,7 +195,6 @@ function tooltip(r) {
       { label: t('archetype.quadrant.tip.score'), value: r.score },
       { label: t('archetype.quadrant.tip.decks'), value: r.decks },
       { label: t('archetype.quadrant.tip.wins'), value: r.wins },
-      { label: t('archetype.quadrant.tip.top4'), value: r.top4 },
     ],
   }
 }

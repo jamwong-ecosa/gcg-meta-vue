@@ -1,9 +1,13 @@
 <template>
-  <div class="space-y-1.5 md:hidden">
-    <template v-for="section in sections" :key="section.key">
+  <!-- pt-0.5: room for the first box's outline (a ring, drawn outside the box),
+       which the opaque sticky filter bar above would otherwise cover -->
+  <div class="space-y-1.5 pt-0.5 md:hidden">
+    <!-- Header and rows share one box; the header sticks only while its own
+         section is in view (overflow-clip, unlike overflow-hidden, keeps sticky working) -->
+    <div v-for="section in sections" :key="section.key" :class="GROUP_CLASS">
       <button
         v-if="section.kind !== 'flat'"
-        class="sticky z-30 flex w-full cursor-pointer items-center gap-2 rounded border-l-4 border-transparent py-1.5 pl-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"
+        class="sticky z-30 flex w-full cursor-pointer items-center gap-2 py-1.5 pl-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"
         :class="section.kind === 'tier' ? tierBandClass(section.tier) : COLOR_BAND_BASE"
         :style="{
           top: groupTop,
@@ -12,10 +16,9 @@
         :aria-expanded="!collapsed.has(section.key)"
         @click="$emit('toggleSection', section.key)"
       >
-        <!-- Same columns as TierCardItem: the transparent left border and pl-2.5
-             match the card's tier stripe, so the pill/dots sit over the cards'
-             tier pills, the label over the names, the totals end where the scores
-             end and the arrow sits in the chevron column -->
+        <!-- Same columns as TierCardItem: pl-3.5 matches the rows, so the
+             pill/dots line up with the rows' leading column, the totals end
+             where the scores end and the arrow sits in the chevron column -->
         <span
           v-if="section.kind === 'tier'"
           class="w-6 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
@@ -67,11 +70,12 @@
           :key="row.archetype"
           :row="row"
           :hide-color="section.kind === 'color'"
+          :hide-tier="section.kind === 'tier'"
           :has-movement="hasMovement"
           @detail="$emit('detail', $event)"
         />
       </template>
-    </template>
+    </div>
 
     <p
       v-if="!sections.length && !zeroRows.length"
@@ -87,7 +91,7 @@
     >
       {{ $t('tier.zeroWins', { n: zeroRows.length, sign: showZeroWins ? '−' : '+' }) }}
     </button>
-    <template v-if="showZeroWins">
+    <div v-if="showZeroWins" :class="GROUP_CLASS">
       <TierCardItem
         v-for="row in zeroRows"
         :key="row.archetype"
@@ -95,7 +99,7 @@
         :has-movement="hasMovement"
         @detail="$emit('detail', $event)"
       />
-    </template>
+    </div>
   </div>
 </template>
 
@@ -109,4 +113,7 @@ defineProps({
   groupTop: { type: String, default: 'var(--nav-h)' },
 })
 defineEmits(['detail', 'toggleZeroWins', 'toggleSection'])
+
+// One card per section, rows split by hairlines rather than each in its own box
+const GROUP_CLASS = tw`overflow-clip rounded bg-white ring-1 ring-gray-500/10 not-dark:shadow-xs not-dark:shadow-gray-400/10 dark:bg-nalika-surface dark:ring-white/[0.06]`
 </script>

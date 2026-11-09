@@ -5,6 +5,12 @@ command = "npm run build:tiers && npm run build"
 [build.environment]
 CI = "true"
 
+# Hashed filenames never change, so browsers can keep them without re-checking
+[[headers]]
+for = "/assets/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
 [[redirects]]
 from = "/*"
 to = "/index.html"

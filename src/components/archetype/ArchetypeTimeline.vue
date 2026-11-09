@@ -1,6 +1,6 @@
 <template>
   <div
-    class="mb-6 rounded border border-gray-500/10 bg-shironezumi/2 p-2 dark:border-nalika-border dark:bg-nalika-surface"
+    class="rounded border border-gray-500/10 bg-shironezumi/2 p-2 dark:border-nalika-border dark:bg-nalika-surface"
   >
     <div class="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-2 pt-1">
       <h2

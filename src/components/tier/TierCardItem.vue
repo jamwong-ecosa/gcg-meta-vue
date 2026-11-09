@@ -1,16 +1,19 @@
 <template>
-  <div
-    class="overflow-hidden rounded-r-lg border-l-4 bg-white ring-1 ring-gray-500/10 not-dark:shadow-xs not-dark:shadow-gray-400/10 dark:bg-nalika-surface dark:ring-white/[0.06]"
-    :class="tierBorderClass(row.tier)"
-  >
+  <!-- A row inside its section's card (MobileTierCard): the stripe runs unbroken
+       down a tier, so the tier pill is only shown when the rows mix tiers -->
+  <div class="relative border-gray-500/10 not-first:border-t dark:border-white/[0.06]">
+    <!-- A bar rather than a left border, so it runs over the divider above
+         instead of mitring into it -->
+    <span class="absolute -top-px bottom-0 left-0 w-1" :class="tierBarClass(row.tier)" />
     <!-- One line with the essentials: tap opens the analysis, the chevron shows
          the rest of the stats -->
     <div class="flex items-stretch">
       <button
-        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-2 pl-2.5 text-left transition-colors hover:bg-sky-50 active:bg-sky-50 dark:hover:bg-sky-400/10 dark:active:bg-sky-400/10"
+        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-3 pl-3.5 text-left transition-colors hover:bg-sky-50 active:bg-sky-50 dark:hover:bg-sky-400/10 dark:active:bg-sky-400/10"
         @click="$emit('detail', row)"
       >
         <span
+          v-if="!hideTier"
           class="w-6 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
           :class="tierPillClass(row.tier)"
         >
@@ -32,7 +35,11 @@
               />
             </span>
             <span class="truncate">{{ headline }}</span>
-            <UiHint v-if="row.darkHorse" class="text-xs" :text="darkHorseHelp()">🐴</UiHint>
+            <!-- leading-none: the colour-emoji font's taller metrics would otherwise
+                 grow the line and push the row's text down -->
+            <UiHint v-if="row.darkHorse" class="text-xs leading-none" :text="darkHorseHelp()">
+              🐴
+            </UiHint>
           </div>
           <div
             v-if="cardNames.length"
@@ -43,30 +50,38 @@
                 : 'text-[13px] text-gray-800 dark:text-nalika-text'
             "
           >
-            <!-- break-keep stops Japanese wrapping mid-name, so lines break at the
-                 slash (or a space inside a long name); the nbsp keeps the slash
-                 at the end of the line rather than starting the next one -->
+            <!-- Each name is an inline-block, so one that doesn't fit the rest of the
+                 line moves down whole instead of breaking at a "・" inside it; only a
+                 name wider than the row wraps inside itself. The slash sits in the
+                 block before it, so it ends a line rather than starting the next -->
             <template v-for="(card, ci) in cardNames" :key="ci">
-              <span v-if="ci > 0">{{ CARD_SEP }}</span>
-              <span :class="card.color ? 'font-medium' : ''" :style="{ color: card.color }">
-                {{ card.name }}
+              <span class="inline-block max-w-full">
+                <span :class="card.color ? 'font-medium' : ''" :style="{ color: card.color }">
+                  {{ card.name }}
+                </span>
+                <template v-if="ci < cardNames.length - 1">{{ CARD_SEP }}</template>
               </span>
+              <template v-if="ci < cardNames.length - 1">{{ ' ' }}</template>
             </template>
-            <UiHint v-if="!headline && row.darkHorse" class="ml-1" :text="darkHorseHelp()">
+            <UiHint
+              v-if="!headline && row.darkHorse"
+              class="ml-1 leading-none"
+              :text="darkHorseHelp()"
+            >
               🐴
             </UiHint>
           </div>
         </div>
-        <!-- Score on top, usage and rank change underneath -->
-        <div class="shrink-0 text-right leading-tight">
+        <!-- Score on top, usage and rank change underneath. Kept no taller than
+             the two-line name block, so every row's text starts at the same
+             offset instead of only the wrapped (taller) ones sitting higher -->
+        <div class="shrink-0 text-right">
           <div
-            class="font-mono text-lg font-bold text-aisumicha tabular-nums dark:text-nalika-text"
+            class="font-mono text-lg/5 font-bold text-aisumicha tabular-nums dark:text-nalika-text"
           >
             {{ row.score }}
           </div>
-          <div
-            class="mt-0.5 flex items-baseline justify-end gap-1.5 font-mono text-xs tabular-nums"
-          >
+          <div class="flex items-baseline justify-end gap-1.5 font-mono text-xs tabular-nums">
             <span class="text-gray-500 dark:text-gray-400">{{ row.usePct }}</span>
             <TierMovement
               v-if="hasMovement"
@@ -79,7 +94,7 @@
         </div>
       </button>
       <button
-        class="my-1.5 ml-2 flex w-10 shrink-0 cursor-pointer items-center justify-center border-l border-gray-500/15 text-gray-400 hover:text-gray-600 dark:border-white/10 dark:text-gray-500 dark:hover:text-gray-300"
+        class="flex w-10 shrink-0 cursor-pointer items-center justify-center text-gray-300 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-300"
         :aria-expanded="open"
         :aria-label="open ? $t('tier.hideStats') : $t('tier.showStats')"
         @click="open = !open"
@@ -100,8 +115,8 @@
       </button>
     </div>
 
-    <div v-if="open" class="border-t border-gray-500/10 px-3 pt-2 pb-3">
-      <dl class="grid grid-cols-3 gap-x-2 gap-y-2">
+    <div v-if="open" class="px-3 pt-1 pb-3">
+      <dl class="grid grid-cols-4 gap-x-2">
         <div v-for="s in stats" :key="s.key">
           <dt
             class="text-xxs font-semibold tracking-widest text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"
@@ -133,6 +148,7 @@
 const props = defineProps({
   row: { type: Object, required: true },
   hideColor: { type: Boolean, default: false },
+  hideTier: { type: Boolean, default: false },
   hasMovement: { type: Boolean, default: false },
 })
 defineEmits(['detail'])
@@ -145,8 +161,6 @@ const stats = computed(() =>
   [
     { key: 'decks', value: props.row.decks },
     { key: 'wins', value: props.row.wins },
-    { key: 'top4', value: props.row.top4 },
-    { key: 'use', value: props.row.usePct },
     { key: 'winEv', value: props.row.winPerEv },
     { key: 'winDk', value: props.row.winPerDk },
   ].map(s => ({ ...s, label: t(`tier.col.${s.key}`) })),
@@ -164,7 +178,7 @@ const headline = computed(() =>
   props.hideColor && nameParts.value.cards ? '' : comboName(nameParts.value.base),
 )
 
-const CARD_SEP = ' / '
+const CARD_SEP = '\u00a0/'
 
 const cardNames = computed(() =>
   nameParts.value.cards

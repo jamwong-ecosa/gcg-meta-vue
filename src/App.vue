@@ -102,6 +102,8 @@
         </template>
       </Suspense>
     </RouterView>
+
+    <UiUpdateBanner />
   </div>
 </template>
 
@@ -137,7 +139,10 @@ watchEffect(() => {
   }
 })
 
+const { start: startPrefetch } = usePrefetch()
+
 function onResolve() {
   finish()
+  startPrefetch()
 }
 </script>

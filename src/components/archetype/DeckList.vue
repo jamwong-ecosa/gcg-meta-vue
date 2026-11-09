@@ -53,28 +53,18 @@
               <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-nalika-text">
                 {{ d.shop || $t('archetype.decks.unknownEvent') }}
               </span>
-              <span
-                v-if="showTech"
-                :class="{ invisible: !d.tech }"
-                class="w-14 shrink-0 rounded bg-sora/10 px-1.5 text-center font-mono text-xxs text-ruri tabular-nums dark:bg-sora/15 dark:text-sora"
-              >
-                {{ $t('archetype.decks.techCount', { n: d.tech }) }}
-              </span>
-              <!-- Phones skip the flex count to leave the shop name room -->
-              <span
-                v-if="showTech"
-                :class="{ invisible: !d.flex }"
-                class="w-14 shrink-0 rounded bg-gray-100 px-1.5 text-center font-mono text-xxs text-gray-500 tabular-nums max-sm:hidden dark:bg-white/5 dark:text-gray-400"
-              >
-                {{ $t('archetype.decks.flexCount', { n: d.flex }) }}
-              </span>
-              <!-- Top tech picks, in the 奇招 tag's yellow as on the cards -->
-              <span
-                v-if="showTech"
-                :class="{ invisible: !d.topTech }"
-                class="w-14 shrink-0 rounded bg-yellow-400/25 px-1.5 text-center font-mono text-xxs font-medium text-yellow-800 tabular-nums dark:bg-yellow-400/15 dark:text-yellow-300"
-              >
-                {{ $t('archetype.decks.topTechCount', { n: d.topTech }) }}
+              <!-- Tag counts as pills like the trait chips, tinted in the card tags'
+                   colours: 奇招, 冷門, 彈性; empty ones are left out -->
+              <span v-if="showTech" class="flex shrink-0 items-center gap-1">
+                <span
+                  v-for="chip in chipsOf(d)"
+                  :key="chip.key"
+                  class="flex items-baseline gap-1 rounded-full border px-1.5 text-xxs whitespace-nowrap"
+                  :class="chip.class"
+                >
+                  {{ chip.label }}
+                  <b class="font-mono font-bold tabular-nums">{{ chip.n }}</b>
+                </span>
               </span>
               <span
                 v-if="d.url"
@@ -109,6 +99,8 @@ const props = defineProps({
   // The archetype's top tech picks, tagged 奇招 as on the archetype cards
   techIds: { type: Set, default: () => new Set() },
   isNew: { type: Function, default: () => false },
+  // (cardId) => same-effect group id; versions of one card share their play rate
+  groupOf: { type: Function, default: cardId => cardId },
 })
 
 const { t } = useI18n()
@@ -148,12 +140,12 @@ useIntersectionObserver(
   { root: scrollBox, rootMargin: '0px 0px 200px 0px' },
 )
 
-// Share of these decks that play each card
+// Share of these decks that play each card, in any same-effect version
 const cardShare = computed(() => {
   const counts = new Map()
   for (const d of props.decks) {
-    for (const c of d.cards) {
-      counts.set(c.cardId, (counts.get(c.cardId) ?? 0) + 1)
+    for (const key of new Set(d.cards.map(c => props.groupOf(c.cardId)))) {
+      counts.set(key, (counts.get(key) ?? 0) + 1)
     }
   }
   const n = props.decks.length || 1
@@ -164,7 +156,7 @@ const cardShare = computed(() => {
 // 冷門 for the cards the row's chips count (a top tech pick keeps just 奇招)
 function tagsOf(card) {
   const tech = props.techIds.has(card.cardId)
-  const share = cardShare.value.get(card.cardId) ?? 0
+  const share = cardShare.value.get(props.groupOf(card.cardId)) ?? 0
   const counted = props.showTech && !tech
   return {
     sig: props.sigIds.has(card.cardId),
@@ -205,6 +197,29 @@ const rows = computed(() =>
     }
   }),
 )
+
+// Soft tints of the card tags' colours, so a row's chips don't outshout its name
+const CHIP_CLASS = {
+  tech: tw`border-yellow-300 bg-yellow-50 text-yellow-800 dark:border-yellow-500/40 dark:bg-yellow-400/10 dark:text-yellow-300`,
+  uncommon: tw`border-sora/30 bg-sora/5 text-ruri dark:border-sora/30 dark:bg-sora/10 dark:text-sora`,
+  flex: tw`border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300`,
+}
+
+// A row's tag-count chips, 奇招 first, skipping any at 0
+function chipsOf(d) {
+  return [
+    { key: 'tech', n: d.topTech, label: 'topTechTag' },
+    { key: 'uncommon', n: d.tech, label: 'techTag' },
+    { key: 'flex', n: d.flex, label: 'flexTag' },
+  ]
+    .filter(c => c.n > 0)
+    .map(c => ({
+      key: c.key,
+      n: c.n,
+      class: CHIP_CLASS[c.key],
+      label: t(`archetype.decks.${c.label}`),
+    }))
+}
 
 const filterOptions = computed(() => {
   const all = rows.value

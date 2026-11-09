@@ -1,6 +1,6 @@
 <template>
   <div
-    class="hidden rounded-lg bg-white not-dark:shadow-xs not-dark:shadow-gray-400/15 md:block dark:bg-nalika-surface"
+    class="hidden overflow-clip rounded bg-white not-dark:shadow-xs not-dark:shadow-gray-400/15 md:block dark:bg-nalika-surface"
   >
     <table class="w-full table-fixed text-left text-sm">
       <colgroup>
@@ -16,7 +16,7 @@
             v-for="(c, i) in headerCols"
             :key="c.key"
             class="py-2 font-semibold"
-            :class="i === 0 ? 'rounded-tl-lg pr-4 pl-4' : 'px-3'"
+            :class="i === 0 ? 'rounded-tl pr-4 pl-4' : 'px-3'"
             :aria-sort="ariaSort(c.key)"
           >
             <!-- Numeric headers end flush with the numbers below: the sort arrow hangs
@@ -35,7 +35,7 @@
               </UiHint>
             </div>
           </th>
-          <th class="rounded-tr-lg px-1 py-2" />
+          <th class="rounded-tr px-1 py-2" />
         </tr>
       </thead>
 
@@ -148,7 +148,7 @@ defineEmits(['detail', 'toggleZeroWins', 'toggleSection', 'sort'])
 
 const { t, locale } = useI18n()
 
-const numericCols = ['decks', 'wins', 'top4', 'use', 'winEv', 'winDk', 'score'].map(key => ({
+const numericCols = ['decks', 'wins', 'use', 'winEv', 'winDk', 'score'].map(key => ({
   key,
 }))
 

@@ -13,7 +13,7 @@
         {{ $t('archetype.detail.avgDeck') }}
       </dt>
       <dd class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-        <div class="flex h-2 w-40 shrink-0 overflow-hidden rounded-sm sm:w-56" aria-hidden="true">
+        <div class="flex h-2 w-full shrink-0 overflow-hidden rounded-sm sm:w-56" aria-hidden="true">
           <div
             v-for="t in avgDeck"
             :key="t.type"
@@ -28,9 +28,6 @@
               {{ t.copies }}
             </b>
             {{ t.label }}
-          </span>
-          <span class="text-gray-400 dark:text-gray-500">
-            · {{ $t('archetype.cardCount', avgDeckTotal) }}
           </span>
         </span>
       </dd>
@@ -166,6 +163,8 @@
       />
     </section>
 
+    <slot name="after-cards" />
+
     <CardImageOverlay v-model="enlargedCardId" :info="enlargedInfo" :z-index="1100" />
 
     <!-- Deck curve: copies per average deck at each level and cost, by type -->
@@ -228,6 +227,7 @@
         :sig-ids="sigCardIds"
         :tech-ids="techCardIds"
         :is-new="isNewCard"
+        :group-of="effectGroupOf"
       />
     </section>
 
@@ -372,7 +372,7 @@ function onZoom(cardId, info = null) {
 
 // Featured cards are those in more than FEATURED_MIN of decks (see build-tiers);
 // at STAPLE_MIN and up a card is a given, so it only gets a thumbnail
-const FEATURED_MIN = 0.1
+const FEATURED_MIN = 0.15
 const STAPLE_MIN = 0.85
 const TYPES = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
 
@@ -399,6 +399,11 @@ const groupLeader = computed(() => {
   return map
 })
 const anchorOf = card => groupLeader.value.get(card.effectGroup?.id) ?? card
+// Card id → its same-effect group id, so deck lists count versions as one card
+const effectGroupIds = computed(
+  () => new Map(allCards.value.filter(c => c.effectGroup).map(c => [c.cardId, c.effectGroup.id])),
+)
+const effectGroupOf = cardId => effectGroupIds.value.get(cardId) ?? cardId
 const featured = computed(() =>
   allCards.value.filter(c => featuredIds.value.has(anchorOf(c).cardId)),
 )
@@ -449,14 +454,29 @@ const TYPE_BAR = {
 const avgDeck = computed(() => {
   const decks = props.archetype.deckCount || 1
   const all = [...(props.archetype.cards ?? []), ...(props.archetype.filteredCards ?? [])]
-  return TYPES.map(type => ({
-    type,
-    label: cardTypeName(type),
-    bar: TYPE_BAR[type],
-    copies: Math.round(
-      all.filter(c => c.type === type).reduce((n, c) => n + (c.totalQty ?? 0), 0) / decks,
-    ),
-  })).filter(t => t.copies > 0)
+  const rows = TYPES.map(type => {
+    const exact =
+      all.filter(c => c.type === type).reduce((n, c) => n + (c.totalQty ?? 0), 0) / decks
+    return {
+      type,
+      label: cardTypeName(type),
+      bar: TYPE_BAR[type],
+      exact,
+      copies: Math.floor(exact),
+    }
+  })
+  // Largest-remainder rounding so the parts add up to the rounded total (50)
+  // instead of drifting to 49/51 when each type is rounded on its own.
+  const target = Math.round(rows.reduce((n, r) => n + r.exact, 0))
+  let left = target - rows.reduce((n, r) => n + r.copies, 0)
+  for (const r of [...rows].sort((a, b) => (b.exact % 1) - (a.exact % 1))) {
+    if (left <= 0) {
+      break
+    }
+    r.copies++
+    left--
+  }
+  return rows.filter(t => t.copies > 0)
 })
 const avgDeckTotal = computed(() => avgDeck.value.reduce((n, t) => n + t.copies, 0) || 1)
 
