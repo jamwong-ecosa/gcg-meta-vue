@@ -481,6 +481,15 @@ function selectTopCards(allCards) {
   )
 }
 
+// Cards the archetype page shows under Staples + Flex: the featured cards plus any
+// same-effect version of one (effectGroup), which ArchetypeDetail places beside it
+// however rarely it's played — so the header count matches the two section counts
+function shownCardCount(archetype) {
+  const featuredGroups = new Set(archetype.cards.map(c => c.effectGroup?.id).filter(Boolean))
+  const twins = archetype.filteredCards.filter(c => featuredGroups.has(c.effectGroup?.id))
+  return archetype.cards.length + twins.length
+}
+
 // Counts feature keyword frequency across featured cards for UI badges
 function computeFeatureBadges(topCards) {
   const featureCounts = {}
@@ -898,7 +907,7 @@ function processSeries(series) {
     archetypes: mainDetails.map(a => ({
       combo: a.combo,
       sigCards: a.sigCards,
-      cardCount: a.cards.length,
+      cardCount: shownCardCount(a),
       deckCount: a.deckCount,
       percent: a.percent,
       winnerDeckCount: a.winnerDeckCount,
