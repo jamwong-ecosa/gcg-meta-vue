@@ -7,17 +7,36 @@
       <div class="absolute inset-x-0 top-0 h-1" :style="{ background: colorStrip }" />
 
       <div class="min-w-0 flex-1">
-        <div class="flex items-baseline gap-1.5">
+        <!-- Phones: the color combo on its own line and the card names under it,
+             each kept whole, as on the tier list's rows -->
+        <div
+          class="text-sm leading-snug font-bold text-sumi sm:text-base md:hidden dark:text-nalika-text"
+        >
+          <div class="flex items-center gap-1.5">
+            <div
+              v-for="h in selectedColors"
+              :key="h"
+              class="h-2.5 w-2.5 shrink-0 rounded-full"
+              :style="{ background: h }"
+            />
+            <span class="ml-1">{{ comboName(selectedParts.base) }}</span>
+          </div>
+          <ArchetypeCardNames
+            v-if="selectedParts.cards.length"
+            class="mt-0.5"
+            :cards="selectedParts.cards"
+            keep-weight
+          />
+        </div>
+        <div class="flex items-baseline gap-1.5 max-md:hidden">
           <div
             v-for="h in selectedColors"
             :key="h"
-            class="h-2.5 w-2.5 shrink-0 rounded-full md:h-2.5 md:w-2.5"
+            class="h-2.5 w-2.5 shrink-0 rounded-full"
             :style="{ background: h }"
           />
 
-          <div
-            class="ml-1 text-sm leading-snug font-bold text-sumi sm:text-base md:text-lg dark:text-nalika-text"
-          >
+          <div class="ml-1 text-lg leading-snug font-bold text-sumi dark:text-nalika-text">
             <template v-for="(seg, si) in selectedSegments" :key="si">
               <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
               <span v-else>{{ seg.text }}</span>
@@ -84,7 +103,26 @@
         @click="select(opt.value)"
       >
         <div class="min-w-0 flex-1">
-          <div class="flex items-baseline gap-1 text-left text-gray-700 dark:text-nalika-text">
+          <!-- Two lines on phones, as for the selected archetype above -->
+          <div class="text-left text-gray-700 md:hidden dark:text-nalika-text">
+            <div class="flex items-center gap-1">
+              <div
+                v-for="h in opt.colors"
+                :key="h"
+                class="h-2 w-2 shrink-0 rounded-full"
+                :style="{ background: h }"
+              />
+              <span class="ml-1 font-semibold">{{ comboName(opt.nameParts.base) }}</span>
+            </div>
+            <ArchetypeCardNames
+              v-if="opt.nameParts.cards.length"
+              class="mt-0.5"
+              :cards="opt.nameParts.cards"
+            />
+          </div>
+          <div
+            class="flex items-baseline gap-1 text-left text-gray-700 max-md:hidden dark:text-nalika-text"
+          >
             <div
               v-for="h in opt.colors"
               :key="h"
@@ -146,6 +184,7 @@ const selected = computed(() => props.options.find(o => o.value === modelValue.v
 
 const selectedColors = computed(() => selected.value?.colors ?? [])
 const selectedSegments = computed(() => selected.value?.labelSegments ?? [])
+const selectedParts = computed(() => selected.value?.nameParts ?? { base: '', cards: [] })
 const selectedDetails = computed(() => selected.value?.details ?? '')
 const selectedStats = computed(() => selected.value?.stats ?? [])
 const selectedTier = computed(() => selected.value?.tier ?? null)

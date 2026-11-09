@@ -103,6 +103,8 @@ const archOptions = computed(() => {
       ],
       colors: comboColors(a.combo),
       labelSegments: buildLabelSegments(a.combo, a.sigCards),
+      // Combo and card names apart, for the two-line name on phones
+      nameParts: archetypeNameParts(a.combo, a.sigCards),
       tier: a.tier || null,
       combo: a.combo,
     }))

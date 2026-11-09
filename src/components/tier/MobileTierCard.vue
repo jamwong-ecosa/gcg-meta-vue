@@ -46,10 +46,10 @@
             })
           }}
         </span>
-        <!-- ml-9.5 plus the gap-2 matches the rows' staples icon (w-11.5) between
+        <!-- ml-7 plus the gap-2 matches the rows' staples icon (w-9) between
              the scores and the chevron, so the totals end in line with the scores -->
         <span
-          class="ml-9.5 flex w-10 shrink-0 justify-center text-gray-500 dark:text-gray-400"
+          class="ml-7 flex w-8 shrink-0 justify-center text-gray-500 dark:text-gray-400"
           aria-hidden="true"
         >
           <svg

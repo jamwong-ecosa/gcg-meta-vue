@@ -41,28 +41,16 @@
               🐴
             </UiHint>
           </div>
-          <div
+          <ArchetypeCardNames
             v-if="cardNames.length"
-            class="leading-snug [overflow-wrap:anywhere] break-keep"
+            class="leading-snug"
             :class="
               headline
                 ? 'mt-0.5 text-xs text-gray-400 dark:text-gray-500'
                 : 'text-[13px] text-gray-800 dark:text-nalika-text'
             "
+            :cards="cardNames"
           >
-            <!-- Each name is an inline-block, so one that doesn't fit the rest of the
-                 line moves down whole instead of breaking at a "・" inside it; only a
-                 name wider than the row wraps inside itself. The slash sits in the
-                 block before it, so it ends a line rather than starting the next -->
-            <template v-for="(card, ci) in cardNames" :key="ci">
-              <span class="inline-block max-w-full">
-                <span :class="card.color ? 'font-medium' : ''" :style="{ color: card.color }">
-                  {{ card.name }}
-                </span>
-                <template v-if="ci < cardNames.length - 1">{{ CARD_SEP }}</template>
-              </span>
-              <template v-if="ci < cardNames.length - 1">{{ ' ' }}</template>
-            </template>
             <UiHint
               v-if="!headline && row.darkHorse"
               class="ml-1 leading-none"
@@ -70,7 +58,7 @@
             >
               🐴
             </UiHint>
-          </div>
+          </ArchetypeCardNames>
         </div>
         <!-- Score on top, usage and rank change underneath. Kept no taller than
              the two-line name block, so every row's text starts at the same
@@ -95,7 +83,7 @@
       </button>
       <!-- Staples quick view: a tap opens DeckPopover's fullscreen overlay. At the
            end beside the chevron, since the row's start lines up with the
-           section header. pl-3.5 evens the gaps to the glyphs: the score has no padding
+           section header. pl-2 evens the gaps to the glyphs: the score has no padding
            while the chevron is centred in its own column -->
       <UiDeckPopover
         class="flex shrink-0"
@@ -104,7 +92,7 @@
         :tags-of="card => ({ sig: row.sigCardIds?.includes(card.cardId) })"
       >
         <button
-          class="flex w-11.5 cursor-pointer items-center justify-center pl-3.5 text-gray-400 active:text-ruri dark:text-gray-500 dark:active:text-sora"
+          class="flex w-9 cursor-pointer items-center justify-center pl-2 text-gray-400 active:text-ruri dark:text-gray-500 dark:active:text-sora"
           :aria-label="$t('tier.staplesPeek')"
         >
           <!-- Two overlapping cards, as on the desktop table -->
@@ -122,7 +110,7 @@
         </button>
       </UiDeckPopover>
       <button
-        class="flex w-10 shrink-0 cursor-pointer items-center justify-center text-gray-300 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-300"
+        class="flex w-8 shrink-0 cursor-pointer items-center justify-center text-gray-300 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-300"
         :aria-expanded="open"
         :aria-label="open ? $t('tier.hideStats') : $t('tier.showStats')"
         @click="open = !open"
@@ -194,28 +182,15 @@ const stats = computed(() =>
   ].map(s => ({ ...s, label: t(`tier.col.${s.key}`) })),
 )
 
-// "Red+White（A / B）" → headline "Red+White", cards "A / B". Grouped by color
-// the section header already names the combo, so only the cards are shown
-// (falling back to the combo when the archetype has no cards).
-const nameParts = computed(() => {
-  const m = props.row.archetype.match(/^(.+?)\s*[（(](.+)[）)]$/)
-  return m ? { base: m[1].trimEnd(), cards: m[2] } : { base: props.row.archetype, cards: '' }
-})
+// Grouped by color the section header already names the combo, so only the
+// cards are shown (falling back to the combo when the archetype has no cards)
+const nameParts = computed(() => archetypeNameParts(props.row.archetype, props.row.sigCards))
 
 const headline = computed(() =>
-  props.hideColor && nameParts.value.cards ? '' : comboName(nameParts.value.base),
+  props.hideColor && nameParts.value.cards.length ? '' : comboName(nameParts.value.base),
 )
 
-const CARD_SEP = '\u00a0/'
-
-const cardNames = computed(() =>
-  nameParts.value.cards
-    ? nameParts.value.cards.split(/\s*\/\s*/).map(name => {
-        const sc = props.row.sigCards?.find(c => c.name === name)
-        return { name, color: sc ? COLOR_TEXT[sc.color] : undefined }
-      })
-    : [],
-)
+const cardNames = computed(() => nameParts.value.cards)
 
 const shift = computed(() => tierShift(props.row.move?.prevTier, props.row.tier))
 </script>

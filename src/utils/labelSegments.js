@@ -39,3 +39,20 @@ export function buildLabelSegments(combo, sigCards, { skipBaseCombo } = {}) {
   }
   return segs
 }
+
+// "Red+White (A / B)" → { base: 'Red+White', cards: [{ name: 'A', color }, …] },
+// for layouts that put the color combo and the card names on separate lines
+// (ArchetypeCardNames); color is set for signature cards only
+export function archetypeNameParts(combo, sigCards) {
+  const m = combo.match(/^(.+?)\s*[（(](.+)[）)]$/)
+  if (!m) {
+    return { base: combo, cards: [] }
+  }
+  return {
+    base: m[1].trimEnd(),
+    cards: m[2].split(/\s*\/\s*/).map(name => {
+      const sc = sigCards?.find(c => c.name === name)
+      return { name, color: sc ? COLOR_TEXT[sc.color] : undefined }
+    }),
+  }
+}
