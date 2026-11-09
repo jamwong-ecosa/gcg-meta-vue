@@ -110,10 +110,14 @@
             </UiHint>
             <UiHint :class="KEY_ITEM" :text="$t('archetype.detail.sameHint')">
               <span :class="KEY_BADGE">
-                <span
-                  class="rounded-sm border border-dashed border-sky-400 px-1 font-mono font-semibold text-sky-700 dark:text-sky-400"
-                >
-                  ≡
+                <!-- A tiny stack: a card with the sky layer peeking above it -->
+                <span class="relative inline-block h-3.5 w-2.5" aria-hidden="true">
+                  <span
+                    class="absolute inset-x-0.5 -top-0.5 bottom-1 rounded-[2px] bg-sky-400 dark:bg-sky-600"
+                  />
+                  <span
+                    class="absolute inset-x-0 top-0.5 bottom-0 rounded-[2px] bg-gray-400 ring-1 ring-white dark:bg-gray-500 dark:ring-nalika-bg"
+                  />
                 </span>
               </span>
               {{ $t('archetype.detail.same') }}

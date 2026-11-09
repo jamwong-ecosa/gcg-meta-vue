@@ -2,14 +2,14 @@
   <!-- One grid so rows fill the width; the type label sits over the first card
        of each type and of each row a type wraps onto, and only rows holding one
        get the room for it on top. A type never wraps mid-row.
-       Cards that play the same (same effect and stats) sit as one stacked card in
-       a dashed box, its numbers for any version; clicking it opens the group so
-       every version gets its own cell, in sort order, with one win-rate change.
+       Cards that play the same (same effect and stats) sit as one stacked card,
+       its numbers for any version; clicking it opens the group so every version
+       gets its own cell, in sort order, on a sky band with one win-rate change.
        An open group running past the end of a row breaks, and each row draws its
-       own piece of the box -->
+       own piece of the band -->
   <div
     ref="gridEl"
-    class="grid grid-cols-4 gap-x-4 gap-y-7 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
+    class="grid grid-cols-4 gap-x-4 gap-y-8 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
   >
     <div
       v-for="item in items"
@@ -42,30 +42,36 @@
 
       <div class="relative">
         <template v-if="item.group">
-          <!-- This card's piece of the box: reaches into the gap towards its
-               neighbours, closed on the sides where the group's row segment ends -->
+          <!-- Open group: a sky band behind its versions, reaching into the gap
+               towards its neighbours and down over the footer line, closed on
+               the sides where the group's row segment ends -->
           <div
-            class="pointer-events-none absolute border-y-2 border-dashed border-sky-400/80 dark:border-sky-500/60"
+            v-if="!item.stack"
+            class="pointer-events-none absolute border-y border-sky-200 bg-sky-50 dark:border-sky-400/25 dark:bg-sky-400/5"
             :class="item.boxClass"
           />
+          <!-- Footer line under the first card, in the row gap: opens a stack
+               ("▼ 2 versions") or closes the open group, at the same spot -->
           <button
-            v-if="item.first && !item.isLast"
-            class="absolute -bottom-3 left-1 z-10 flex cursor-pointer items-baseline gap-1 rounded bg-white px-1.5 text-xs leading-5 whitespace-nowrap text-sky-700 hover:text-sky-900 dark:bg-nalika-bg dark:text-sky-400 dark:hover:text-sky-200"
+            v-if="item.first"
+            class="absolute top-full left-0 z-10 mt-1 flex cursor-pointer items-center gap-1 text-xs leading-4 font-semibold whitespace-nowrap text-sky-700 hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-200"
             @click="toggleGroup(item.group.id)"
           >
-            <span aria-hidden="true">⌃</span>
-            {{ $t('archetype.group.collapse') }}
+            <span aria-hidden="true" class="text-xxs">{{ item.stack ? '▼' : '▲' }}</span>
+            {{
+              item.stack
+                ? $t('archetype.group.versions', { n: item.group.size })
+                : $t('archetype.group.collapse')
+            }}
           </button>
+          <!-- An open group's one WR, under its last card; a stack shows it in
+               its own stats line instead -->
           <UiHint
-            v-if="item.isLast"
-            class="absolute right-1 -bottom-3 z-10 flex items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xs leading-5 whitespace-nowrap text-sky-700 tabular-nums dark:bg-nalika-bg dark:text-sky-400"
+            v-if="item.isLast && !item.stack && item.group.liftText"
+            class="absolute top-full right-0 z-10 mt-1 font-mono text-xs leading-4 whitespace-nowrap tabular-nums"
             :content="item.group.hint"
           >
-            <!-- Just the group's WR, kept short so it fits under one card; shares
-                 are in the hint -->
-            <b class="font-bold">≡</b>
-            <span v-if="item.stack" class="font-semibold">{{ item.group.size }}</span>
-            <span v-if="item.group.liftText" :class="item.group.liftClass">
+            <span :class="item.group.liftClass">
               <span class="max-sm:hidden">{{ $t('archetype.badge.wr') }}</span>
               {{ item.group.liftText }}
             </span>
@@ -74,7 +80,7 @@
         <ArchetypeCardThumb
           class="w-full"
           :card="item.card"
-          :lift="removed || item.group ? null : liftOf(item.card)"
+          :lift="liftFor(item)"
           :is-sig="sigIds.has(item.card.cardId)"
           :is-new="!removed && isNew(item.card.cardId)"
           :is-removed="removed"
@@ -157,6 +163,18 @@ function toggleGroup(id) {
   expanded.value = next
 }
 
+// A stack's stats line shows its group's WR; an open group's versions show
+// none of their own (the group's sits under the last one)
+function liftFor(item) {
+  if (props.removed) {
+    return null
+  }
+  if (item.group) {
+    return item.stack ? item.group.lift : null
+  }
+  return props.liftOf(item.card)
+}
+
 // A collapsed group opens on click; a card zooms, with its group's numbers if it has one
 function onZoom(item, id, info) {
   if (item.stack) {
@@ -182,15 +200,16 @@ function groupInfo(g, members) {
   const hasAll = g.allDecks != null
   const pct = n => sharePct(props.deckCount ? n / props.deckCount : 0)
   const leader = members[0]
-  // Median copies of the effect, all versions added up, in decks mixing
-  // versions (see typicalCopies in build-tiers); older tier data lacks it, so
-  // the top card's own copies stand in
-  const effectCopies = g.typicalCopies || copiesOf(leader)
-  const copiesNote = !g.typicalCopies
-    ? t('archetype.group.copiesTop')
-    : g.typicalOfMixed
-      ? t('archetype.group.copiesMixed', { n: g.mixedDecks })
-      : t('archetype.group.copiesAny')
+  // Middle half of the copies of the effect per deck, all versions added up
+  // (see copiesRange in build-tiers): "4–6", or "4" when both ends meet; older
+  // tier data lacks it, so the top card's own copies stand in
+  const hasRange = g.copiesLow != null
+  const effectCopies = !hasRange
+    ? String(copiesOf(leader))
+    : g.copiesLow === g.copiesHigh
+      ? String(g.copiesLow)
+      : `${g.copiesLow}–${g.copiesHigh}`
+  const copiesNote = hasRange ? t('archetype.group.copiesRange') : t('archetype.group.copiesTop')
   const hint = {
     title: t('archetype.group.title'),
     subtitle: t('archetype.group.subtitle'),
@@ -213,6 +232,7 @@ function groupInfo(g, members) {
   return {
     id: g.id,
     size: members.length,
+    lift,
     liftText: liftBadge(lift),
     liftClass: liftTone(lift),
     hint,
@@ -235,9 +255,9 @@ function groupInfo(g, members) {
       footnote: t('archetype.group.expand', { n: members.length }),
     },
     // The group counts as one card: its copies are every version added up, as
-    // the mixed decks typically run it (4 Lubris + 1 or 2 Flat). ≡ marks it as
+    // the mixed decks typically run it (4 Lubris + 1 or 2 Flat). Sky marks it as
     // the group's, not the pictured card's, which can't go past 4
-    stackCopies: `≡×${effectCopies}`,
+    stackCopies: `×${effectCopies}`,
     // The most-played version stands in for the group, its share counting decks
     // running any version
     stackCard: {
@@ -247,19 +267,19 @@ function groupInfo(g, members) {
   }
 }
 
-// A box piece is closed (border, rounded) only at the group's first and last
+// A band piece is closed (border, rounded) only at the group's first and last
 // card, so a group broken over two rows reads as one, open at the break. It
-// reaches half the column gap towards a neighbour in the same row. A collapsed
-// group's box rises a little higher to take in the layer peeking above the card
-function boxClass({ first, last, col, stacked }) {
+// reaches half the column gap towards a neighbour in the same row, and down
+// past the card over the footer line in the row gap
+function boxClass({ first, last, col }) {
   const toLeft = !first && col > 0
   const toRight = !last && col < cols.value - 1
   return [
-    stacked ? tw`-top-2.5 -bottom-1 sm:-top-3.5 sm:-bottom-1.5` : tw`-inset-y-1 sm:-inset-y-1.5`,
-    toLeft ? tw`-left-2 sm:-left-3` : tw`-left-0.5 sm:-left-1.5`,
-    toRight ? tw`-right-2 sm:-right-3` : tw`-right-0.5 sm:-right-1.5`,
-    first && tw`rounded-l-lg border-l-2`,
-    last && tw`rounded-r-lg border-r-2`,
+    tw`-top-1.5 -bottom-6 sm:-top-2`,
+    toLeft ? tw`-left-2 sm:-left-3` : tw`-left-1.5 sm:-left-2`,
+    toRight ? tw`-right-2 sm:-right-3` : tw`-right-1.5 sm:-right-2`,
+    first && tw`rounded-l-lg border-l`,
+    last && tw`rounded-r-lg border-r`,
   ]
 }
 
@@ -344,7 +364,7 @@ const items = computed(() => {
     }
     return {
       ...base,
-      boxClass: boxClass({ first: e.first, last: e.isLast, col, stacked: !!e.stack }),
+      boxClass: boxClass({ first: e.first, last: e.isLast, col }),
     }
   })
 })

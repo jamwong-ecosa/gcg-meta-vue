@@ -557,11 +557,6 @@ function calculateTechScore(
 // cards go to "Other Cards" — no per-type quota, so a pilot in 3 decks isn't
 // featured beside the staples just to fill a slot.
 const FEATURED_MIN_INCLUSION = 0.15
-// Share of a same-effect group's decks that must mix versions, and how many
-// decks at least, for its typical copies to come from the mixed decks (see
-// typicalCopies): 1 mixed deck of 3 is a third, but still one list
-const MIXED_MIN_SHARE = 0.25
-const MIXED_MIN_DECKS = 3
 function selectTopCards(allCards) {
   return allCards.filter(
     c => TYPE_PICK_ORDER.includes(c.type) && c.inclusionRate > FEATURED_MIN_INCLUSION,
@@ -658,31 +653,21 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, totalAll) {
         ),
     )
     const decksWithAll = ids => deckQtys.filter(qtys => ids.every(id => qtys.has(id))).length
-    // Median total copies of the effect (all versions added up) in decks mixing
-    // two or more versions, or, when under MIXED_MIN_SHARE or MIXED_MIN_DECKS of
-    // the decks running it mix, in all of them (2 mixed decks out of 31 aren't
-    // typical). The median,
-    // not the most common total, which a small sample tips either way (7 decks
-    // on 6 against 6 on 5); with an even count, the lower middle value
-    const typicalCopies = ids => {
-      const mixed = []
-      const any = []
+    // Copies of the effect per deck (all versions added up) over every deck
+    // running it, as the middle half: the 25th to 75th percentile. Same decks
+    // as the group's use rate, and a range because they often split in two:
+    // one version up to the 4-copy cap, or past it with a second version
+    const copiesRange = ids => {
+      const totals = []
       for (const qtys of deckQtys) {
         const held = ids.filter(id => qtys.has(id))
-        if (held.length === 0) {
-          continue
-        }
-        const total = held.reduce((sum, id) => sum + qtys.get(id), 0)
-        any.push(total)
-        if (held.length > 1) {
-          mixed.push(total)
+        if (held.length > 0) {
+          totals.push(held.reduce((sum, id) => sum + qtys.get(id), 0))
         }
       }
-      const ofMixed =
-        mixed.length >= MIXED_MIN_DECKS && mixed.length >= any.length * MIXED_MIN_SHARE
-      const totals = (ofMixed ? mixed : any).sort((a, b) => a - b)
-      const median = totals[Math.floor((totals.length - 1) / 2)] ?? 0
-      return { typicalCopies: median, typicalOfMixed: ofMixed, mixedDecks: mixed.length }
+      totals.sort((a, b) => a - b)
+      const at = p => totals[Math.round((totals.length - 1) * p)] ?? 0
+      return { copiesLow: at(0.25), copiesHigh: at(0.75) }
     }
     for (const c of allCards) {
       const key = functionKey(c.cardId)
@@ -693,7 +678,7 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, totalAll) {
           decks: group.effectAgg[key] ?? 0,
           wins: winnerInfo?.effectCounts?.[key] ?? 0,
           allDecks: decksWithAll(ids),
-          ...typicalCopies(ids),
+          ...copiesRange(ids),
         }
       }
     }

@@ -8,13 +8,14 @@
       :class="stacked ? tw`cursor-pointer` : tw`cursor-zoom-in`"
       @click="emit('zoom', card.cardId, hint)"
     >
-      <!-- Collapsed same-effect group: the card keeps its full size, and one
-           narrower blank card behind it peeks out above its top edge, however
-           many versions the group holds -->
+      <!-- Collapsed same-effect group: one plain card behind it, nudged up and
+           to the right like a squared-up pile, however many versions the group
+           holds; sky, the colour of everything group-wide. The front card keeps
+           its full size and the layer grows into the gaps -->
       <div class="relative w-full">
         <span
           v-if="stacked"
-          class="absolute inset-x-1.5 -top-1.5 bottom-2 rounded border border-gray-400 bg-gray-300 sm:inset-x-2 sm:-top-2 dark:border-slate-400 dark:bg-slate-500"
+          class="absolute inset-0 translate-x-0.5 -translate-y-0.5 rounded bg-sky-200 ring-1 ring-sky-400/60 sm:translate-x-[3px] sm:-translate-y-[3px] dark:bg-sky-800 dark:ring-sky-500/50"
         />
         <div class="relative w-full">
           <!-- Tag ring drawn behind the card, flush to its edge: TECH yellow, NEW
@@ -24,7 +25,10 @@
             class="pointer-events-none absolute -inset-1 rounded-md"
             :class="ringClass"
           />
-          <div class="relative w-full overflow-hidden rounded">
+          <div
+            class="relative w-full overflow-hidden rounded"
+            :class="stacked && tw`shadow-md shadow-black/25`"
+          >
             <img
               :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
               :alt="card.name"
@@ -34,8 +38,11 @@
             />
             <span
               v-if="!isRemoved"
-              class="absolute top-0 right-0 rounded-bl-md bg-black/70 px-1.5 font-mono text-base leading-snug font-bold text-white sm:text-lg"
+              class="absolute top-0 right-0 rounded-bl-md font-mono leading-snug font-bold text-white sm:px-1.5 sm:text-lg"
+              :class="stacked ? tw`bg-sky-700/90 px-1 text-sm` : tw`bg-black/70 px-1.5 text-base`"
             >
+              <!-- A stack's copies are every version added up, so sky like the
+                   layer behind: the group's number, not the pictured card's -->
               {{ copiesText || `×${copies}` }}
             </span>
             <!-- Labels sit in one row bottom-left, over the card's trait text, so they
@@ -95,7 +102,7 @@ const props = defineProps({
   stacked: { type: Boolean, default: false },
   // Hover hint in place of the card's own (a collapsed group shows the group's)
   hintContent: { type: Object, default: null },
-  // Copies badge in place of the card's own "×N" (a collapsed group: "≡×5")
+  // Copies badge in place of the card's own "×N" (a collapsed group: "×4–6", drawn in sky)
   copiesText: { type: String, default: '' },
 })
 const emit = defineEmits(['zoom'])
