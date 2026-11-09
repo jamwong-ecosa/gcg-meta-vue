@@ -220,10 +220,10 @@ function serializeDeckCards(deck) {
 
 // ── Archetype helpers ──────────────────────────────────────────────────────────
 
-function groupByCombo(players, { init, accumulate }) {
+function groupByCombo(players, keyOf, { init, accumulate }) {
   const map = {}
   for (const player of players) {
-    const { key, sigCardIds } = buildComboKey(player.deck)
+    const { key, sigCardIds } = keyOf(player.deck)
     if (!key) {
       continue
     }
@@ -235,8 +235,90 @@ function groupByCombo(players, { init, accumulate }) {
 
 // ── Archetype grouping ───────────────────────────────────────────────────────
 
-function buildArchetypeMaps(allPlayers, winners) {
-  const comboArchetypes = groupByCombo(allPlayers, {
+// The signature rule flips on copy counts (a 3-of Qubeley loses to a 4-of Zeong),
+// so one deck can land under two or more keys. Each archetype folds into the
+// largest same-colour archetype whose average list is at least MERGE_SIMILARITY
+// alike, and takes its name
+const MERGE_SIMILARITY = 0.8
+
+// Weighted Jaccard over average copies per deck: 1 = identical lists, 0 = no shared cards
+function listSimilarity(a, b) {
+  let shared = 0
+  let total = 0
+  for (const id of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    shared += Math.min(a[id] ?? 0, b[id] ?? 0)
+    total += Math.max(a[id] ?? 0, b[id] ?? 0)
+  }
+  return total ? shared / total : 0
+}
+
+// Returns keyOf(deck) → { key, sigCardIds } with merged keys resolved to the
+// archetype they fold into. Decks without a signature card are left as they are
+function createComboKeyResolver(players) {
+  const groups = new Map()
+  for (const player of players) {
+    const { key, sigCardIds } = buildComboKey(player.deck)
+    if (sigCardIds.length === 0) {
+      continue
+    }
+    let group = groups.get(key)
+    if (!group) {
+      group = {
+        key,
+        sigCardIds,
+        colors: getDeckColors(player.deck).join('+'),
+        decks: 0,
+        copies: {},
+      }
+      groups.set(key, group)
+    }
+    group.decks++
+    for (const card of player.deck) {
+      group.copies[card.cardId] = (group.copies[card.cardId] ?? 0) + card.quantity
+    }
+  }
+
+  // Largest first, so an archetype only folds into a bigger one that kept its own name
+  const sorted = [...groups.values()].sort(
+    (a, b) => b.decks - a.decks || a.key.localeCompare(b.key),
+  )
+  const kept = []
+  const mergedInto = new Map()
+  for (const group of sorted) {
+    group.avgCopies = Object.fromEntries(
+      Object.entries(group.copies).map(([id, qty]) => [id, qty / group.decks]),
+    )
+    let best = null
+    let bestSimilarity = MERGE_SIMILARITY
+    for (const other of kept) {
+      if (other.colors !== group.colors) {
+        continue
+      }
+      const similarity = listSimilarity(group.avgCopies, other.avgCopies)
+      if (similarity >= bestSimilarity) {
+        best = other
+        bestSimilarity = similarity
+      }
+    }
+    if (best) {
+      mergedInto.set(group.key, best)
+      console.log(
+        `  merged ${group.key} (${group.decks}) → ${best.key} (${bestSimilarity.toFixed(2)})`,
+      )
+    } else {
+      kept.push(group)
+    }
+  }
+
+  return deck => {
+    const raw = buildComboKey(deck)
+    const target = mergedInto.get(raw.key)
+    return target ? { key: target.key, sigCardIds: target.sigCardIds } : raw
+  }
+}
+
+function buildArchetypeMaps(allPlayers, winners, keyOf) {
+  const comboArchetypes = groupByCombo(allPlayers, keyOf, {
     init: sigCardIds => ({
       sigCardIds,
       count: 0,
@@ -259,7 +341,7 @@ function buildArchetypeMaps(allPlayers, winners) {
     },
   })
 
-  const winnersByCombo = groupByCombo(winners, {
+  const winnersByCombo = groupByCombo(winners, keyOf, {
     init: () => ({ count: 0, cardCounts: {}, effectCounts: {} }),
     accumulate: (entry, winner) => {
       entry.count++
@@ -679,7 +761,8 @@ function processSeries(series) {
   const { allPlayers, winners } = getSeriesMetadata(series)
   const { eventMinDate, eventMaxDate } = getSeriesEventDateRange(series)
 
-  const { comboArchetypes, winnersByCombo } = buildArchetypeMaps(allPlayers, winners)
+  const keyOf = createComboKeyResolver(allPlayers)
+  const { comboArchetypes, winnersByCombo } = buildArchetypeMaps(allPlayers, winners, keyOf)
 
   const archetypeDetails = buildArchetypeDetails(comboArchetypes, winnersByCombo, allPlayers.length)
 
@@ -695,7 +778,7 @@ function processSeries(series) {
   )
   const unassignedDeckData = allPlayers
     .filter(p => {
-      const { key, sigCardIds } = buildComboKey(p.deck)
+      const { key, sigCardIds } = keyOf(p.deck)
       return (sigCardIds.length === 0 || smallArchKeys.has(key)) && !!(p.deckUrl || p.eventUrl)
     })
     .map(p => ({
