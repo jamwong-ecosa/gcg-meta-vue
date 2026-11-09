@@ -33,7 +33,7 @@ export default {
       newHint: 'Not played by this archetype last series',
       same: 'same card, other name',
       sameHint:
-        'Same card under another name: one WR for the group, decks running any version vs none. Hover the group for its decks',
+        'Same card under another name: stacked as one card with one WR, decks running any version vs none. Hover the stack for its decks, click it to show every version',
       level: 'Level',
       cost: 'Cost',
       traits: 'Traits',
@@ -71,6 +71,12 @@ export default {
       runAll: 'run all {n} versions',
       vsNone: 'any version vs none',
       footnote: 'WR: win rate of decks running any version vs none',
+      copies: 'Copies',
+      copiesMixed: 'median of the {n} decks mixing versions, all versions together',
+      copiesAny: 'median per deck, all versions together (few decks mix them)',
+      copiesTop: 'copies of the top card',
+      expand: 'Click to show all {n} versions',
+      collapse: 'Collapse',
     },
     timeline: {
       title: 'Archetype Timeline',
@@ -183,7 +189,7 @@ export default {
       newHint: '此牌型在上個系列未採用此卡',
       same: '同效果、不同卡名',
       sameHint:
-        '不同卡名但效果相同的卡：整組只算一個勝率，比較採用任一版本與完全未採用的卡組。將鼠標移到該組可查看其卡組數',
+        '不同卡名但效果相同的卡：疊成一張，整組只算一個勝率，比較採用任一版本與完全未採用的卡組。將鼠標移到該組可查看其卡組數，按一下可顯示每個版本',
       level: '等級',
       cost: '費用',
       traits: '特徵',
@@ -219,6 +225,12 @@ export default {
       runAll: '{n} 個版本全都有採用',
       vsNone: '任一版本 vs 未採用',
       footnote: '勝率：採用任一版本的卡組 vs 完全未採用的卡組',
+      copies: '張數',
+      copiesMixed: '混用版本的 {n} 副卡組張數中位數，所有版本合計',
+      copiesAny: '每副卡組張數中位數，所有版本合計（甚少卡組混用）',
+      copiesTop: '最常用版本的張數',
+      expand: '按一下顯示全部 {n} 個版本',
+      collapse: '收起',
     },
     timeline: {
       title: '牌型歷程',

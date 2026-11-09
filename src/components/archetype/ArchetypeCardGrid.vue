@@ -2,9 +2,11 @@
   <!-- One grid so rows fill the width; the type label sits over the first card
        of each type and of each row a type wraps onto, and only rows holding one
        get the room for it on top. A type never wraps mid-row.
-       Cards that play the same (same effect and stats) stay in sort order inside
-       one dashed box with one win-rate change; when the group runs past the end
-       of a row it breaks, and each row draws its own piece of the box -->
+       Cards that play the same (same effect and stats) sit as one stacked card in
+       a dashed box, its numbers for any version; clicking it opens the group so
+       every version gets its own cell, in sort order, with one win-rate change.
+       An open group running past the end of a row breaks, and each row draws its
+       own piece of the box -->
   <div
     ref="gridEl"
     class="grid grid-cols-4 gap-x-4 gap-y-7 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
@@ -43,9 +45,17 @@
           <!-- This card's piece of the box: reaches into the gap towards its
                neighbours, closed on the sides where the group's row segment ends -->
           <div
-            class="pointer-events-none absolute -inset-y-1 border-y-2 border-dashed border-sky-400/80 sm:-inset-y-1.5 dark:border-sky-500/60"
+            class="pointer-events-none absolute border-y-2 border-dashed border-sky-400/80 dark:border-sky-500/60"
             :class="item.boxClass"
           />
+          <button
+            v-if="item.first && !item.isLast"
+            class="absolute -bottom-3 left-1 z-10 flex cursor-pointer items-baseline gap-1 rounded bg-white px-1.5 text-xs leading-5 whitespace-nowrap text-sky-700 hover:text-sky-900 dark:bg-nalika-bg dark:text-sky-400 dark:hover:text-sky-200"
+            @click="toggleGroup(item.group.id)"
+          >
+            <span aria-hidden="true">⌃</span>
+            {{ $t('archetype.group.collapse') }}
+          </button>
           <UiHint
             v-if="item.isLast"
             class="absolute right-1 -bottom-3 z-10 flex items-baseline gap-1.5 rounded bg-white px-1.5 font-mono text-xs leading-5 whitespace-nowrap text-sky-700 tabular-nums dark:bg-nalika-bg dark:text-sky-400"
@@ -54,6 +64,7 @@
             <!-- Just the group's WR, kept short so it fits under one card; shares
                  are in the hint -->
             <b class="font-bold">≡</b>
+            <span v-if="item.stack" class="font-semibold">{{ item.group.size }}</span>
             <span v-if="item.group.liftText" :class="item.group.liftClass">
               <span class="max-sm:hidden">{{ $t('archetype.badge.wr') }}</span>
               {{ item.group.liftText }}
@@ -67,7 +78,10 @@
           :is-sig="sigIds.has(item.card.cardId)"
           :is-new="!removed && isNew(item.card.cardId)"
           :is-removed="removed"
-          @zoom="(id, info) => emit('zoom', id, item.group ? [info, item.group.hint] : info)"
+          :stack="item.stack"
+          :hint-content="item.stack ? item.group.stackHint : null"
+          :copies-text="item.stack ? item.group.stackCopies : ''"
+          @zoom="(id, info) => onZoom(item, id, info)"
         />
       </div>
     </div>
@@ -131,45 +145,120 @@ useResizeObserver(gridEl, () => {
   }
 })
 
-function groupInfo(g) {
+// Open groups by effect-group id; every group starts collapsed
+const expanded = ref(new Set())
+function toggleGroup(id) {
+  const next = new Set(expanded.value)
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    next.add(id)
+  }
+  expanded.value = next
+}
+
+// A collapsed group opens on click; a card zooms, with its group's numbers if it has one
+function onZoom(item, id, info) {
+  if (item.stack) {
+    toggleGroup(item.group.id)
+  } else {
+    emit('zoom', id, item.group ? [info, item.group.hint] : info)
+  }
+}
+
+// Copies per deck that runs the card, as the card's own ×N badge shows it
+function copiesOf(card) {
+  const exact =
+    card.totalQty && card.decksIncluded ? card.totalQty / card.decksIncluded : card.avgQty
+  return Math.max(1, Math.round(exact ?? 1))
+}
+
+// `members` are the group's versions in this grid, most played first
+function groupInfo(g, members) {
   const lift = props.groupLiftOf(g)
   // Every version the archetype plays, which may be more than this grid shows
   const size = g.id.split('+').length
   // Older tier data has no allDecks
   const hasAll = g.allDecks != null
   const pct = n => sharePct(props.deckCount ? n / props.deckCount : 0)
+  const leader = members[0]
+  // Median copies of the effect, all versions added up, in decks mixing
+  // versions (see typicalCopies in build-tiers); older tier data lacks it, so
+  // the top card's own copies stand in
+  const effectCopies = g.typicalCopies || copiesOf(leader)
+  const copiesNote = !g.typicalCopies
+    ? t('archetype.group.copiesTop')
+    : g.typicalOfMixed
+      ? t('archetype.group.copiesMixed', { n: g.mixedDecks })
+      : t('archetype.group.copiesAny')
+  const hint = {
+    title: t('archetype.group.title'),
+    subtitle: t('archetype.group.subtitle'),
+    rows: [
+      {
+        label: t('archetype.group.decks'),
+        value: g.decks,
+        note: `${pct(g.decks)}% · ${t('archetype.group.anyVersion')}`,
+      },
+      { label: t('archetype.group.wins'), value: g.wins, note: t('archetype.group.eventsWon') },
+      hasAll && {
+        label: t('archetype.group.all'),
+        value: g.allDecks,
+        note: `${pct(g.allDecks)}% · ${size === 2 ? t('archetype.group.runBoth') : t('archetype.group.runAll', { n: size })}`,
+      },
+      liftRow(lift, t('archetype.group.vsNone')),
+    ].filter(Boolean),
+    footnote: lift ? '' : t('archetype.group.footnote'),
+  }
   return {
+    id: g.id,
+    size: members.length,
     liftText: liftBadge(lift),
     liftClass: liftTone(lift),
-    hint: {
-      title: t('archetype.group.title'),
-      subtitle: t('archetype.group.subtitle'),
+    hint,
+    // Collapsed: each version with its own share and copies, the group's copies
+    // all versions together, and how to open it
+    stackHint: {
+      ...hint,
+      subtitle: members
+        .map(m => `${m.name} ${sharePct(m.inclusionRate)}% ×${copiesOf(m)}`)
+        .join(' / '),
       rows: [
+        hint.rows[0],
         {
-          label: t('archetype.group.decks'),
-          value: g.decks,
-          note: `${pct(g.decks)}% · ${t('archetype.group.anyVersion')}`,
+          label: t('archetype.group.copies'),
+          value: effectCopies,
+          note: copiesNote,
         },
-        { label: t('archetype.group.wins'), value: g.wins, note: t('archetype.group.eventsWon') },
-        hasAll && {
-          label: t('archetype.group.all'),
-          value: g.allDecks,
-          note: `${pct(g.allDecks)}% · ${size === 2 ? t('archetype.group.runBoth') : t('archetype.group.runAll', { n: size })}`,
-        },
-        liftRow(lift, t('archetype.group.vsNone')),
-      ].filter(Boolean),
-      footnote: lift ? '' : t('archetype.group.footnote'),
+        ...hint.rows.slice(1),
+      ],
+      footnote: t('archetype.group.expand', { n: members.length }),
+    },
+    // The group counts as one card: its copies are every version added up, as
+    // the mixed decks typically run it (4 Lubris + 1 or 2 Flat). ≡ marks it as
+    // the group's, not the pictured card's, which can't go past 4
+    stackCopies: `≡×${effectCopies}`,
+    // The most-played version stands in for the group, its share counting decks
+    // running any version
+    stackCard: {
+      ...leader,
+      inclusionRate: props.deckCount ? g.decks / props.deckCount : leader.inclusionRate,
     },
   }
 }
 
 // A box piece is closed (border, rounded) only at the group's first and last
 // card, so a group broken over two rows reads as one, open at the break. It
-// reaches half the column gap towards a neighbour in the same row
-function boxClass({ first, last, col }) {
+// reaches half the column gap towards a neighbour in the same row. A collapsed
+// group's box also takes in the versions stacked up and to the right
+function boxClass({ first, last, col, stacked }) {
+  if (stacked) {
+    return tw`-top-2.5 -right-2.5 -bottom-1 -left-0.5 rounded-lg border-x-2 sm:-top-4 sm:-right-4 sm:-bottom-1.5 sm:-left-1.5`
+  }
   const toLeft = !first && col > 0
   const toRight = !last && col < cols.value - 1
   return [
+    tw`-inset-y-1 sm:-inset-y-1.5`,
     toLeft ? tw`-left-2 sm:-left-3` : tw`-left-0.5 sm:-left-1.5`,
     toRight ? tw`-right-2 sm:-right-3` : tw`-right-0.5 sm:-right-1.5`,
     first && tw`rounded-l-lg border-l-2`,
@@ -179,7 +268,8 @@ function boxClass({ first, last, col }) {
 
 // Type order (unknown types last), each type in its own sort order, except a
 // same-effect group's members are pulled together where its first (most
-// played) member sits. The first card of each type carries the type label.
+// played) member sits, or, while it's collapsed, stand as one stacked cell
+// there. The first card of each type carries the type label.
 const items = computed(() => {
   const types = [...new Set([...TYPES, ...props.cards.map(c => c.type)])]
   const ordered = types.flatMap(type => {
@@ -193,16 +283,28 @@ const items = computed(() => {
         out.push({ card })
       } else if (!placed.has(g.id)) {
         placed.add(g.id)
-        const info = groupInfo(g)
-        members.forEach((m, i) => {
-          out.push({ card: m, group: info, first: i === 0, isLast: i === members.length - 1 })
-        })
+        const info = groupInfo(g, members)
+        if (expanded.value.has(g.id)) {
+          members.forEach((m, i) => {
+            out.push({ card: m, group: info, first: i === 0, isLast: i === members.length - 1 })
+          })
+        } else {
+          out.push({
+            card: info.stackCard,
+            group: info,
+            first: true,
+            isLast: true,
+            stack: members.slice(1),
+          })
+        }
       }
     }
+    // typeCount (the label's chip) counts cards; typeCells, the cells they take
     return out.map((e, i) => ({
       ...e,
       typeFirst: i === 0,
       typeCount: ofType.length,
+      typeCells: out.length,
     }))
   })
   // A type never wraps mid-row: it shares the row with the type before it
@@ -211,7 +313,7 @@ const items = computed(() => {
   let cursor = 0
   const pos = ordered.map(e => {
     const used = cursor % cols.value
-    if (e.typeFirst && used && e.typeCount > cols.value - used) {
+    if (e.typeFirst && used && e.typeCells > cols.value - used) {
       cursor += cols.value - used
     }
     return cursor++
@@ -243,7 +345,10 @@ const items = computed(() => {
     if (!e.group) {
       return base
     }
-    return { ...base, boxClass: boxClass({ first: e.first, last: e.isLast, col }) }
+    return {
+      ...base,
+      boxClass: boxClass({ first: e.first, last: e.isLast, col, stacked: !!e.stack }),
+    }
   })
 })
 </script>

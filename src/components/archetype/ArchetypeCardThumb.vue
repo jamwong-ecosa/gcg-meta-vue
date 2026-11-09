@@ -2,12 +2,24 @@
   <!-- Compact card (width comes from the parent): the full card image, which
        already shows cost, level and stats; copies per deck on top; inclusion and
        win-rate change underneath. Removed cards show the image only, dimmed -->
-  <UiHint class="flex flex-col" :content="hint">
+  <UiHint class="flex flex-col" :content="hintContent ?? hint">
     <button
-      class="group relative flex w-full cursor-zoom-in flex-col text-left"
+      class="group relative flex w-full flex-col text-left"
+      :class="stack.length ? tw`cursor-pointer` : tw`cursor-zoom-in`"
       @click="emit('zoom', card.cardId, hint)"
     >
       <div class="relative w-full">
+        <!-- Collapsed same-effect group: the other versions peek out behind, up
+             and to the right, farthest first so the front card paints on top -->
+        <img
+          v-for="layer in stackLayers"
+          :key="layer.card.cardId"
+          :src="`https://jw-assets.imgix.net/gcg-img/${layer.card.cardId}.webp?w=200&auto=format,compress`"
+          alt=""
+          class="absolute inset-0 aspect-[5/7] w-full rounded object-cover shadow-sm ring-1 ring-black/10 dark:ring-white/10"
+          :class="layer.class"
+          loading="lazy"
+        />
         <!-- Tag ring drawn behind the card, flush to its edge: TECH yellow, NEW
              green, both split on the diagonal (yellow top-left, green bottom-right) -->
         <span
@@ -27,7 +39,7 @@
             v-if="!isRemoved"
             class="absolute top-0 right-0 rounded-bl-md bg-black/70 px-1.5 font-mono text-base leading-snug font-bold text-white sm:text-lg"
           >
-            ×{{ copies }}
+            {{ copiesText || `×${copies}` }}
           </span>
           <!-- Labels sit in one row bottom-left, over the card's trait text, so they
              don't hide the level or cost -->
@@ -81,6 +93,12 @@ const props = defineProps({
   isRemoved: { type: Boolean, default: false },
   // Win-rate change with the card vs without (see liftFor in ArchetypeDetail); null hides it
   lift: { type: Object, default: null },
+  // Other versions of a collapsed same-effect group, drawn stacked behind the card
+  stack: { type: Array, default: () => [] },
+  // Hover hint in place of the card's own (a collapsed group shows the group's)
+  hintContent: { type: Object, default: null },
+  // Copies badge in place of the card's own "×N" (a collapsed group: "≡×5")
+  copiesText: { type: String, default: '' },
 })
 const emit = defineEmits(['zoom'])
 
@@ -104,6 +122,18 @@ const hint = computed(() =>
         rows: statsRows.value,
         tags: badges.value,
       },
+)
+// At most two layers show, however many versions there are
+// and each one further back is darker, so the edges read as a pile
+const STACK_OFFSETS = [
+  tw`translate-x-0.75 -translate-y-0.75 brightness-90 sm:translate-x-1.25 sm:-translate-y-1.25`,
+  tw`translate-x-1.5 -translate-y-1.5 brightness-75 sm:translate-x-2.5 sm:-translate-y-2.5`,
+]
+const stackLayers = computed(() =>
+  props.stack
+    .slice(0, STACK_OFFSETS.length)
+    .map((card, i) => ({ card, class: STACK_OFFSETS[i] }))
+    .reverse(),
 )
 const ringClass = computed(() => tagRingClass(tags.value))
 const barClass = computed(() => inclusionBarClass(props.card.inclusionRate))
