@@ -7,9 +7,12 @@
        gets its own cell, in sort order, on a sky band with one win-rate change.
        An open group running past the end of a row breaks, and each row draws its
        own piece of the band -->
+  <!-- A group's footer line and band hang below its cell, into the row gap; in
+       the last row there's no gap, so the grid makes room for them itself -->
   <div
     ref="gridEl"
     class="grid grid-cols-4 gap-x-4 gap-y-8 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] sm:gap-x-6"
+    :class="groupInLastRow && tw`mb-5`"
   >
     <div
       v-for="item in items"
@@ -357,6 +360,7 @@ const items = computed(() => {
       ...e,
       labelRow,
       newRow,
+      inLastRow: rowOf(i) === rowOf(ordered.length - 1),
       typeStyle: TYPE_STYLE[type] ?? OTHER_STYLE,
     }
     if (!e.group) {
@@ -368,4 +372,6 @@ const items = computed(() => {
     }
   })
 })
+
+const groupInLastRow = computed(() => items.value.some(e => e.group && e.inLastRow))
 </script>
