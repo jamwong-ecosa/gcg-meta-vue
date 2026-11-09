@@ -8,8 +8,9 @@ const CARD_FOCUS = {
   'GD01-001': [0.83, 0.29], // ガンダム
   'GD01-024': [0.67, 0.18], // ウイングガンダムゼロ
   'GD01-066': [0.63, 0.19], // ジャスティスガンダム
-  // Head right under the cost box: trim below the box instead of right of it
-  'GD03-050': [0.18, 0.24, { x: 60, y: 172 }], // ガンダム・バルバトスルプス
+  // Head right under the cost box: trim from just below the box and right of
+  // the purple bar, keeping as much art as possible left of and above the head
+  'GD03-050': [0.208, 0.233, { x: 50, y: 142 }], // ガンダム・バルバトスルプス
   'GD04-017': [0.4, 0.36], // ジオング
   'GD04-065': [0.52, 0.19], // バンシィ・ノルン
   'GD05-002': [0.41, 0.24], // ストライクフリーダムガンダム

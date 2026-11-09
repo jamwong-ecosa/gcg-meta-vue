@@ -144,8 +144,8 @@
         </span>
       </RouterLink>
 
-      <!-- One layout at every size: a square crop of the signature card on the left,
-           tier, name and counts on the right -->
+      <!-- One layout at every size: the signature card art on the left, tier, name
+           and counts on the right -->
       <div class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4">
         <RouterLink
           v-for="row in topRows"
@@ -154,16 +154,43 @@
           class="group flex h-28 overflow-hidden rounded-lg border border-gray-500/15 bg-white transition-[border-color,box-shadow] duration-200 hover:border-ruri/30 hover:shadow-md hover:shadow-ruri/10 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/40 dark:hover:shadow-black/30"
         >
           <!-- Hover: soft shadow and a faint blue border; no underline through the names -->
-          <div class="w-28 shrink-0 bg-gray-100 dark:bg-nalika-bg">
-            <img
-              v-if="row.imageCardId"
-              :src="`https://jw-assets.imgix.net/gcg-img/${row.imageCardId}.webp?fit=crop&ar=1:1&w=224&crop=focalpoint&fp-x=0.5&fp-y=0.36&fp-z=1.5&auto=format,compress`"
-              alt=""
-              loading="lazy"
-              class="h-full w-full object-cover"
-            />
+          <div class="relative w-28 shrink-0 overflow-hidden bg-gray-100 sm:w-40 dark:bg-nalika-bg">
+            <!-- Each card's art cropped around the unit's face (as in the pie
+                 chart); two-card archetypes split on a steep diagonal, the first
+                 named card on the left -->
+            <div
+              v-for="(art, ai) in row.thumbs"
+              :key="ai"
+              class="absolute inset-0"
+              :style="{ clipPath: art.clip }"
+            >
+              <img
+                :src="art.url"
+                alt=""
+                loading="lazy"
+                class="absolute max-w-none"
+                :style="art.style"
+              />
+            </div>
+            <svg
+              v-if="row.thumbs.length === 2"
+              class="pointer-events-none absolute inset-0 h-full w-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <line
+                :x1="SPLIT_TOP * 100"
+                y1="0"
+                :x2="SPLIT_BOTTOM * 100"
+                y2="100"
+                class="stroke-white dark:stroke-nalika-surface"
+                stroke-width="3"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
           </div>
-          <div class="flex min-w-0 flex-1 flex-col justify-center p-3">
+          <div class="flex min-w-0 flex-1 flex-col justify-center px-2.5 py-3 sm:px-3">
             <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span
                 class="rounded px-2 py-0.5 text-sm leading-none font-bold"
@@ -184,14 +211,29 @@
               </span>
               <span class="truncate">{{ comboName(row.colors) }}</span>
             </div>
-            <!-- Wrap between card names, never inside one -->
+            <!-- Card names joined by "/", wrapping between names (inside one only
+                 when it is wider than the line). Every name has a slash in front;
+                 the row is pulled left by the slash's width and clipped, so a name
+                 that starts a line loses its slash. 13px on phones so the longest names
+                 (ストライクフリーダムガンダム) fit a line down to 360px. A hanging indent keeps a
+                 name's own wrapped lines clear of the clipped strip. Two lines at most -->
             <div
-              class="mt-1.5 line-clamp-2 text-sm leading-snug font-bold break-keep text-sumi dark:text-nalika-text"
+              class="mt-1.5 max-h-[2lh] overflow-hidden text-[13px] leading-snug font-bold text-sumi sm:text-sm dark:text-nalika-text"
             >
-              <template v-for="(seg, si) in row.segments" :key="si">
-                <span v-if="seg.color" :style="{ color: seg.color }">{{ seg.text }}</span>
-                <span v-else>{{ seg.text }}</span>
-              </template>
+              <div class="-ml-5 flex flex-wrap">
+                <span
+                  v-for="(name, ni) in row.names"
+                  :key="ni"
+                  class="min-w-0 pl-5 -indent-5 wrap-anywhere break-keep before:inline-block before:w-5 before:text-center before:indent-0 before:content-['/']"
+                >
+                  <span
+                    v-for="(part, pi) in name"
+                    :key="pi"
+                    :style="{ color: part.color }"
+                    v-text="part.text"
+                  />
+                </span>
+              </div>
             </div>
             <div class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
               {{ $t('home.rowStats', { wins: row.wins, use: row.usePct }) }}
@@ -260,6 +302,7 @@
 </template>
 
 <script setup>
+import { useMediaQuery } from '@vueuse/core'
 import manifest from '$data/archetypes/index.json'
 
 const { t, locale } = useI18n()
@@ -329,6 +372,97 @@ const updated = computed(() => {
   }
 })
 
+// Card art box on each row (px, matches w-28 sm:w-40 and h-28): narrower on
+// phones so the names keep their room. Two-card archetypes split on a line from
+// SPLIT_TOP to SPLIT_BOTTOM across the box's width
+const isWide = useMediaQuery('(min-width: 640px)')
+const thumbW = computed(() => (isWide.value ? 160 : 112))
+const THUMB_H = 112
+const SPLIT_TOP = 0.62
+const SPLIT_BOTTOM = 0.38
+// A face-centred square crop (cardFace) `slack` times the area it fills,
+// slid to put the face on the target while still covering the area; `face` is
+// where the face ends up in the box
+function placeArt(cardId, box, target, slack) {
+  const { u, v } = cardFace(cardId, 0)
+  const size = Math.max(box.x1 - box.x0, box.y1 - box.y0) * slack
+  const fit = (want, lo, hi) => Math.min(lo, Math.max(hi - size, want))
+  const x = fit(target.x - u * size, box.x0, box.x1)
+  const y = fit(target.y - v * size, box.y0, box.y1)
+  const px = Math.min(800, Math.ceil((size * 2) / 50) * 50)
+  return {
+    url: cardFace(cardId, px).url,
+    style: { left: `${x}px`, top: `${y}px`, width: `${size}px`, height: `${size}px` },
+    face: { x: x + u * size, y: y + v * size },
+  }
+}
+
+// Two-card split in a box `w` wide: each half's area, where its face should
+// go, and its clip
+function splitHalves(w) {
+  const x0 = SPLIT_TOP * w
+  const x1 = SPLIT_BOTTOM * w
+  const splitX = y => x0 - ((x0 - x1) * y) / THUMB_H
+  return [
+    {
+      box: { x0: 0, x1: x0, y0: 0, y1: THUMB_H },
+      target: { x: x1 * 0.62, y: THUMB_H * 0.45 },
+      clip: `polygon(0 0, ${SPLIT_TOP * 100}% 0, ${SPLIT_BOTTOM * 100}% 100%, 0 100%)`,
+      // How far the face sits inside the half, from the diagonal
+      margin: face => splitX(face.y) - face.x,
+    },
+    {
+      box: { x0: x1, x1: w, y0: 0, y1: THUMB_H },
+      target: { x: w - (w - x0) * 0.62, y: THUMB_H * 0.45 },
+      clip: `polygon(${SPLIT_TOP * 100}% 0, 100% 0, 100% 100%, ${SPLIT_BOTTOM * 100}% 100%)`,
+      margin: face => face.x - splitX(face.y),
+    },
+  ]
+}
+// A face closer than this to the diagonal gets cut by it (about half a head)
+const FACE_MARGIN = 22
+// Crop sizes to try, smallest first: the art is only enlarged when it must be.
+// A head tucked in the art's top-left corner needs the most in the right half,
+// whose slant cuts across that corner
+const SLACKS = [1.15, 1.35, 1.6, 1.8]
+// The least enlarged crop that keeps the face clear of the diagonal, or the
+// one that gets it closest
+function placeInHalf(cardId, half) {
+  const spots = SLACKS.map(k => placeArt(cardId, half.box, half.target, k))
+  const ok = spots.find(p => half.margin(p.face) >= FACE_MARGIN)
+  const best = ok ?? spots.reduce((a, b) => (half.margin(b.face) > half.margin(a.face) ? b : a))
+  return { ...best, clip: half.clip }
+}
+function rowThumbs(ids, w) {
+  if (ids.length === 2) {
+    // Name order, which follows the colour order (藍 left of 紫)
+    const halves = splitHalves(w)
+    return ids.map((id, i) => placeInHalf(id, halves[i]))
+  }
+  if (ids.length === 1) {
+    const box = { x0: 0, x1: w, y0: 0, y1: THUMB_H }
+    return [{ ...placeArt(ids[0], box, { x: w / 2, y: THUMB_H * 0.45 }, 1), clip: 'none' }]
+  }
+  return []
+}
+
+// Label segments ("A", " / ", "B") → one list of coloured parts per card name,
+// so the template draws the slashes itself
+function splitNames(segments) {
+  const names = [[]]
+  for (const seg of segments) {
+    seg.text.split(/\s*\/\s*/).forEach((text, i) => {
+      if (i > 0) {
+        names.push([])
+      }
+      if (text) {
+        names.at(-1).push({ text, color: seg.color })
+      }
+    })
+  }
+  return names.filter(n => n.length)
+}
+
 // Signature cards whose copies are within 5% of each other count as equally
 // played; the higher-level one (usually the deck's finisher) gets the picture
 const CLOSE_COPIES = 0.05
@@ -358,10 +492,18 @@ const topRows = computed(() => {
     const idx = archetypes.findIndex(
       a => normalizeArchetypeName(a.combo) === normalizeArchetypeName(row.archetype),
     )
+    // Two signature cards, in the order the name lists them
+    const sigIds = row.sigCardIds ?? []
     return {
       ...row,
       imageCardId,
-      segments: buildLabelSegments(row.archetype, row.sigCards ?? [], { skipBaseCombo: true }),
+      thumbs: rowThumbs(
+        sigIds.length === 2 && sigIds[0] !== sigIds[1] ? sigIds : [imageCardId].filter(Boolean),
+        thumbW.value,
+      ),
+      names: splitNames(
+        buildLabelSegments(row.archetype, row.sigCards ?? [], { skipBaseCombo: true }),
+      ),
       to:
         idx === -1
           ? { name: 'tier', query: { series: s.value } }
