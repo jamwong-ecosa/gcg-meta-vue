@@ -93,6 +93,34 @@
           </div>
         </div>
       </button>
+      <!-- Staples quick view: a tap opens DeckPopover's fullscreen overlay. At the
+           end beside the chevron, since the row's start lines up with the
+           section header. pl-3.5 evens the gaps to the glyphs: the score has no padding
+           while the chevron is centred in its own column -->
+      <UiDeckPopover
+        class="flex shrink-0"
+        :cards="row.staples ?? []"
+        :label="$t('tier.staplesLabel', { pct: 85 })"
+        :tags-of="card => ({ sig: row.sigCardIds?.includes(card.cardId) })"
+      >
+        <button
+          class="flex w-11.5 cursor-pointer items-center justify-center pl-3.5 text-gray-400 active:text-ruri dark:text-gray-500 dark:active:text-sora"
+          :aria-label="$t('tier.staplesPeek')"
+        >
+          <!-- Two overlapping cards, as on the desktop table -->
+          <svg
+            class="size-4.5"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <rect x="7" y="4" width="9" height="13" rx="1.5" />
+            <path d="M4.5 6.5v8a2 2 0 0 0 2 2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </UiDeckPopover>
       <button
         class="flex w-10 shrink-0 cursor-pointer items-center justify-center text-gray-300 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-300"
         :aria-expanded="open"

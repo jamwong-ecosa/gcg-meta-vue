@@ -5,6 +5,35 @@
   >
     <td class="py-2 pr-4 pl-4">
       <div class="flex min-w-0 items-baseline gap-1.5">
+        <!-- Staples quick view: a card-stack icon leading the row, in line with the
+             section headers' arrows; hover it for the popover. A click stays on
+             the page instead of opening the analysis -->
+        <UiDeckPopover
+          class="-my-1 -ml-1.5 shrink-0 self-center"
+          :cards="row.staples ?? []"
+          :label="$t('tier.staplesLabel', { pct: 85 })"
+          :tags-of="card => ({ sig: row.sigCardIds?.includes(card.cardId) })"
+          @click.stop
+        >
+          <span
+            class="flex size-6 items-center justify-center rounded text-gray-400 transition-colors group-hover:text-gray-500 hover:bg-ruri/10 hover:text-ruri! dark:text-gray-500 dark:group-hover:text-gray-400 dark:hover:bg-sora/15 dark:hover:text-sora!"
+            role="img"
+            :aria-label="$t('tier.staplesPeek')"
+          >
+            <!-- Two overlapping cards -->
+            <svg
+              class="size-4"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <rect x="7" y="4" width="9" height="13" rx="1.5" />
+              <path d="M4.5 6.5v8a2 2 0 0 0 2 2" stroke-linecap="round" />
+            </svg>
+          </span>
+        </UiDeckPopover>
         <div v-if="!hideColor" class="flex shrink-0 items-center gap-0.5">
           <div
             v-for="dot in row.colorDots"

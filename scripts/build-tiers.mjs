@@ -477,6 +477,31 @@ function colorDots(colors) {
 // Formats archetype data into display rows for tiers.json.
 // Converts ASCII parens in combo keys to fullwidth for Japanese display.
 // Sorted by tier, then strength (see compareTierRank).
+// Staples as ArchetypeDetail splits them: cards whose effect is played in
+// STAPLE_MIN of the archetype's decks or more, any version. Same-effect versions
+// each keep their own image, with copies per deck running the effect, so they add
+// up like a deck list (a 0 rounds a rare version away): [[cardId, copies], …],
+// most copies first
+const STAPLE_MIN = 0.85
+function stapleCards(a) {
+  const all = [...(a.cards ?? []), ...(a.filteredCards ?? [])]
+  const lead = new Map()
+  for (const c of all) {
+    const key = c.effectGroup?.id ?? c.cardId
+    if ((c.inclusionRate ?? 0) > (lead.get(key)?.inclusionRate ?? -1)) {
+      lead.set(key, c)
+    }
+  }
+  return all
+    .filter(c => (lead.get(c.effectGroup?.id ?? c.cardId).inclusionRate ?? 0) >= STAPLE_MIN)
+    .map(c => [
+      c.cardId,
+      Math.round((c.totalQty ?? 0) / (c.effectGroup?.decks || c.decksIncluded || 1)),
+    ])
+    .filter(([, copies]) => copies > 0)
+    .sort((x, y) => y[1] - x[1])
+}
+
 function formatTierRows(series) {
   return series.archetypes
     .filter(a => a.deckCount > 0)
@@ -502,6 +527,9 @@ function formatTierRows(series) {
           const card = [...(a.cards ?? []), ...(a.filteredCards ?? [])].find(c => c.cardId === id)
           return { copies: card?.totalQty ?? 0, level: Number(card?.level) || 0 }
         }),
+        // The tier page's quick view of the list; moved out to
+        // tier-staples.json before tiers.json is written
+        staples: stapleCards(a),
         // Every card the archetype's decks play, for card-number search; moved
         // out to tier-card-ids.json before tiers.json is written
         cardIds: [...new Set([...(a.cards ?? []), ...(a.filteredCards ?? [])].map(c => c.cardId))],
@@ -1159,6 +1187,19 @@ for (const entry of tierData) {
 }
 writeFileSync('data-processed/tier-card-ids.json', JSON.stringify(cardIdIndex))
 console.log('Saved data-processed/tier-card-ids.json')
+
+// Staples per archetype, loaded when the tier page's quick view first opens:
+// { [series]: { [archetype]: [[cardId, copies], …] } }
+const stapleIndex = {}
+for (const entry of tierData) {
+  stapleIndex[entry.value] = {}
+  for (const row of entry.rows) {
+    stapleIndex[entry.value][row.archetype] = row.staples
+    delete row.staples
+  }
+}
+writeFileSync('data-processed/tier-staples.json', JSON.stringify(stapleIndex))
+console.log('Saved data-processed/tier-staples.json')
 
 writeFileSync('data-processed/tiers.json', JSON.stringify(tierData, null, 2))
 console.log(

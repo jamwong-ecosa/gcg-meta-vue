@@ -31,6 +31,20 @@ function loadCardIds() {
     })
 }
 
+// Each archetype's staples ({ [series]: { [archetype]: [[cardId, copies], …] } }),
+// for each row's quick view; the tier page loads it once mounted
+const stapleIndex = shallowRef(null)
+let staplesLoading = null
+export function loadTierStaples() {
+  staplesLoading ??= import('$data/tier-staples.json')
+    .then(mod => {
+      stapleIndex.value = mod.default ?? {}
+    })
+    .catch(() => {
+      staplesLoading = null
+    })
+}
+
 // "gd05-033", "GD05033", "gd05 033" → "gd05033". Only 3+ characters with a
 // digit count as a card number, so names and a stray "5" never match an ID
 function cardNumberQuery(q) {
@@ -40,6 +54,7 @@ function cardNumberQuery(q) {
 
 // Card number → lower-cased name, to search any played card by name
 const cardNameById = new Map(cardMeta.map(c => [c.id, (c.name ?? '').toLowerCase()]))
+const cardById = new Map(cardMeta.map(c => [c.id, c]))
 
 // Filtering, sorting and sectioning for the tier page. Both the desktop table
 // and the mobile list render `sections` + `zeroRows`, so they always agree.
@@ -69,6 +84,22 @@ export function useTierList({ allRows, previousSeries, seriesKey }) {
   })
   const hasMovement = computed(() => prevByName.value.size > 0)
 
+  function staplesOf(archetype) {
+    const list = stapleIndex.value?.[seriesKey?.value]?.[archetype] ?? []
+    return list.map(([cardId, qty]) => {
+      const info = cardById.get(cardId)
+      return {
+        cardId,
+        qty,
+        name: info?.name ?? cardId,
+        type: info?.type ?? 'UNIT',
+        color: info?.color ?? '',
+        level: Number(info?.level) || 0,
+        cost: Number(info?.cost) || 0,
+      }
+    })
+  }
+
   // Rows arrive sorted by strength, so the index is the rank
   const ranked = computed(() =>
     allRows.value.map((r, i) => {
@@ -82,6 +113,8 @@ export function useTierList({ allRows, previousSeries, seriesKey }) {
         use: parseFloat(r.usePct),
         winEv: parseFloat(r.winPerEv),
         winDk: parseFloat(r.winPerDk),
+        // In DeckPopover's card shape; empty until the index has loaded
+        staples: staplesOf(r.archetype),
         move: !hasMovement.value
           ? null
           : prev

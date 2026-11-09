@@ -31,6 +31,7 @@ export function usePrefetch() {
     }
     warm('card-meta', () => import('$data/card-meta.json'))
     warm('tier-card-ids', () => import('$data/tier-card-ids.json'))
+    warm('tier-staples', () => import('$data/tier-staples.json'))
     warm('arch-quadrant', () => import('@/components/archetype/ArchetypeQuadrantChart.vue'))
     warm('card-quadrant', () => import('@/components/chart/CardQuadrantChart.vue'))
   }

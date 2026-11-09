@@ -191,6 +191,9 @@ const router = useRouter()
 const { loadTierData } = useTierData()
 
 await loadTierData()
+// The staples behind each row's quick view; loaded once the page is up so the
+// first hover or tap already has them
+onMounted(loadTierStaples)
 
 const { selectedKey, currentSeries, previousSeries, allRows } = useSeriesState()
 
