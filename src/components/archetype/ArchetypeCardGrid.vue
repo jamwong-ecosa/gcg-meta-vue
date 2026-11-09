@@ -78,7 +78,7 @@
           :is-sig="sigIds.has(item.card.cardId)"
           :is-new="!removed && isNew(item.card.cardId)"
           :is-removed="removed"
-          :stack="item.stack"
+          :stacked="!!item.stack"
           :hint-content="item.stack ? item.group.stackHint : null"
           :copies-text="item.stack ? item.group.stackCopies : ''"
           @zoom="(id, info) => onZoom(item, id, info)"
@@ -250,15 +250,12 @@ function groupInfo(g, members) {
 // A box piece is closed (border, rounded) only at the group's first and last
 // card, so a group broken over two rows reads as one, open at the break. It
 // reaches half the column gap towards a neighbour in the same row. A collapsed
-// group's box also takes in the versions stacked up and to the right
+// group's box rises a little higher to take in the layer peeking above the card
 function boxClass({ first, last, col, stacked }) {
-  if (stacked) {
-    return tw`-top-2.5 -right-2.5 -bottom-1 -left-0.5 rounded-lg border-x-2 sm:-top-4 sm:-right-4 sm:-bottom-1.5 sm:-left-1.5`
-  }
   const toLeft = !first && col > 0
   const toRight = !last && col < cols.value - 1
   return [
-    tw`-inset-y-1 sm:-inset-y-1.5`,
+    stacked ? tw`-top-2.5 -bottom-1 sm:-top-3.5 sm:-bottom-1.5` : tw`-inset-y-1 sm:-inset-y-1.5`,
     toLeft ? tw`-left-2 sm:-left-3` : tw`-left-0.5 sm:-left-1.5`,
     toRight ? tw`-right-2 sm:-right-3` : tw`-right-0.5 sm:-right-1.5`,
     first && tw`rounded-l-lg border-l-2`,

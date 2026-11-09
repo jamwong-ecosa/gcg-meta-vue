@@ -5,56 +5,54 @@
   <UiHint class="flex flex-col" :content="hintContent ?? hint">
     <button
       class="group relative flex w-full flex-col text-left"
-      :class="stack.length ? tw`cursor-pointer` : tw`cursor-zoom-in`"
+      :class="stacked ? tw`cursor-pointer` : tw`cursor-zoom-in`"
       @click="emit('zoom', card.cardId, hint)"
     >
+      <!-- Collapsed same-effect group: the card keeps its full size, and one
+           narrower blank card behind it peeks out above its top edge, however
+           many versions the group holds -->
       <div class="relative w-full">
-        <!-- Collapsed same-effect group: the other versions peek out behind, up
-             and to the right, farthest first so the front card paints on top -->
-        <img
-          v-for="layer in stackLayers"
-          :key="layer.card.cardId"
-          :src="`https://jw-assets.imgix.net/gcg-img/${layer.card.cardId}.webp?w=200&auto=format,compress`"
-          alt=""
-          class="absolute inset-0 aspect-[5/7] w-full rounded object-cover shadow-sm ring-1 ring-black/10 dark:ring-white/10"
-          :class="layer.class"
-          loading="lazy"
-        />
-        <!-- Tag ring drawn behind the card, flush to its edge: TECH yellow, NEW
-             green, both split on the diagonal (yellow top-left, green bottom-right) -->
         <span
-          v-if="ringClass"
-          class="pointer-events-none absolute -inset-1 rounded-md"
-          :class="ringClass"
+          v-if="stacked"
+          class="absolute inset-x-1.5 -top-1.5 bottom-2 rounded border border-gray-400 bg-gray-300 sm:inset-x-2 sm:-top-2 dark:border-slate-400 dark:bg-slate-500"
         />
-        <div class="relative w-full overflow-hidden rounded">
-          <img
-            :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
-            :alt="card.name"
-            class="aspect-[5/7] w-full object-cover transition-[filter] group-hover:brightness-110"
-            :class="{ 'opacity-60 grayscale-[60%]': isRemoved }"
-            loading="lazy"
-          />
+        <div class="relative w-full">
+          <!-- Tag ring drawn behind the card, flush to its edge: TECH yellow, NEW
+             green, both split on the diagonal (yellow top-left, green bottom-right) -->
           <span
-            v-if="!isRemoved"
-            class="absolute top-0 right-0 rounded-bl-md bg-black/70 px-1.5 font-mono text-base leading-snug font-bold text-white sm:text-lg"
-          >
-            {{ copiesText || `×${copies}` }}
-          </span>
-          <!-- Labels sit in one row bottom-left, over the card's trait text, so they
-             don't hide the level or cost -->
-          <div
-            v-if="badges.length"
-            class="absolute bottom-0 left-0 flex max-w-full flex-wrap-reverse items-end gap-px"
-          >
+            v-if="ringClass"
+            class="pointer-events-none absolute -inset-1 rounded-md"
+            :class="ringClass"
+          />
+          <div class="relative w-full overflow-hidden rounded">
+            <img
+              :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
+              :alt="card.name"
+              class="aspect-[5/7] w-full object-cover transition-[filter] group-hover:brightness-110"
+              :class="{ 'opacity-60 grayscale-[60%]': isRemoved }"
+              loading="lazy"
+            />
             <span
-              v-for="b in badges"
-              :key="b.key"
-              class="rounded-r px-1 text-xxs leading-tight font-bold"
-              :class="b.class"
+              v-if="!isRemoved"
+              class="absolute top-0 right-0 rounded-bl-md bg-black/70 px-1.5 font-mono text-base leading-snug font-bold text-white sm:text-lg"
             >
-              {{ b.text }}
+              {{ copiesText || `×${copies}` }}
             </span>
+            <!-- Labels sit in one row bottom-left, over the card's trait text, so they
+             don't hide the level or cost -->
+            <div
+              v-if="badges.length"
+              class="absolute bottom-0 left-0 flex max-w-full flex-wrap-reverse items-end gap-px"
+            >
+              <span
+                v-for="b in badges"
+                :key="b.key"
+                class="rounded-r px-1 text-xxs leading-tight font-bold"
+                :class="b.class"
+              >
+                {{ b.text }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -93,8 +91,8 @@ const props = defineProps({
   isRemoved: { type: Boolean, default: false },
   // Win-rate change with the card vs without (see liftFor in ArchetypeDetail); null hides it
   lift: { type: Object, default: null },
-  // Other versions of a collapsed same-effect group, drawn stacked behind the card
-  stack: { type: Array, default: () => [] },
+  // Stands for a collapsed same-effect group: drawn as a stack, opens on click
+  stacked: { type: Boolean, default: false },
   // Hover hint in place of the card's own (a collapsed group shows the group's)
   hintContent: { type: Object, default: null },
   // Copies badge in place of the card's own "×N" (a collapsed group: "≡×5")
@@ -122,18 +120,6 @@ const hint = computed(() =>
         rows: statsRows.value,
         tags: badges.value,
       },
-)
-// At most two layers show, however many versions there are
-// and each one further back is darker, so the edges read as a pile
-const STACK_OFFSETS = [
-  tw`translate-x-0.75 -translate-y-0.75 brightness-90 sm:translate-x-1.25 sm:-translate-y-1.25`,
-  tw`translate-x-1.5 -translate-y-1.5 brightness-75 sm:translate-x-2.5 sm:-translate-y-2.5`,
-]
-const stackLayers = computed(() =>
-  props.stack
-    .slice(0, STACK_OFFSETS.length)
-    .map((card, i) => ({ card, class: STACK_OFFSETS[i] }))
-    .reverse(),
 )
 const ringClass = computed(() => tagRingClass(tags.value))
 const barClass = computed(() => inclusionBarClass(props.card.inclusionRate))

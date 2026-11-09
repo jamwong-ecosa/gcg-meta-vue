@@ -557,9 +557,11 @@ function calculateTechScore(
 // cards go to "Other Cards" — no per-type quota, so a pilot in 3 decks isn't
 // featured beside the staples just to fill a slot.
 const FEATURED_MIN_INCLUSION = 0.15
-// Share of a same-effect group's decks that must mix versions for its typical
-// copies to come from the mixed decks (see typicalCopies)
+// Share of a same-effect group's decks that must mix versions, and how many
+// decks at least, for its typical copies to come from the mixed decks (see
+// typicalCopies): 1 mixed deck of 3 is a third, but still one list
 const MIXED_MIN_SHARE = 0.25
+const MIXED_MIN_DECKS = 3
 function selectTopCards(allCards) {
   return allCards.filter(
     c => TYPE_PICK_ORDER.includes(c.type) && c.inclusionRate > FEATURED_MIN_INCLUSION,
@@ -657,8 +659,9 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, totalAll) {
     )
     const decksWithAll = ids => deckQtys.filter(qtys => ids.every(id => qtys.has(id))).length
     // Median total copies of the effect (all versions added up) in decks mixing
-    // two or more versions, or, when under MIXED_MIN_SHARE of the decks running
-    // it mix, in all of them (2 mixed decks out of 31 aren't typical). The median,
+    // two or more versions, or, when under MIXED_MIN_SHARE or MIXED_MIN_DECKS of
+    // the decks running it mix, in all of them (2 mixed decks out of 31 aren't
+    // typical). The median,
     // not the most common total, which a small sample tips either way (7 decks
     // on 6 against 6 on 5); with an even count, the lower middle value
     const typicalCopies = ids => {
@@ -675,7 +678,8 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, totalAll) {
           mixed.push(total)
         }
       }
-      const ofMixed = mixed.length > 0 && mixed.length >= any.length * MIXED_MIN_SHARE
+      const ofMixed =
+        mixed.length >= MIXED_MIN_DECKS && mixed.length >= any.length * MIXED_MIN_SHARE
       const totals = (ofMixed ? mixed : any).sort((a, b) => a - b)
       const median = totals[Math.floor((totals.length - 1) / 2)] ?? 0
       return { typicalCopies: median, typicalOfMixed: ofMixed, mixedDecks: mixed.length }
