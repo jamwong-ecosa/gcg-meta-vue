@@ -1,4 +1,4 @@
-import { useStorage } from '@vueuse/core'
+import { useSessionStorage, useStorage, watchDebounced } from '@vueuse/core'
 import cardMeta from '$data/card-meta.json'
 
 const TIER_ORDER = ['S', 'A', 'B', 'C', 'D', '--']
@@ -15,6 +15,25 @@ export const TIER_SORT_OPTIONS = [
   { key: 'wins', labelKey: 'tier.col.wins' },
   { key: 'move', labelKey: 'tier.col.move' },
 ]
+
+// The filters, sort and 0-win list live in the query (TIER_STATE_PARAMS), so the
+// back button returns to the same view: ?q=…&colors=Blue,Red&sort=score-desc&zero=1.
+// Defaults are left out. Changing one only replaces the URL, which keeps the
+// scroll position (see scrollBehavior)
+function readState(query) {
+  const one = v => (Array.isArray(v) ? v[0] : v) ?? ''
+  const [key, dir] = one(query.sort).split('-')
+  const sortOk = TIER_SORT_OPTIONS.some(o => o.key === key) && ['asc', 'desc'].includes(dir)
+  return {
+    query: one(query.q),
+    colors: one(query.colors)
+      .split(',')
+      .filter(c => c in COLOR_HEX),
+    sortKey: sortOk ? key : 'rank',
+    sortDir: sortOk ? dir : 'asc',
+    showZeroWins: one(query.zero) === '1',
+  }
+}
 
 // Every card each archetype plays ({ [series]: { [archetype]: [cardId, …] } }),
 // kept out of tiers.json and loaded the first time someone types a search;
@@ -60,20 +79,62 @@ const cardById = new Map(cardMeta.map(c => [c.id, c]))
 // and the mobile list render `sections` + `zeroRows`, so they always agree.
 // `seriesKey` picks the series in the played-card index
 export function useTierList({ allRows, previousSeries, seriesKey }) {
-  const query = ref('')
+  const route = useRoute()
+  const router = useRouter()
+  const ownRoute = route.name
+  const initial = readState(route.query)
+
+  const query = ref(initial.query)
   // Two characters is enough: some card names are that short
-  watch(query, q => {
-    if (q.trim().length >= 2) {
-      loadCardIds()
+  watch(
+    query,
+    q => {
+      if (q.trim().length >= 2) {
+        loadCardIds()
+      }
+    },
+    { immediate: true },
+  )
+  const colors = ref(initial.colors)
+  const groupByColor = useStorage('gcg-group-color', false)
+  const sortKey = ref(initial.sortKey)
+  const sortDir = ref(initial.sortDir)
+  // Every section starts open; headers fold on click. Kept for the tab's
+  // session, so coming back to the page finds them as they were left
+  const collapsed = useSessionStorage('gcg-tier-collapsed', new Set())
+  const showZeroWins = ref(initial.showZeroWins)
+
+  // Mirror the state into the URL (see TIER_STATE_PARAMS). Typing is debounced,
+  // and a series switch, which replaces the whole query, gets the params back.
+  // Only while this page is the current route, not as the router leaves it
+  const stateParams = computed(() => {
+    const q = query.value.trim()
+    const isDefaultSort = sortKey.value === 'rank' && sortDir.value === 'asc'
+    return {
+      q: q || undefined,
+      colors: colors.value.length ? colors.value.join(',') : undefined,
+      sort: isDefaultSort ? undefined : `${sortKey.value}-${sortDir.value}`,
+      zero: showZeroWins.value ? '1' : undefined,
     }
   })
-  const colors = ref([])
-  const groupByColor = useStorage('gcg-group-color', false)
-  const sortKey = ref('rank')
-  const sortDir = ref('asc')
-  // Every section starts open; headers fold on click
-  const collapsed = ref(new Set())
-  const showZeroWins = ref(false)
+  watchDebounced(
+    [stateParams, () => route.query.series],
+    () => {
+      if (route.name !== ownRoute) {
+        return
+      }
+      const next = { ...route.query, ...stateParams.value }
+      for (const k of TIER_STATE_PARAMS) {
+        if (next[k] === undefined) {
+          delete next[k]
+        }
+      }
+      if (TIER_STATE_PARAMS.some(k => next[k] !== route.query[k])) {
+        void router.replace({ query: next })
+      }
+    },
+    { debounce: 250 },
+  )
 
   const prevByName = computed(() => {
     const map = new Map()

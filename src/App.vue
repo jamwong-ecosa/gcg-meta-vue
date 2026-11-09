@@ -144,5 +144,7 @@ const { start: startPrefetch } = usePrefetch()
 function onResolve() {
   finish()
   startPrefetch()
+  // Lets the router restore a back/forward scroll position (see scrollBehavior)
+  pageRendered(route.fullPath)
 }
 </script>
