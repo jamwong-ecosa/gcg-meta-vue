@@ -252,13 +252,52 @@ function listSimilarity(a, b) {
   return total ? shared / total : 0
 }
 
+// Decks with no LR unit at 2+ copies have no signature card, so their key is just
+// their colours. When a colour combo's such decks are one coherent list, they're
+// named after their defining units instead: the two most valuable units in at
+// least FALLBACK_MIN_SHARE of them, by rarity, then the signature score (copies
+// and level). A mixed bag with no shared units stays unnamed and goes to the
+// unassigned decks. Needs FALLBACK_MIN_DECKS, the size an archetype needs
+const FALLBACK_MIN_SHARE = 0.8
+const FALLBACK_MIN_DECKS = 3
+const RARITY_RANK = { LR: 4, R: 3, U: 2, 'C+': 1 }
+function fallbackSignatures(decks) {
+  const units = new Map()
+  for (const deck of decks) {
+    for (const card of deck) {
+      const info = lookup(card.cardId)
+      if (info.type !== 'UNIT') {
+        continue
+      }
+      const u = units.get(card.cardId) ?? { cardId: card.cardId, info, decks: 0, copies: 0 }
+      u.decks++
+      u.copies += card.quantity
+      units.set(card.cardId, u)
+    }
+  }
+  const score = u => (u.copies / u.decks) * 10 + (parseInt(u.info.level) || 0) * 7
+  return [...units.values()]
+    .filter(u => u.decks / decks.length >= FALLBACK_MIN_SHARE)
+    .sort(
+      (a, b) =>
+        (RARITY_RANK[b.info.rarity] ?? 0) - (RARITY_RANK[a.info.rarity] ?? 0) ||
+        score(b) - score(a) ||
+        a.cardId.localeCompare(b.cardId),
+    )
+    .slice(0, 2)
+    .map(u => ({ name: u.info.name, cardId: u.cardId }))
+}
+
 // Returns keyOf(deck) → { key, sigCardIds } with merged keys resolved to the
-// archetype they fold into. Decks without a signature card are left as they are
+// archetype they fold into, and signature-less decks to their fallback name
+// (see fallbackSignatures) when they have one
 function createComboKeyResolver(players) {
   const groups = new Map()
+  const sigless = new Map()
   for (const player of players) {
     const { key, sigCardIds } = buildComboKey(player.deck)
     if (sigCardIds.length === 0) {
+      sigless.set(key, [...(sigless.get(key) ?? []), player.deck])
       continue
     }
     let group = groups.get(key)
@@ -310,8 +349,23 @@ function createComboKeyResolver(players) {
     }
   }
 
+  const named = new Map()
+  for (const [key, decks] of sigless) {
+    const sigs = decks.length >= FALLBACK_MIN_DECKS ? fallbackSignatures(decks) : []
+    if (sigs.length) {
+      named.set(key, {
+        key: `${key} (${sigs.map(sig => sig.name).join(' / ')})`,
+        sigCardIds: sigs.map(sig => sig.cardId),
+      })
+      console.log(`  named ${key} (${decks.length}, no LR) → ${named.get(key).key}`)
+    }
+  }
+
   return deck => {
     const raw = buildComboKey(deck)
+    if (raw.sigCardIds.length === 0) {
+      return named.get(raw.key) ?? raw
+    }
     const target = mergedInto.get(raw.key)
     return target ? { key: target.key, sigCardIds: target.sigCardIds } : raw
   }
@@ -541,6 +595,8 @@ function formatTierRows(series) {
         score: a.tierScore,
         tier: a.tierLabel,
         darkHorse: a.darkHorse ?? false,
+        // Named after non-LR units: the deck runs no LR unit at 2+ copies
+        noLR: a.sigCardIds.every(id => !lookup(id).rarity?.startsWith('LR')),
       }
     })
 }
@@ -820,8 +876,10 @@ function processSeries(series) {
 
   // Filter to archetypes with at least 3 decks
   const minSize = 3
+  // Decks still without a signature card (no coherent fallback) are only listed
+  // with the unassigned decks below, not as an archetype of their own
   const mainDetails = archetypeDetails
-    .filter(a => a.deckCount >= minSize)
+    .filter(a => a.deckCount >= minSize && a.sigCardIds.length > 0)
     .sort((a, b) => b.deckCount - a.deckCount)
 
   // Collect unassigned decks: no sig card OR filtered-out archetype (< minSize decks)

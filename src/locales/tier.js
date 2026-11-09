@@ -15,6 +15,7 @@ export default {
         '{use} is the share of placed decks, {winEv} the share of events won and {winDk} wins per placed deck.',
       move: '{term} is the rank change since {series}: ▲ climbed, ▼ dropped, NEW wasn’t placed then.',
       darkHorse: '🐴 marks a dark horse: rarely played but winning far more often than average.',
+      noLR: 'No LR marks an archetype built without LR units, named after its core units instead.',
       hover:
         'Hover a column header for its definition, and click it to sort. Hover a row’s card icon (tap on phones) for its staples.',
     },
@@ -31,6 +32,7 @@ export default {
     zeroWins: '0 Wins（{n}）{sign}',
     staplesLabel: 'Staples · in {pct}%+ of decks',
     staplesPeek: 'Quick view of the staples',
+    noLR: 'No LR',
     sectionCount: '{n} archetype | {n} archetypes',
     sectionTotals: '{decks} decks · {wins} wins',
     hideStats: 'Hide stats',
@@ -68,6 +70,7 @@ export default {
       move: 'Rank change since the previous series',
       darkHorse:
         'Dark horse: under 2% of placed decks, but converting placements into wins at least 30% better than average',
+      noLR: 'No LR: none of these decks runs an LR unit at 2+ copies, so the archetype is named after the units nearly every one of them plays',
     },
   },
   'zh-HK': {
@@ -83,6 +86,7 @@ export default {
       stats: '{use}為入賞卡組佔比，{winEv}為奪得賽事冠軍的比例，{winDk}為每副入賞卡組的冠軍數。',
       move: '{term}為自 {series} 以來的排名變化：▲ 上升、▼ 下降、NEW 表示當時未入賞。',
       darkHorse: '🐴 代表黑馬：使用人數少，但奪冠率遠高於平均。',
+      noLR: '無 LR 代表不靠 LR 機體的牌型，改以其主力機體命名。',
       hover:
         '將鼠標移到欄位標題可查看說明，點擊可排序；移到每行的卡牌圖示（手機請按一下）可查看主力卡。',
     },
@@ -99,6 +103,7 @@ export default {
     zeroWins: '0 冠（{n}）{sign}',
     staplesLabel: '主力卡 · {pct}% 以上卡組採用',
     staplesPeek: '快速查看主力卡',
+    noLR: '無 LR',
     sectionCount: '{n} 個牌型',
     sectionTotals: '{decks} 副卡組 · {wins} 冠',
     hideStats: '隱藏數據',
@@ -134,6 +139,7 @@ export default {
       tier: '級別按分數分群切分，因此各級別數量不一',
       move: '與上一個系列相比的排名變化',
       darkHorse: '黑馬：入賞卡組佔比不到 2%，但入賞轉冠率比平均高出至少 30%',
+      noLR: '無 LR：此牌型的卡組都沒有採用 2 張或以上的 LR 機體，因此以幾乎每副都採用的機體命名',
     },
   },
 }

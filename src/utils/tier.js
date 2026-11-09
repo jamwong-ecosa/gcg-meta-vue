@@ -64,3 +64,4 @@ export function tierShift(prevTier, tier) {
 export const tierColumnHelp = key => translate(`tier.help.${key}`)
 
 export const darkHorseHelp = () => translate('tier.help.darkHorse')
+export const noLRHelp = () => translate('tier.help.noLR')

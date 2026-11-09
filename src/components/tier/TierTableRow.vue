@@ -71,6 +71,13 @@
         >
           🐴
         </UiHint>
+        <UiHint
+          v-if="row.noLR"
+          class="shrink-0 rounded bg-gray-100 px-1 text-xs whitespace-nowrap text-gray-600 dark:bg-white/10 dark:text-nalika-text-muted"
+          :text="noLRHelp()"
+        >
+          {{ $t('tier.noLR') }}
+        </UiHint>
       </div>
     </td>
     <td class="px-3 py-2 text-right font-mono tabular-nums">{{ row.decks }}</td>

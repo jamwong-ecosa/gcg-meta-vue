@@ -40,6 +40,13 @@
             <UiHint v-if="row.darkHorse" class="text-xs leading-none" :text="darkHorseHelp()">
               🐴
             </UiHint>
+            <UiHint
+              v-if="row.noLR"
+              class="shrink-0 rounded bg-gray-100 px-1 text-xxs leading-tight font-medium whitespace-nowrap text-gray-600 dark:bg-white/10 dark:text-nalika-text-muted"
+              :text="noLRHelp()"
+            >
+              {{ $t('tier.noLR') }}
+            </UiHint>
           </div>
           <ArchetypeCardNames
             v-if="cardNames.length"
@@ -57,6 +64,13 @@
               :text="darkHorseHelp()"
             >
               🐴
+            </UiHint>
+            <UiHint
+              v-if="!headline && row.noLR"
+              class="ml-1 rounded bg-gray-100 px-1 text-xxs leading-tight font-medium whitespace-nowrap text-gray-600 dark:bg-white/10 dark:text-nalika-text-muted"
+              :text="noLRHelp()"
+            >
+              {{ $t('tier.noLR') }}
             </UiHint>
           </ArchetypeCardNames>
         </div>
