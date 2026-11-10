@@ -201,15 +201,20 @@
               <span class="text-sm font-bold text-gray-700 tabular-nums dark:text-nalika-text">
                 {{ row.score }}
               </span>
-              <span class="ml-1 flex items-center gap-0.5">
-                <span
-                  v-for="dot in row.colorDots"
-                  :key="dot.name"
-                  class="h-2.5 w-2.5 rounded-full"
-                  :style="{ background: dot.hex }"
-                />
+              <!-- Dots and combo as in the tier table rows -->
+              <span
+                class="ml-1 flex min-w-0 items-center gap-1.5 text-sm text-sumi dark:text-nalika-text"
+              >
+                <span class="flex shrink-0 items-center gap-0.5">
+                  <span
+                    v-for="dot in row.colorDots"
+                    :key="dot.name"
+                    class="mr-px inline-block h-2 w-2 rounded-full"
+                    :style="{ background: dot.hex }"
+                  />
+                </span>
+                <span class="truncate">{{ comboName(row.colors) }}</span>
               </span>
-              <span class="truncate">{{ comboName(row.colors) }}</span>
             </div>
             <!-- Card names joined by "/", wrapping between names (inside one only
                  when it is wider than the line). Every name has a slash in front;

@@ -33,9 +33,9 @@ export function buildLabelSegments(combo, sigCards, { skipBaseCombo } = {}) {
   // The base is a color combo ('Red+White'); show it in the current language
   const segs = [{ text: comboName(baseCombo) }]
   if (qualifier) {
-    segs.push({ text: '（' })
+    // Card names follow the combo after a space, no （）
+    segs.push({ text: ' ' })
     segs.push(...buildSegmentsFor(qualifier, sigCards))
-    segs.push({ text: '）' })
   }
   return segs
 }
