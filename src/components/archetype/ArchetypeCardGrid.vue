@@ -87,6 +87,7 @@
           :is-sig="sigIds.has(item.card.cardId)"
           :is-new="!removed && isNew(item.card.cardId)"
           :is-removed="removed"
+          :ban-rule="banRuleOf(item.card.cardId)"
           :stacked="!!item.stack"
           :hint-content="item.stack ? item.group.stackHint : null"
           :copies-text="item.stack ? item.group.stackCopies : ''"
@@ -113,6 +114,8 @@ const props = defineProps({
   sigIds: { type: Set, default: () => new Set() },
   // (cardId) => boolean
   isNew: { type: Function, default: () => false },
+  // (cardId) => the card's ban-list entry as it bears on this archetype, or null
+  banRuleOf: { type: Function, default: () => null },
 })
 const emit = defineEmits(['zoom'])
 

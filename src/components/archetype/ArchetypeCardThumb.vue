@@ -103,6 +103,8 @@ const props = defineProps({
   hintContent: { type: Object, default: null },
   // Copies badge in place of the card's own "×N" (a collapsed group: "×4–6", drawn in sky)
   copiesText: { type: String, default: '' },
+  // Its ban-list entry for this archetype ({ kind, limit?, partnerNames? }), or null
+  banRule: { type: Object, default: null },
 })
 const emit = defineEmits(['zoom'])
 
@@ -110,12 +112,28 @@ const { copies, liftText, liftClass, statsRows } = useCardStats(
   () => props.card,
   () => props.lift,
 )
+const { t } = useI18n()
+// Ban-list tag, removed cards included (it may be why they were dropped)
+const banRule = computed(() => props.banRule)
 const tags = computed(() => ({
   sig: props.isSig,
   tech: !props.isRemoved && props.card.inWinner,
   new: !props.isRemoved && props.isNew,
+  ...(banRule.value && { [banRule.value.kind]: true }),
 }))
-const badges = computed(() => tagBadges(tags.value))
+// The ban tag's tooltip states the card's rule, not a deck's breach of it
+const badges = computed(() => {
+  const rule = banRule.value
+  const titles = rule
+    ? {
+        [rule.kind]: t(`card.banRule.${rule.kind}`, {
+          limit: rule.limit,
+          cards: rule.partnerNames?.join(', '),
+        }),
+      }
+    : {}
+  return tagBadges(tags.value, titles)
+})
 // Name and card number, stats, then what each tag on the card means
 const hint = computed(() =>
   props.isRemoved
