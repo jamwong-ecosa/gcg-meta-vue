@@ -136,8 +136,13 @@
       </button>
     </div>
 
-    <div v-if="open" class="px-3 pt-1 pb-3">
-      <dl class="grid grid-cols-4 gap-x-2">
+    <!-- A tinted panel under the name column: pl-7 + the panel's px-2.5 puts the
+         labels where the names start (past the deck-stack icon), pr-3 ends it
+         where the scores end -->
+    <div v-if="open" class="pr-3 pb-3 pl-7">
+      <dl
+        class="grid grid-cols-4 gap-x-2 rounded-md bg-gray-500/[0.03] px-2.5 py-2 dark:bg-white/[0.025]"
+      >
         <div v-for="s in stats" :key="s.key">
           <dt
             class="text-xxs font-semibold tracking-widest text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"

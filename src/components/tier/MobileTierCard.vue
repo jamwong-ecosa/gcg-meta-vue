@@ -2,6 +2,16 @@
   <!-- pt-0.5: room for the first box's outline (a ring, drawn outside the box),
        which the opaque sticky filter bar above would otherwise cover -->
   <div class="space-y-1.5 pt-0.5 md:hidden">
+    <!-- Says once what the numbers on the right of every row are, instead of
+         labelling each row; pr-3 puts it over the scores -->
+    <p
+      v-if="sections.length"
+      class="pr-3 text-right font-mono text-xxs text-gray-400 tabular-nums dark:text-gray-500"
+    >
+      <span class="font-semibold">{{ $t('tier.col.score') }}</span>
+      ·
+      {{ $t('tier.col.use') }}
+    </p>
     <!-- Header and rows share one box; the header sticks only while its own
          section is in view (overflow-clip, unlike overflow-hidden, keeps sticky working) -->
     <div v-for="section in sections" :key="section.key" :class="GROUP_CLASS">
@@ -49,7 +59,7 @@
         </span>
         <span v-if="section.kind !== 'tier'">{{ section.label }}</span>
         <span class="font-normal text-gray-500 dark:text-gray-400">
-          ({{ section.rows.length }})
+          {{ $t('tier.sectionCount', section.rows.length) }}
         </span>
         <span class="ml-auto font-mono font-normal tabular-nums">
           {{
