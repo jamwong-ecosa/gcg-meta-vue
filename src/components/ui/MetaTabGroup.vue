@@ -22,7 +22,8 @@
 </template>
 
 <script setup>
-const modelValue = defineModel({ type: [String, Number], required: true })
+// null is a valid value: the "All" tab in the colour and card-type filters
+const modelValue = defineModel({ type: [String, Number], default: null })
 
 defineProps({
   options: { type: Array, required: true },

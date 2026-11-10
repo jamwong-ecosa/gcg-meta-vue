@@ -94,7 +94,9 @@
 
     <RouterView v-slot="{ Component }">
       <Suspense @resolve="onResolve">
-        <component :is="Component" />
+        <!-- v-if: before the first route resolves Component is empty, and the bare
+             comment it would render makes Suspense warn about a missing root -->
+        <component :is="Component" v-if="Component" />
         <template #fallback>
           <div class="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
             {{ $t('common.loading') }}
