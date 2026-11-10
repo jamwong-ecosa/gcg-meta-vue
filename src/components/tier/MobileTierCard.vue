@@ -7,7 +7,7 @@
     <div v-for="section in sections" :key="section.key" :class="GROUP_CLASS">
       <button
         v-if="section.kind !== 'flat'"
-        class="sticky z-30 flex w-full cursor-pointer items-center gap-2 py-1.5 pl-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"
+        class="sticky z-30 flex w-full cursor-pointer items-center gap-2 py-1.5 pr-3 pl-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"
         :class="section.kind === 'tier' ? tierBandClass(section.tier) : COLOR_BAND_BASE"
         :style="{
           top: groupTop,
@@ -16,9 +16,22 @@
         :aria-expanded="!collapsed.has(section.key)"
         @click="$emit('toggleSection', section.key)"
       >
-        <!-- Same columns as TierCardItem: pl-3.5 matches the rows, so the
-             pill/dots line up with the rows' leading column, the totals end
-             where the scores end and the arrow sits in the chevron column -->
+        <!-- Same columns as TierCardItem: the arrow sits over the rows' staples
+             icons, the pill/dots over the start of their text, and the totals
+             end where the scores end (pr-3) -->
+        <svg
+          class="size-4 shrink-0 text-gray-500 transition-transform dark:text-gray-400"
+          :class="collapsed.has(section.key) && '-rotate-90'"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
+            clip-rule="evenodd"
+          />
+        </svg>
         <span
           v-if="section.kind === 'tier'"
           class="w-6 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
@@ -45,25 +58,6 @@
               wins: $n(section.wins),
             })
           }}
-        </span>
-        <!-- ml-7 plus the gap-2 matches the rows' staples icon (w-9) between
-             the scores and the chevron, so the totals end in line with the scores -->
-        <span
-          class="ml-7 flex w-8 shrink-0 justify-center text-gray-500 dark:text-gray-400"
-          aria-hidden="true"
-        >
-          <svg
-            class="size-4 transition-transform"
-            :class="collapsed.has(section.key) && '-rotate-90'"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
-              clip-rule="evenodd"
-            />
-          </svg>
         </span>
       </button>
       <template v-if="!collapsed.has(section.key)">

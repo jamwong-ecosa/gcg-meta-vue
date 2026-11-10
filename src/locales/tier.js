@@ -17,7 +17,7 @@ export default {
       darkHorse: '🐴 marks a dark horse: rarely played but winning far more often than average.',
       noLR: 'No LR marks an archetype built without LR units, named after its core units instead.',
       hover:
-        'Hover a column header for its definition, and click it to sort. Hover a row’s card icon (tap on phones) for its staples.',
+        'Hover a column header for its definition, and click it to sort. Hover a row’s deck icon (tap on phones) for its staples.',
     },
     searchPlaceholder: 'Search card name, number or color',
     sort: 'Sort',
@@ -88,7 +88,7 @@ export default {
       darkHorse: '🐴 代表黑馬：使用人數少，但奪冠率遠高於平均。',
       noLR: '無 LR 代表不靠 LR 機體的牌型，改以其主力機體命名。',
       hover:
-        '將鼠標移到欄位標題可查看說明，點擊可排序；移到每行的卡牌圖示（手機請按一下）可查看主力卡。',
+        '將鼠標移到欄位標題可查看說明，點擊可排序；移到每行的卡組圖示（手機請按一下）可查看主力卡。',
     },
     searchPlaceholder: '搜尋卡名、卡號或顏色',
     sort: '排序',

@@ -5,11 +5,28 @@
     <!-- A bar rather than a left border, so it runs over the divider above
          instead of mitring into it -->
     <span class="absolute -top-px bottom-0 left-0 w-1" :class="tierBarClass(row.tier)" />
-    <!-- One line with the essentials: tap opens the analysis, the chevron shows
-         the rest of the stats -->
+    <!-- One line with the essentials: tapping the name opens the analysis,
+         tapping the score shows the rest of the stats -->
     <div class="flex items-stretch">
+      <!-- Staples quick view: a tap opens DeckPopover's fullscreen overlay. A
+           deck-stack icon leading the row as on the desktop table, under the
+           section header's arrow (same pl-3.5 and size), so the names start
+           where the header's tier pill starts -->
+      <UiDeckPopover
+        class="flex shrink-0"
+        :cards="row.staples ?? []"
+        :label="$t('tier.staplesLabel', { pct: 85 })"
+        :tags-of="card => ({ sig: row.sigCardIds?.includes(card.cardId) })"
+      >
+        <button
+          class="flex cursor-pointer items-center pr-2 pl-3.5 text-gray-400 active:text-ruri dark:text-gray-500 dark:active:text-sora"
+          :aria-label="$t('tier.staplesPeek')"
+        >
+          <UiIconDeckStack class="size-4" />
+        </button>
+      </UiDeckPopover>
       <button
-        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-3 pl-3.5 text-left transition-colors hover:bg-sky-50 active:bg-sky-50 dark:hover:bg-sky-400/10 dark:active:bg-sky-400/10"
+        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-3 pr-1 text-left transition-colors hover:bg-sky-50 active:bg-sky-50 dark:hover:bg-sky-400/10 dark:active:bg-sky-400/10"
         @click="$emit('detail', row)"
       >
         <span
@@ -74,74 +91,48 @@
             </UiHint>
           </ArchetypeCardNames>
         </div>
-        <!-- Score on top, usage and rank change underneath. Kept no taller than
-             the two-line name block, so every row's text starts at the same
-             offset instead of only the wrapped (taller) ones sitting higher -->
-        <div class="shrink-0 text-right">
-          <div
+      </button>
+      <!-- Score on top, usage and rank change underneath; the block is the stats
+           toggle, hinted by the small chevron hugging the score. Kept no taller
+           than the two-line name block, so every row's text starts at the same
+           offset. pr-3 matches the section header, so its totals end where the
+           scores end -->
+      <button
+        class="flex shrink-0 cursor-pointer flex-col items-end justify-center pr-3 pl-2 transition-colors active:bg-gray-500/5 dark:active:bg-white/5"
+        :aria-expanded="open"
+        @click="open = !open"
+      >
+        <span class="sr-only">{{ open ? $t('tier.hideStats') : $t('tier.showStats') }}</span>
+        <span class="flex items-center gap-0.5">
+          <svg
+            class="size-3.5 shrink-0 text-gray-400 transition-transform dark:text-gray-500"
+            :class="open ? 'rotate-180' : ''"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <span
             class="font-mono text-lg/5 font-bold text-aisumicha tabular-nums dark:text-nalika-text"
           >
             {{ row.score }}
-          </div>
-          <div class="flex items-baseline justify-end gap-1.5 font-mono text-xs tabular-nums">
-            <span class="text-gray-500 dark:text-gray-400">{{ row.usePct }}</span>
-            <TierMovement
-              v-if="hasMovement"
-              compact
-              :move="row.move"
-              :rank="row.rank"
-              :tier="row.tier"
-            />
-          </div>
-        </div>
-      </button>
-      <!-- Staples quick view: a tap opens DeckPopover's fullscreen overlay. At the
-           end beside the chevron, since the row's start lines up with the
-           section header. pl-2 evens the gaps to the glyphs: the score has no padding
-           while the chevron is centred in its own column -->
-      <UiDeckPopover
-        class="flex shrink-0"
-        :cards="row.staples ?? []"
-        :label="$t('tier.staplesLabel', { pct: 85 })"
-        :tags-of="card => ({ sig: row.sigCardIds?.includes(card.cardId) })"
-      >
-        <button
-          class="flex w-9 cursor-pointer items-center justify-center pl-2 text-gray-400 active:text-ruri dark:text-gray-500 dark:active:text-sora"
-          :aria-label="$t('tier.staplesPeek')"
-        >
-          <!-- Two overlapping cards, as on the desktop table -->
-          <svg
-            class="size-4.5"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            aria-hidden="true"
-          >
-            <rect x="7" y="4" width="9" height="13" rx="1.5" />
-            <path d="M4.5 6.5v8a2 2 0 0 0 2 2" stroke-linecap="round" />
-          </svg>
-        </button>
-      </UiDeckPopover>
-      <button
-        class="flex w-8 shrink-0 cursor-pointer items-center justify-center text-gray-300 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-300"
-        :aria-expanded="open"
-        :aria-label="open ? $t('tier.hideStats') : $t('tier.showStats')"
-        @click="open = !open"
-      >
-        <svg
-          class="h-5 w-5 transition-transform"
-          :class="open ? 'rotate-180' : ''"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
-            clip-rule="evenodd"
+          </span>
+        </span>
+        <span class="flex items-baseline gap-1.5 font-mono text-xs tabular-nums">
+          <span class="text-gray-500 dark:text-gray-400">{{ row.usePct }}</span>
+          <TierMovement
+            v-if="hasMovement"
+            compact
+            :move="row.move"
+            :rank="row.rank"
+            :tier="row.tier"
           />
-        </svg>
+        </span>
       </button>
     </div>
 
