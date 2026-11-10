@@ -169,15 +169,19 @@
     </section>
 
     <!-- Unassigned Decks (collapsible) -->
-    <UiCollapsibleSection
+    <UiFoldedSection
       v-if="unassignedDecks?.deckUrls?.length"
+      class="mt-6"
       :show="showUnassigned"
-      :count="unassignedDecks.count"
       :title="$t('tier.unassigned')"
+      :blurb="$t('tier.unassignedBlurb')"
+      :count-text="$t('archetype.deckCount', unassignedDecks.count)"
+      :peek-ids="unassignedAces"
+      :count="unassignedDecks.count"
       @toggle="showUnassigned = !showUnassigned"
     >
-      <ArchetypeDeckList :decks="unassignedDeckPreviews" :show-tech="false" />
-    </UiCollapsibleSection>
+      <ArchetypeDeckList class="p-3 sm:p-4" :decks="unassignedDeckPreviews" :show-tech="false" />
+    </UiFoldedSection>
   </div>
 </template>
 
@@ -239,6 +243,19 @@ function onSortSelect(e) {
 const { showUnassigned } = useCollapseState()
 
 const unassignedDecks = computed(() => currentSeries.value?.unassignedDecks ?? null)
+
+// One face per deck for the folded header: its highest-level unit
+const unassignedAces = computed(() =>
+  unassignedDeckPreviews.value
+    .slice(0, 5)
+    .map(d =>
+      d.cards
+        .filter(c => c.type === 'UNIT')
+        .reduce((best, c) => (!best || c.level > best.level ? c : best), null),
+    )
+    .filter(Boolean)
+    .map(c => c.cardId),
+)
 
 const unassignedDeckPreviews = computed(() => {
   const ud = unassignedDecks.value

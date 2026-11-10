@@ -235,44 +235,43 @@
       />
     </section>
 
-    <!-- Other Cards (collapsible) -->
-    <UiCollapsibleSection
-      v-if="otherCards.length"
-      :show="showOther"
-      :count="otherCards.length"
-      :title="$t('archetype.detail.otherCards')"
-      content-class="space-y-4"
-      root-class="mt-6"
-      @toggle="showOther = !showOther"
-    >
-      <ArchetypeCardGrid
-        class="rounded border border-gray-500/10 bg-gray-50 p-3 sm:p-4 dark:border-nalika-border dark:bg-white/[0.02]"
-        :cards="otherCards"
-        :lift-of="winLift"
-        :group-lift-of="groupWinLift"
-        :deck-count="archetype.deckCount"
-        :sig-ids="sigCardIds"
-        :is-new="isNewCard"
-        @zoom="onZoom"
-      />
-    </UiCollapsibleSection>
-
-    <!-- Removed Cards (collapsible) -->
-    <UiCollapsibleSection
-      v-if="removedCards.length"
-      :show="showRemoved"
-      :count="removedCards.length"
-      :title="$t('archetype.detail.removedCards')"
-      content-class="space-y-4"
-      @toggle="showRemoved = !showRemoved"
-    >
-      <ArchetypeCardGrid
-        class="rounded border border-gray-500/10 bg-gray-50 p-3 sm:p-4 dark:border-nalika-border dark:bg-white/[0.02]"
-        :cards="removedCards"
-        removed
-        @zoom="onZoom"
-      />
-    </UiCollapsibleSection>
+    <!-- Other and removed cards: folded until asked for -->
+    <div v-if="otherCards.length || removedCards.length" class="mt-6 space-y-3">
+      <UiFoldedSection
+        v-if="otherCards.length"
+        :show="showOther"
+        :title="$t('archetype.detail.otherCards')"
+        :blurb="$t('archetype.section.otherBlurb')"
+        :range="`<${FEATURED_MIN * 100}%`"
+        :count-text="$t('archetype.cardCount', otherCards.length)"
+        :peek-ids="otherCards.map(c => c.cardId)"
+        :count="otherCards.length"
+        @toggle="showOther = !showOther"
+      >
+        <ArchetypeCardGrid
+          class="p-3 pt-4 sm:p-4"
+          :cards="otherCards"
+          :lift-of="winLift"
+          :group-lift-of="groupWinLift"
+          :deck-count="archetype.deckCount"
+          :sig-ids="sigCardIds"
+          :is-new="isNewCard"
+          @zoom="onZoom"
+        />
+      </UiFoldedSection>
+      <UiFoldedSection
+        v-if="removedCards.length"
+        :show="showRemoved"
+        :title="$t('archetype.detail.removedCards')"
+        :blurb="$t('archetype.section.removedBlurb')"
+        :count-text="$t('archetype.cardCount', removedCards.length)"
+        :peek-ids="removedCards.map(c => c.cardId)"
+        :count="removedCards.length"
+        @toggle="showRemoved = !showRemoved"
+      >
+        <ArchetypeCardGrid class="p-3 pt-4 sm:p-4" :cards="removedCards" removed @zoom="onZoom" />
+      </UiFoldedSection>
+    </div>
   </div>
 </template>
 

@@ -33,7 +33,6 @@
               :src="`https://jw-assets.imgix.net/gcg-img/${card.cardId}.webp?w=200&auto=format,compress`"
               :alt="card.name"
               class="aspect-[5/7] w-full object-cover transition-[filter] group-hover:brightness-110"
-              :class="{ 'opacity-60 grayscale-[60%]': isRemoved }"
               loading="lazy"
             />
             <span

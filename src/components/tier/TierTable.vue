@@ -103,12 +103,33 @@
       </tbody>
 
       <tbody v-if="zeroRows.length">
+        <!-- A grey band shaped like the tier bands above, folded by default -->
         <tr
-          class="cursor-pointer text-center text-xs font-medium text-ruri hover:bg-gray-100/50 dark:hover:bg-white/10"
+          class="cursor-pointer bg-gray-50 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:bg-white/[0.06]"
+          :aria-expanded="showZeroWins"
           @click="$emit('toggleZeroWins')"
         >
-          <td :colspan="colCount" class="px-4 py-3">
-            {{ $t('tier.zeroWins', { n: zeroRows.length, sign: showZeroWins ? '−' : '+' }) }}
+          <td :colspan="colCount" class="px-4 py-1.5">
+            <div class="flex items-center gap-2">
+              <span
+                class="inline-block w-3 text-center transition-transform"
+                :class="showZeroWins && 'rotate-90'"
+              >
+                ▸
+              </span>
+              <span
+                class="w-10 rounded px-1.5 py-0.5 text-center font-bold whitespace-nowrap"
+                :class="tierPillClass('--')"
+              >
+                {{ $t('tier.zeroWins') }}
+              </span>
+              <span class="font-normal text-gray-500 dark:text-gray-400">
+                {{ $t('tier.sectionCount', zeroRows.length) }}
+              </span>
+              <span class="ml-auto font-mono font-normal tabular-nums">
+                {{ $t('tier.sectionTotals', { decks: $n(zeroDecks), wins: 0 }) }}
+              </span>
+            </div>
           </td>
         </tr>
         <template v-if="showZeroWins">
@@ -161,6 +182,9 @@ const headerCols = computed(() => [
 ])
 
 const colCount = computed(() => headerCols.value.length + 1)
+
+// Decks across the 0-win rows, for their band's totals
+const zeroDecks = computed(() => props.zeroRows.reduce((sum, r) => sum + r.decks, 0))
 
 function sortFieldOf(key) {
   return key === 'tier' ? 'rank' : key

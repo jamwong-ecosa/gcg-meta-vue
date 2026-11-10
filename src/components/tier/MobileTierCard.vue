@@ -90,27 +90,55 @@
       {{ $t('tier.noMatch') }}
     </p>
 
-    <button
-      v-if="zeroRows.length"
-      class="w-full cursor-pointer py-2 text-center text-xs font-medium text-ruri"
-      @click="$emit('toggleZeroWins')"
-    >
-      {{ $t('tier.zeroWins', { n: zeroRows.length, sign: showZeroWins ? '−' : '+' }) }}
-    </button>
-    <div v-if="showZeroWins" :class="GROUP_CLASS">
-      <TierCardItem
-        v-for="row in zeroRows"
-        :key="row.archetype"
-        :row="row"
-        :has-movement="hasMovement"
-        @detail="$emit('detail', $event)"
-      />
+    <!-- 0 wins: a grey group shaped like the tier groups, folded by default -->
+    <div v-if="zeroRows.length" :class="GROUP_CLASS">
+      <button
+        class="sticky z-30 flex w-full cursor-pointer items-center gap-2 bg-gray-50 py-1.5 pr-3 pl-3.5 text-left text-xs font-semibold text-gray-700 dark:bg-[color-mix(in_oklab,var(--color-white)_3%,var(--color-nalika-surface))] dark:text-gray-300"
+        :style="{ top: groupTop }"
+        :aria-expanded="showZeroWins"
+        @click="$emit('toggleZeroWins')"
+      >
+        <svg
+          class="size-4 shrink-0 text-gray-500 transition-transform dark:text-gray-400"
+          :class="!showZeroWins && '-rotate-90'"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <span
+          class="shrink-0 rounded px-1 py-0.5 text-center text-xxs font-bold whitespace-nowrap"
+          :class="tierPillClass('--')"
+        >
+          {{ $t('tier.zeroWins') }}
+        </span>
+        <span class="font-normal text-gray-500 dark:text-gray-400">
+          {{ $t('tier.sectionCount', zeroRows.length) }}
+        </span>
+        <span class="ml-auto font-mono font-normal tabular-nums">
+          {{ $t('tier.sectionTotals', { decks: $n(zeroDecks), wins: 0 }) }}
+        </span>
+      </button>
+      <template v-if="showZeroWins">
+        <TierCardItem
+          v-for="row in zeroRows"
+          :key="row.archetype"
+          :row="row"
+          :has-movement="hasMovement"
+          @detail="$emit('detail', $event)"
+        />
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   sections: { type: Array, required: true },
   zeroRows: { type: Array, default: () => [] },
   showZeroWins: { type: Boolean, default: false },
@@ -122,4 +150,7 @@ defineEmits(['detail', 'toggleZeroWins', 'toggleSection'])
 
 // One card per section, rows split by hairlines rather than each in its own box
 const GROUP_CLASS = tw`overflow-clip rounded bg-white ring-1 ring-gray-500/10 not-dark:shadow-xs not-dark:shadow-gray-400/10 dark:bg-nalika-surface dark:ring-white/[0.06]`
+
+// Decks across the 0-win rows, for their group's totals
+const zeroDecks = computed(() => props.zeroRows.reduce((sum, r) => sum + r.decks, 0))
 </script>

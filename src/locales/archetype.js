@@ -48,6 +48,8 @@ export default {
       staplesBlurb: 'core of the list, in almost every deck',
       flex: 'Flex & tech',
       flexBlurb: 'where builds differ',
+      otherBlurb: 'played by only a few decks',
+      removedBlurb: 'played last series, dropped this one',
     },
     lift: {
       everyDeck: 'Every deck runs it: nothing to compare',
@@ -204,6 +206,8 @@ export default {
       staplesBlurb: '卡組核心，幾乎每副都會採用',
       flex: '彈性與奇招',
       flexBlurb: '各家構築分歧之處',
+      otherBlurb: '只有少數卡組採用',
+      removedBlurb: '上一系列有用，今系列不再採用',
     },
     lift: {
       everyDeck: '每副卡組都有採用：無從比較',
