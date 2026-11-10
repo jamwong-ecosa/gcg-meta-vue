@@ -128,7 +128,7 @@
           <li
             v-for="item in group.items"
             :key="item.name"
-            class="mb-1 grid break-inside-avoid grid-cols-[3.25rem_minmax(0,1fr)_3rem_3.5rem] items-baseline gap-2 text-xs"
+            class="mb-1 grid break-inside-avoid grid-cols-[2.25rem_minmax(0,1fr)_3rem_4rem] items-baseline gap-2 pr-6 text-xs sm:grid-cols-[2.25rem_minmax(0,1fr)_3rem_3.5rem] sm:pr-0"
             :title="
               $t('card.stats.usedOfTotal', { count: item.count, total: item.total, pct: item.pct })
             "
