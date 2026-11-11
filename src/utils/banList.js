@@ -1,3 +1,5 @@
+import cardMeta from '$data/card-meta.json'
+
 // The official ban & restricted list currently in force:
 // https://www.gundam-gcg.com/zh-tw/news/01_279.html (page dated 2026-09-25).
 // Checked at display time against today's list: the decks in our data were
@@ -17,31 +19,21 @@ const BANNED_PAIRS = [
 ]
 
 // Lv.2, cost 1, AP2, HP2 units with no effect text: any two of them are a
-// banned pair, so a deck runs one kind only, up to 4 copies
-const VANILLA_UNITS = new Set([
-  'GD01-035',
-  'GD01-060',
-  'GD01-085',
-  'GD02-013',
-  'GD02-080',
-  'GD03-032',
-  'GD03-063',
-  'GD04-078',
-  'GD05-014',
-  'GD05-027',
-  'GD05-042',
-  'GD05-062',
-  'GD05-077',
-  'ST01-005',
-  'ST04-008',
-  'ST05-004',
-  'ST05-009',
-  'ST06-004',
-  'ST09-005',
-  'ST10-005',
-  'ST11-008',
-  'ST12-010',
-])
+// banned pair, so a deck runs one kind only, up to 4 copies. Read from the card
+// data so units from new sets are covered without editing this file
+const VANILLA_UNITS = new Set(
+  cardMeta
+    .filter(
+      c =>
+        c.type === 'UNIT' &&
+        c.noEffect &&
+        c.level === '2' &&
+        c.cost === '1' &&
+        c.ap === '2' &&
+        c.hp === '2',
+    )
+    .map(c => c.id),
+)
 
 // What breaks the current list in a deck of [{ cardId, qty }]:
 // [{ kind: 'banned' | 'limited' | 'pair' | 'vanilla', cardIds, limit? }],

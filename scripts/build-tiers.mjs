@@ -118,6 +118,8 @@ function writeCardMeta() {
     acquisitionInfo: c.acquisitionInfo,
     level: c.level,
     cost: c.cost,
+    ...(c.type === 'UNIT' && { ap: c.ap, hp: c.hp }),
+    ...(c.effect === '-' && { noEffect: true }),
   }))
   writeFileSync('data-processed/card-meta.json', JSON.stringify(meta, null, 2))
   console.log(`Saved data-processed/card-meta.json (${meta.length} cards)`)
