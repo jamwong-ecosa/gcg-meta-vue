@@ -91,37 +91,41 @@
       />
     </section>
 
-    <!-- Current meta -->
-    <section v-if="featured" class="mt-14 md:mt-20">
-      <!-- The series is the heading: an eyebrow, its month large with the event
-           name beside it, one line of counts. No tier-list link here — the hero's
-           "View tier list" already opens this same series -->
-      <p
-        class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70 zh:text-sm zh:tracking-wide"
-      >
-        {{ $t('home.currentMeta') }}
-      </p>
-      <h2
-        class="mt-1 flex flex-wrap items-baseline gap-x-2 text-2xl font-bold text-sumi md:text-3xl dark:text-nalika-text"
-      >
-        {{ featuredTitle.main }}
-        <span
-          v-if="featuredTitle.sub"
-          class="text-base font-semibold text-ruri md:text-lg dark:text-sora"
+    <!-- Current meta: the top eight of the tier list, poster style; each tile is
+         the archetype's signature card art with its share of placed decks on top -->
+    <section
+      v-if="featured"
+      class="relative mt-14 overflow-hidden rounded-lg border border-gray-500/15 bg-white p-3 text-sumi shadow-sm shadow-black/[0.03] sm:p-5 md:mt-20 md:p-6 dark:border-nalika-border dark:bg-nalika-surface dark:text-nalika-text"
+    >
+      <header class="relative">
+        <p
+          class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70 zh:text-sm zh:tracking-wide"
         >
-          {{ featuredTitle.sub }}
-        </span>
-      </h2>
-      <p class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
-        {{ $t('home.eventsRange', { n: $n(featured.events), range: featuredRange }) }}
-      </p>
+          {{ $t('home.currentMeta') }}
+        </p>
+        <h2
+          class="mt-1 flex flex-wrap items-baseline gap-x-2 text-2xl font-bold text-sumi md:text-3xl dark:text-nalika-text"
+        >
+          {{ featuredTitle.main }}
+          <span
+            v-if="featuredTitle.sub"
+            class="text-base font-semibold text-ruri md:text-lg dark:text-sora"
+          >
+            {{ featuredTitle.sub }}
+          </span>
+        </h2>
+        <p class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
+          {{ $t('home.eventsRange', { n: $n(featured.events), range: featuredRange }) }}
+          · {{ $t('home.ranking.decks', { n: $n(featured.totalDecks) }) }}
+        </p>
+      </header>
 
       <!-- A status line, not a CTA: the whole row opens the in-progress series' tiers -->
       <RouterLink
         v-if="inProgress"
         :to="{ name: 'tier', query: { series: inProgress.value } }"
         :title="$t('home.preliminaryTitle', { label: inProgress.label })"
-        class="group mt-4 flex items-center gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/25 dark:text-amber-200/80 dark:hover:bg-amber-900/40"
+        class="group relative mt-4 flex items-center gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/25 dark:text-amber-200/80 dark:hover:bg-amber-900/40"
       >
         <span class="relative flex h-2 w-2 shrink-0" aria-hidden="true">
           <span class="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-60" />
@@ -144,108 +148,143 @@
         </span>
       </RouterLink>
 
-      <!-- One layout at every size: the signature card art on the left, tier, name
-           and counts on the right -->
-      <div class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4">
+      <!-- One grid: #1 tall on the left, #2 and #3 large beside it, #4 and #5
+           under them at the size of the rest, which then fill rows of three -->
+      <div class="relative mt-4 grid gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
         <RouterLink
-          v-for="row in topRows"
+          v-for="(row, i) in podium"
           :key="row.archetype"
           :to="row.to"
-          class="group flex h-28 overflow-hidden rounded-lg border border-gray-500/15 bg-white transition-[border-color,box-shadow] duration-200 hover:border-ruri/30 hover:shadow-md hover:shadow-ruri/10 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/40 dark:hover:shadow-black/30"
+          class="group relative isolate overflow-hidden rounded-lg border-2 bg-gray-100 text-white transition-[translate,box-shadow] duration-200 hover:shadow-lg hover:shadow-ruri/20 motion-safe:hover:-translate-y-0.5 dark:bg-nalika-bg dark:hover:shadow-black/40"
+          :class="[
+            PODIUM[i].border,
+            i === 0
+              ? 'aspect-[4/3] sm:col-span-2 sm:aspect-[2/1] lg:col-span-1 lg:row-span-2 lg:aspect-auto'
+              : 'aspect-[4/3] lg:aspect-auto lg:h-56',
+          ]"
         >
-          <!-- Hover: soft shadow and a faint blue border; no underline through the names -->
-          <div class="relative w-28 shrink-0 overflow-hidden bg-gray-100 sm:w-40 dark:bg-nalika-bg">
-            <!-- Each card's art cropped around the unit's face (as in the pie
-                 chart); two-card archetypes split on a steep diagonal, the first
-                 named card on the left -->
-            <div
-              v-for="(art, ai) in row.thumbs"
-              :key="ai"
-              class="absolute inset-0"
-              :style="{ clipPath: art.clip }"
-            >
-              <img
-                :src="art.url"
-                alt=""
-                loading="lazy"
-                class="absolute max-w-none"
-                :style="art.style"
-              />
-            </div>
-            <svg
-              v-if="row.thumbs.length === 2"
-              class="pointer-events-none absolute inset-0 h-full w-full"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <line
-                :x1="SPLIT_TOP * 100"
-                y1="0"
-                :x2="SPLIT_BOTTOM * 100"
-                y2="100"
-                class="stroke-white dark:stroke-nalika-surface"
-                stroke-width="3"
-                vector-effect="non-scaling-stroke"
-              />
-            </svg>
-          </div>
-          <div class="flex min-w-0 flex-1 flex-col justify-center px-2.5 py-3 sm:px-3">
-            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <span
-                class="rounded px-2 py-0.5 text-sm leading-none font-bold"
-                :class="tierPillClass(row.tier)"
-              >
-                {{ row.tier }}
-              </span>
-              <span class="text-sm font-bold text-gray-700 tabular-nums dark:text-nalika-text">
-                {{ row.score }}
-              </span>
-              <!-- Dots and combo as in the tier table rows -->
-              <span
-                class="ml-1 flex min-w-0 items-center gap-1.5 text-sm text-sumi dark:text-nalika-text"
-              >
-                <span class="flex shrink-0 items-center gap-0.5">
-                  <span
-                    v-for="dot in row.colorDots"
-                    :key="dot.name"
-                    class="mr-px inline-block h-2 w-2 rounded-full"
-                    :style="{ background: dot.hex }"
-                  />
+          <img
+            v-if="row.art"
+            :src="row.art.url"
+            alt=""
+            class="absolute inset-0 -z-10 h-full w-full object-cover brightness-90 transition-[filter] duration-200 group-hover:brightness-110"
+            :style="{ objectPosition: row.art.position }"
+          />
+          <div
+            class="absolute inset-0 -z-10 bg-linear-to-t from-nalika-bg/95 via-nalika-bg/45 to-transparent"
+            :class="i === 0 ? 'via-25%' : 'via-45%'"
+          />
+          <span
+            class="absolute top-0 left-0 flex items-center justify-center rounded-br-md font-black text-sumi shadow-sm"
+            :class="[PODIUM[i].badge, i === 0 ? 'h-14 w-14 text-3xl' : 'h-10 w-10 text-xl']"
+          >
+            {{ i + 1 }}
+          </span>
+          <span
+            class="absolute top-2 right-2 rounded px-2 py-0.5 text-xs leading-none font-bold"
+            :class="tierPillClass(row.tier)"
+          >
+            {{ row.tier }}
+          </span>
+          <div
+            class="absolute inset-x-0 bottom-0 flex items-end gap-3"
+            :class="i === 0 ? 'p-3 md:p-4' : 'p-3'"
+          >
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="h-2.5 w-7 shrink-0 rounded-full" :style="row.bar" />
+                <span class="truncate text-sm font-bold text-white/75">
+                  {{ comboName(row.colors) }}
                 </span>
-                <span class="truncate">{{ comboName(row.colors) }}</span>
-              </span>
-            </div>
-            <!-- Card names joined by "/", wrapping between names (inside one only
-                 when it is wider than the line). Every name has a slash in front;
-                 the row is pulled left by the slash's width and clipped, so a name
-                 that starts a line loses its slash. 13px on phones so the longest names
-                 (ストライクフリーダムガンダム) fit a line down to 360px. A hanging indent keeps a
-                 name's own wrapped lines clear of the clipped strip. Two lines at most -->
-            <div
-              class="mt-1.5 max-h-[2lh] overflow-hidden text-[13px] leading-snug font-bold text-sumi sm:text-sm dark:text-nalika-text"
-            >
-              <div class="-ml-5 flex flex-wrap">
-                <span
-                  v-for="(name, ni) in row.names"
-                  :key="ni"
-                  class="min-w-0 pl-5 -indent-5 wrap-anywhere break-keep before:inline-block before:w-5 before:text-center before:indent-0 before:content-['/']"
-                >
-                  <span
-                    v-for="(part, pi) in name"
-                    :key="pi"
-                    :style="{ color: part.color }"
-                    v-text="part.text"
-                  />
+              </div>
+              <div
+                class="mt-1 line-clamp-2 leading-tight font-black wrap-break-word break-keep"
+                :class="i === 0 ? 'text-xl' : 'text-base'"
+              >
+                {{ row.title }}
+              </div>
+              <div class="mt-1.5 flex gap-3 text-xs font-bold tabular-nums">
+                <span class="text-white/75">
+                  {{ $t('home.ranking.placed', { n: row.decks }) }}
+                </span>
+                <span :class="row.wins ? 'text-amber-300' : 'text-white/45'">
+                  {{ $t('home.ranking.wins', { n: row.wins }) }}
                 </span>
               </div>
             </div>
-            <div class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
-              {{ $t('home.rowStats', { wins: row.wins, use: row.usePct }) }}
+            <div
+              class="flex shrink-0 items-baseline leading-none font-black tracking-tight text-sora tabular-nums"
+              :class="i === 0 ? 'text-5xl' : 'text-3xl'"
+            >
+              {{ row.share }}
+              <span class="ml-0.5" :class="i === 0 ? 'text-lg' : 'text-sm'">%</span>
+            </div>
+          </div>
+        </RouterLink>
+
+        <RouterLink
+          v-for="(row, i) in rest"
+          :key="row.archetype"
+          :to="row.to"
+          class="group relative isolate h-28 overflow-hidden rounded-lg border border-gray-500/20 bg-gray-100 text-white transition-[translate,border-color,box-shadow] duration-200 hover:border-ruri/60 hover:shadow-lg hover:shadow-ruri/20 motion-safe:hover:-translate-y-0.5 md:h-32 dark:border-nalika-border dark:bg-nalika-bg dark:hover:border-sora/60 dark:hover:shadow-black/40"
+        >
+          <img
+            v-if="row.art"
+            :src="row.art.url"
+            alt=""
+            loading="lazy"
+            class="absolute inset-0 -z-10 h-full w-full object-cover brightness-90 transition-[filter] duration-200 group-hover:brightness-110"
+            :style="{ objectPosition: row.art.position }"
+          />
+          <div
+            class="absolute inset-0 -z-10 bg-linear-to-t from-nalika-bg/95 via-nalika-bg/55 via-50% to-transparent"
+          />
+          <span
+            class="absolute top-0 left-0 flex h-9 w-9 items-center justify-center rounded-br-md bg-white/90 text-xl font-black text-sumi dark:bg-nalika-surface/90 dark:text-nalika-text"
+          >
+            {{ i + 4 }}
+          </span>
+          <span
+            class="absolute top-2 right-2 rounded px-1.5 py-0.5 text-[11px] leading-none font-bold"
+            :class="tierPillClass(row.tier)"
+          >
+            {{ row.tier }}
+          </span>
+          <div class="absolute inset-x-0 bottom-0 flex items-end gap-2 px-3 pb-2">
+            <div class="min-w-0 flex-1">
+              <div class="flex min-w-0 items-center gap-1.5">
+                <span class="h-2 w-5 shrink-0 rounded-full" :style="row.bar" />
+                <span class="truncate text-xs font-bold text-white/75">
+                  {{ comboName(row.colors) }}
+                </span>
+              </div>
+              <div class="mt-0.5 truncate text-sm font-black">{{ row.title }}</div>
+              <div class="mt-1 flex gap-2.5 text-[11px] font-bold tabular-nums">
+                <span class="text-white/75">
+                  {{ $t('home.ranking.placed', { n: row.decks }) }}
+                </span>
+                <span :class="row.wins ? 'text-amber-300' : 'text-white/45'">
+                  {{ $t('home.ranking.wins', { n: row.wins }) }}
+                </span>
+              </div>
+            </div>
+            <div
+              class="flex shrink-0 items-baseline text-2xl leading-none font-black text-sora tabular-nums"
+            >
+              {{ row.share }}
+              <span class="ml-0.5 text-sm">%</span>
             </div>
           </div>
         </RouterLink>
       </div>
+
+      <RouterLink
+        :to="{ name: 'tier', query: seriesQuery }"
+        class="relative mt-4 flex items-center justify-end gap-3 text-xs font-semibold tracking-[0.2em] text-gray-400 uppercase transition-colors hover:text-ruri dark:text-nalika-text-muted dark:hover:text-sora"
+      >
+        <span class="h-px w-24 bg-gray-300 dark:bg-nalika-border" aria-hidden="true" />
+        {{ $t('home.ranking.viewAll') }} →
+      </RouterLink>
     </section>
 
     <!-- Explore -->
@@ -307,7 +346,6 @@
 </template>
 
 <script setup>
-import { useMediaQuery } from '@vueuse/core'
 import manifest from '$data/archetypes/index.json'
 
 const { t, locale } = useI18n()
@@ -377,102 +415,39 @@ const updated = computed(() => {
   }
 })
 
-// Card art box on each row (px, matches w-28 sm:w-40 and h-28): narrower on
-// phones so the names keep their room. Two-card archetypes split on a line from
-// SPLIT_TOP to SPLIT_BOTTOM across the box's width
-const isWide = useMediaQuery('(min-width: 640px)')
-const thumbW = computed(() => (isWide.value ? 160 : 112))
-const THUMB_H = 112
-const SPLIT_TOP = 0.62
-const SPLIT_BOTTOM = 0.38
-// A face-centred square crop (cardFace) `slack` times the area it fills,
-// slid to put the face on the target while still covering the area; `face` is
-// where the face ends up in the box
-function placeArt(cardId, box, target, slack) {
-  const { u, v } = cardFace(cardId, 0)
-  const size = Math.max(box.x1 - box.x0, box.y1 - box.y0) * slack
-  const fit = (want, lo, hi) => Math.min(lo, Math.max(hi - size, want))
-  const x = fit(target.x - u * size, box.x0, box.x1)
-  const y = fit(target.y - v * size, box.y0, box.y1)
-  const px = Math.min(800, Math.ceil((size * 2) / 50) * 50)
-  return {
-    url: cardFace(cardId, px).url,
-    style: { left: `${x}px`, top: `${y}px`, width: `${size}px`, height: `${size}px` },
-    face: { x: x + u * size, y: y + v * size },
+// Tile backgrounds: the illustration cropped to roughly the tile's shape with
+// the unit's face upper middle, clear of the text along the bottom
+function cardArt(cardId, width, aspect, zoom) {
+  if (!cardId) {
+    return null
   }
-}
-
-// Two-card split in a box `w` wide: each half's area, where its face should
-// go, and its clip
-function splitHalves(w) {
-  const x0 = SPLIT_TOP * w
-  const x1 = SPLIT_BOTTOM * w
-  const splitX = y => x0 - ((x0 - x1) * y) / THUMB_H
-  return [
-    {
-      box: { x0: 0, x1: x0, y0: 0, y1: THUMB_H },
-      target: { x: x1 * 0.62, y: THUMB_H * 0.45 },
-      clip: `polygon(0 0, ${SPLIT_TOP * 100}% 0, ${SPLIT_BOTTOM * 100}% 100%, 0 100%)`,
-      // How far the face sits inside the half, from the diagonal
-      margin: face => splitX(face.y) - face.x,
-    },
-    {
-      box: { x0: x1, x1: w, y0: 0, y1: THUMB_H },
-      target: { x: w - (w - x0) * 0.62, y: THUMB_H * 0.45 },
-      clip: `polygon(${SPLIT_TOP * 100}% 0, 100% 0, 100% 100%, ${SPLIT_BOTTOM * 100}% 100%)`,
-      margin: face => face.x - splitX(face.y),
-    },
-  ]
-}
-// A face closer than this to the diagonal gets cut by it (about half a head)
-const FACE_MARGIN = 22
-// Crop sizes to try, smallest first: the art is only enlarged when it must be.
-// A head tucked in the art's top-left corner needs the most in the right half,
-// whose slant cuts across that corner
-const SLACKS = [1.15, 1.35, 1.6, 1.8]
-// The least enlarged crop that keeps the face clear of the diagonal, or the
-// one that gets it closest
-function placeInHalf(cardId, half) {
-  const spots = SLACKS.map(k => placeArt(cardId, half.box, half.target, k))
-  const ok = spots.find(p => half.margin(p.face) >= FACE_MARGIN)
-  const best = ok ?? spots.reduce((a, b) => (half.margin(b.face) > half.margin(a.face) ? b : a))
-  return { ...best, clip: half.clip }
-}
-function rowThumbs(ids, w) {
-  if (ids.length === 2) {
-    // Name order, which follows the colour order (藍 left of 紫)
-    const halves = splitHalves(w)
-    return ids.map((id, i) => placeInHalf(id, halves[i]))
-  }
-  if (ids.length === 1) {
-    const box = { x0: 0, x1: w, y0: 0, y1: THUMB_H }
-    return [{ ...placeArt(ids[0], box, { x: w / 2, y: THUMB_H * 0.45 }, 1), clip: 'none' }]
-  }
-  return []
-}
-
-// Label segments ("A", " / ", "B") → one list of coloured parts per card name,
-// so the template draws the slashes itself
-function splitNames(segments) {
-  const names = [[]]
-  for (const seg of segments) {
-    seg.text.split(/\s*\/\s*/).forEach((text, i) => {
-      if (i > 0) {
-        names.push([])
-      }
-      if (text) {
-        names.at(-1).push({ text, color: seg.color })
-      }
-    })
-  }
-  return names.filter(n => n.length)
+  const { url, u, v } = cardCrop(cardId, width, aspect, { faceAt: 0.35, zoom })
+  return { url, position: `${(u * 100).toFixed(1)}% ${(v * 100).toFixed(1)}%` }
 }
 
 // Signature cards whose copies are within 5% of each other count as equally
 // played; the higher-level one (usually the deck's finisher) gets the picture
 const CLOSE_COPIES = 0.05
+const RANKED = 8
 
-const topRows = computed(() => {
+// Rank badges and borders for the top three: gold, silver, bronze
+const PODIUM = [
+  {
+    border: tw`border-amber-400 dark:border-amber-500/80`,
+    badge: tw`bg-linear-to-br from-amber-200 via-amber-400 to-amber-600`,
+  },
+  {
+    border: tw`border-slate-300 dark:border-slate-400/70`,
+    badge: tw`bg-linear-to-br from-white via-slate-300 to-slate-500`,
+  },
+  {
+    border: tw`border-orange-300 dark:border-orange-500/70`,
+    badge: tw`bg-linear-to-br from-orange-200 via-orange-400 to-orange-700`,
+  },
+]
+
+// The featured series' top archetypes in tier list order (rows come sorted by rank)
+const ranked = computed(() => {
   const s = featured.value
   if (!s) {
     return []
@@ -480,35 +455,40 @@ const topRows = computed(() => {
   const archetypes = manifest.find(m => m.value === s.value)?.archetypes ?? []
   // Archetypes often share a signature card; show a different one where possible
   const usedImages = new Set()
-  return s.rows.slice(0, 6).map(row => {
-    // The most-played signature card (most copies across the archetype's
-    // decks), or the higher-level one when their copies are close, unless an
-    // archetype above already shows it
+  return s.rows.slice(0, RANKED).map((row, i) => {
+    // Signature cards ranked by copies across the archetype's decks, the
+    // higher-level one (usually the finisher) first when their copies are close
     const stats = row.sigCardStats ?? []
     const ids = (row.sigCardIds ?? [])
-      .map((id, i) => ({ id, ...(stats[i] ?? { copies: 0, level: 0 }) }))
+      .map((id, j) => ({ id, ...(stats[j] ?? { copies: 0, level: 0 }) }))
       .sort((a, b) => {
         const close = Math.abs(a.copies - b.copies) <= CLOSE_COPIES * Math.max(a.copies, b.copies)
         return close ? b.level - a.level : b.copies - a.copies
       })
       .map(c => c.id)
-    const imageCardId = ids.find(id => !usedImages.has(id)) ?? ids[0]
+    // The first of those nobody above shows yet, or failing that, the
+    // archetype's most-played other unit nobody shows
+    const imageCardId =
+      [...ids, ...(row.artCardIds ?? [])].find(id => !usedImages.has(id)) ?? ids[0]
     usedImages.add(imageCardId)
     const idx = archetypes.findIndex(
       a => normalizeArchetypeName(a.combo) === normalizeArchetypeName(row.archetype),
     )
-    // Two signature cards, in the order the name lists them
-    const sigIds = row.sigCardIds ?? []
+    const hexes = (row.colorDots ?? []).map(d => d.hex)
+    const names = (row.sigCards ?? []).map(c => c.name)
     return {
       ...row,
-      imageCardId,
-      thumbs: rowThumbs(
-        sigIds.length === 2 && sigIds[0] !== sigIds[1] ? sigIds : [imageCardId].filter(Boolean),
-        thumbW.value,
-      ),
-      names: splitNames(
-        buildLabelSegments(row.archetype, row.sigCards ?? [], { skipBaseCombo: true }),
-      ),
+      art:
+        i === 0
+          ? cardArt(imageCardId, 800, 0.9, 1)
+          : i < 3
+            ? cardArt(imageCardId, 600, 1.8, 1.2)
+            : cardArt(imageCardId, 600, 3, 1.4),
+      title: names.length ? names.join(' / ') : comboName(row.colors),
+      share: s.totalDecks ? ((row.decks / s.totalDecks) * 100).toFixed(1) : '0.0',
+      bar: {
+        background: hexes.length > 1 ? `linear-gradient(90deg, ${hexes.join(', ')})` : hexes[0],
+      },
       to:
         idx === -1
           ? { name: 'tier', query: { series: s.value } }
@@ -516,6 +496,8 @@ const topRows = computed(() => {
     }
   })
 })
+const podium = computed(() => ranked.value.slice(0, 3))
+const rest = computed(() => ranked.value.slice(3))
 
 // Fanned hero cards: signature cards of the same top six decks as the Current
 // meta blocks, ranked 5 3 1 2 4 6 from left to right so #1 and #2 sit in the
