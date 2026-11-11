@@ -186,24 +186,29 @@
           >
             {{ row.tier }}
           </span>
-          <div
-            class="absolute inset-x-0 bottom-0 flex items-end gap-3"
-            :class="i === 0 ? 'p-3 md:p-4' : 'p-3'"
-          >
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2">
-                <span class="h-2.5 w-7 shrink-0 rounded-full" :style="row.bar" />
-                <span class="truncate text-sm font-bold text-white/75">
-                  {{ comboName(row.colors) }}
-                </span>
-              </div>
-              <div
-                class="mt-1 line-clamp-2 leading-tight font-black wrap-break-word break-keep"
-                :class="i === 0 ? 'text-xl' : 'text-base'"
-              >
-                {{ row.title }}
-              </div>
-              <div class="mt-1.5 flex gap-3 text-xs font-bold tabular-nums">
+          <!-- Names get the full width; the share sits beside the counts below -->
+          <div class="absolute inset-x-0 bottom-0" :class="i === 0 ? 'p-3 md:p-4' : 'p-3'">
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-7 shrink-0 rounded-full" :style="row.bar" />
+              <span class="truncate text-sm font-bold text-white/75">
+                {{ comboName(row.colors) }}
+              </span>
+            </div>
+            <!-- Lines break between names only; a name wider than the line is
+                 cut short on its own -->
+            <div
+              class="mt-1 flex max-h-[2lh] flex-wrap gap-x-1.5 overflow-hidden leading-tight font-black"
+              :class="i === 0 ? 'text-xl' : 'text-base'"
+            >
+              <span
+                v-for="(name, ni) in row.names"
+                :key="ni"
+                class="max-w-full truncate"
+                v-text="ni < row.names.length - 1 ? `${name} /` : name"
+              />
+            </div>
+            <div class="mt-1 flex items-end justify-between gap-3">
+              <div class="flex gap-3 pb-0.5 text-xs font-bold tabular-nums">
                 <span class="text-white/75">
                   {{ $t('home.ranking.placed', { n: row.decks }) }}
                 </span>
@@ -211,13 +216,13 @@
                   {{ $t('home.ranking.wins', { n: row.wins }) }}
                 </span>
               </div>
-            </div>
-            <div
-              class="flex shrink-0 items-baseline leading-none font-black tracking-tight text-sora tabular-nums"
-              :class="i === 0 ? 'text-5xl' : 'text-3xl'"
-            >
-              {{ row.share }}
-              <span class="ml-0.5" :class="i === 0 ? 'text-lg' : 'text-sm'">%</span>
+              <div
+                class="flex shrink-0 items-baseline leading-none font-black tracking-tight text-sora tabular-nums"
+                :class="i === 0 ? 'text-5xl' : 'text-3xl'"
+              >
+                {{ row.share }}
+                <span class="ml-0.5" :class="i === 0 ? 'text-lg' : 'text-sm'">%</span>
+              </div>
             </div>
           </div>
         </RouterLink>
@@ -250,16 +255,23 @@
           >
             {{ row.tier }}
           </span>
-          <div class="absolute inset-x-0 bottom-0 flex items-end gap-2 px-3 pb-2">
-            <div class="min-w-0 flex-1">
-              <div class="flex min-w-0 items-center gap-1.5">
-                <span class="h-2 w-5 shrink-0 rounded-full" :style="row.bar" />
-                <span class="truncate text-xs font-bold text-white/75">
-                  {{ comboName(row.colors) }}
-                </span>
-              </div>
-              <div class="mt-0.5 truncate text-sm font-black">{{ row.title }}</div>
-              <div class="mt-1 flex gap-2.5 text-[11px] font-bold tabular-nums">
+          <div class="absolute inset-x-0 bottom-0 px-3 pb-2">
+            <div class="flex min-w-0 items-center gap-1.5">
+              <span class="h-2 w-5 shrink-0 rounded-full" :style="row.bar" />
+              <span class="truncate text-xs font-bold text-white/75">
+                {{ comboName(row.colors) }}
+              </span>
+            </div>
+            <!-- One line: when the names don't fit, each is cut short in
+                 proportion to its length, so both stay readable -->
+            <div class="mt-0.5 flex min-w-0 text-sm font-black">
+              <template v-for="(name, ni) in row.names" :key="ni">
+                <span v-if="ni" class="shrink-0 px-1.5">/</span>
+                <span class="min-w-0 truncate">{{ name }}</span>
+              </template>
+            </div>
+            <div class="mt-0.5 flex items-end justify-between gap-2">
+              <div class="flex gap-2.5 pb-0.5 text-[11px] font-bold tabular-nums">
                 <span class="text-white/75">
                   {{ $t('home.ranking.placed', { n: row.decks }) }}
                 </span>
@@ -267,12 +279,12 @@
                   {{ $t('home.ranking.wins', { n: row.wins }) }}
                 </span>
               </div>
-            </div>
-            <div
-              class="flex shrink-0 items-baseline text-2xl leading-none font-black text-sora tabular-nums"
-            >
-              {{ row.share }}
-              <span class="ml-0.5 text-sm">%</span>
+              <div
+                class="flex shrink-0 items-baseline text-2xl leading-none font-black text-sora tabular-nums"
+              >
+                {{ row.share }}
+                <span class="ml-0.5 text-sm">%</span>
+              </div>
             </div>
           </div>
         </RouterLink>
@@ -484,7 +496,7 @@ const ranked = computed(() => {
           : i < 3
             ? cardArt(imageCardId, 600, 1.8, 1.2)
             : cardArt(imageCardId, 600, 3, 1.4),
-      title: names.length ? names.join(' / ') : comboName(row.colors),
+      names: names.length ? names : [comboName(row.colors)],
       share: s.totalDecks ? ((row.decks / s.totalDecks) * 100).toFixed(1) : '0.0',
       bar: {
         background: hexes.length > 1 ? `linear-gradient(90deg, ${hexes.join(', ')})` : hexes[0],
