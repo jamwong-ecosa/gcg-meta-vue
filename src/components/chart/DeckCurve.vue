@@ -237,6 +237,6 @@ const average = computed(() => {
   if (!total) {
     return '—'
   }
-  return (entries.value.reduce((n, e) => n + e.value * e.copies, 0) / total).toFixed(1)
+  return String(Math.round(entries.value.reduce((n, e) => n + e.value * e.copies, 0) / total))
 })
 </script>
