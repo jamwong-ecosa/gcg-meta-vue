@@ -1,6 +1,6 @@
 <template>
   <button
-    class="z-50 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white transition-colors not-dark:text-amber-500/70 hover:bg-gray-100 dark:bg-nalika-surface dark:hover:bg-nalika-bg"
+    class="z-50 flex h-9 w-9 max-sm:h-8 max-sm:w-8 cursor-pointer items-center justify-center rounded-full bg-white transition-colors not-dark:text-amber-500/70 hover:bg-gray-100 dark:bg-nalika-surface dark:hover:bg-nalika-bg"
     @click="toggleDark()"
   >
     <svg v-if="isDark" viewBox="0 0 24 24" width="18" fill="currentColor">
