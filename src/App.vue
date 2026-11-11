@@ -10,7 +10,7 @@
     />
     <nav
       ref="navRef"
-      class="fixed inset-x-0 top-0 z-999 w-full border-b border-gray-500/10 bg-white py-2 dark:bg-nalika-surface"
+      class="fixed inset-x-0 top-0 z-999 w-full border-b border-gray-500/10 bg-white py-1 sm:py-2 dark:bg-nalika-surface"
     >
       <!-- Same box as the pages (max-w-340 with the padding inside it) so the links
            start at the content's left edge and the toggles end at its right -->
