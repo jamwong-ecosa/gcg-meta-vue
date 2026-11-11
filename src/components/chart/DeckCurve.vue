@@ -211,8 +211,11 @@ function apportion(cards, target) {
 // A card's popover figure: its share of the total, or "<1" when that's 0
 const cardLabel = c => (c.shown ? String(c.shown) : '<1')
 
-const maxTotal = computed(() => Math.max(1, ...bars.value.map(b => b.total)))
-const barHeight = bar => (bar.total / maxTotal.value) * BAR_MAX
+// Heights follow the whole-number labels, so two bars both labelled 7 stand
+// equal; a "<1" bar keeps its exact sliver so it still shows
+const shownTotal = bar => (bar.total < 0.5 ? bar.total : Math.round(bar.total))
+const maxTotal = computed(() => Math.max(1, ...bars.value.map(shownTotal)))
+const barHeight = bar => (shownTotal(bar) / maxTotal.value) * BAR_MAX
 
 function popoverAlign(i) {
   const n = bars.value.length
