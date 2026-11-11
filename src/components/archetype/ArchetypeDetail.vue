@@ -138,10 +138,10 @@
       :class="sec.panelClass"
     >
       <h4
-        class="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b px-3 py-2 sm:px-4"
+        class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 border-b px-3 py-1.5 sm:gap-y-1 sm:px-4 sm:py-2"
         :class="sec.headClass"
       >
-        <span class="text-lg font-semibold tracking-wider" :class="sec.titleClass">
+        <span class="text-base font-semibold tracking-wider sm:text-lg" :class="sec.titleClass">
           {{ sec.title }}
         </span>
         <span
@@ -166,6 +166,44 @@
         @zoom="onZoom"
       />
     </section>
+
+    <!-- Other and removed cards: folded until asked for, right under flex -->
+    <div v-if="otherCards.length || removedCards.length" class="mb-5 space-y-3">
+      <UiFoldedSection
+        v-if="otherCards.length"
+        :show="showOther"
+        :title="$t('archetype.detail.otherCards')"
+        :blurb="$t('archetype.section.otherBlurb')"
+        :range="`<${FEATURED_MIN * 100}%`"
+        :count-text="$t('archetype.cardCount', otherCards.length)"
+        :peek-ids="otherCards.map(c => c.cardId)"
+        :count="otherCards.length"
+        @toggle="showOther = !showOther"
+      >
+        <ArchetypeCardGrid
+          class="p-3 pt-4 sm:p-4"
+          :cards="otherCards"
+          :lift-of="winLift"
+          :group-lift-of="groupWinLift"
+          :deck-count="archetype.deckCount"
+          :sig-ids="sigCardIds"
+          :is-new="isNewCard"
+          @zoom="onZoom"
+        />
+      </UiFoldedSection>
+      <UiFoldedSection
+        v-if="removedCards.length"
+        :show="showRemoved"
+        :title="$t('archetype.detail.removedCards')"
+        :blurb="$t('archetype.section.removedBlurb')"
+        :count-text="$t('archetype.cardCount', removedCards.length)"
+        :peek-ids="removedCards.map(c => c.cardId)"
+        :count="removedCards.length"
+        @toggle="showRemoved = !showRemoved"
+      >
+        <ArchetypeCardGrid class="p-3 pt-4 sm:p-4" :cards="removedCards" removed @zoom="onZoom" />
+      </UiFoldedSection>
+    </div>
 
     <slot name="after-cards" />
 
@@ -214,7 +252,7 @@
       </div>
     </div>
 
-    <!-- Decks: always shown, ahead of the collapsible card lists -->
+    <!-- Decks: always shown -->
     <section v-if="archetype.deckCardIds?.length" class="mt-6">
       <h4 class="mb-2 flex items-baseline gap-2">
         <span
@@ -235,43 +273,6 @@
       />
     </section>
 
-    <!-- Other and removed cards: folded until asked for -->
-    <div v-if="otherCards.length || removedCards.length" class="mt-6 space-y-3">
-      <UiFoldedSection
-        v-if="otherCards.length"
-        :show="showOther"
-        :title="$t('archetype.detail.otherCards')"
-        :blurb="$t('archetype.section.otherBlurb')"
-        :range="`<${FEATURED_MIN * 100}%`"
-        :count-text="$t('archetype.cardCount', otherCards.length)"
-        :peek-ids="otherCards.map(c => c.cardId)"
-        :count="otherCards.length"
-        @toggle="showOther = !showOther"
-      >
-        <ArchetypeCardGrid
-          class="p-3 pt-4 sm:p-4"
-          :cards="otherCards"
-          :lift-of="winLift"
-          :group-lift-of="groupWinLift"
-          :deck-count="archetype.deckCount"
-          :sig-ids="sigCardIds"
-          :is-new="isNewCard"
-          @zoom="onZoom"
-        />
-      </UiFoldedSection>
-      <UiFoldedSection
-        v-if="removedCards.length"
-        :show="showRemoved"
-        :title="$t('archetype.detail.removedCards')"
-        :blurb="$t('archetype.section.removedBlurb')"
-        :count-text="$t('archetype.cardCount', removedCards.length)"
-        :peek-ids="removedCards.map(c => c.cardId)"
-        :count="removedCards.length"
-        @toggle="showRemoved = !showRemoved"
-      >
-        <ArchetypeCardGrid class="p-3 pt-4 sm:p-4" :cards="removedCards" removed @zoom="onZoom" />
-      </UiFoldedSection>
-    </div>
   </div>
 </template>
 

@@ -6,7 +6,7 @@
     class="scroll-mt-14 overflow-hidden rounded border border-gray-500/15 bg-gray-50 dark:border-nalika-border dark:bg-white/[0.02]"
   >
     <button
-      class="flex w-full cursor-pointer items-baseline gap-x-2.5 px-3 py-2 text-left transition-colors hover:bg-gray-500/[0.06] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ruri sm:px-4 dark:hover:bg-white/[0.04] dark:focus-visible:outline-sora"
+      class="flex w-full cursor-pointer items-baseline gap-x-2.5 px-3 py-1.5 text-left sm:py-2 transition-colors hover:bg-gray-500/[0.06] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ruri sm:px-4 dark:hover:bg-white/[0.04] dark:focus-visible:outline-sora"
       :class="show && 'border-b border-gray-500/15 dark:border-nalika-border'"
       :aria-expanded="show"
       @click="emit('toggle')"
@@ -18,7 +18,7 @@
       >
         ▸
       </span>
-      <span class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+      <span class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5 gap-y-0.5 sm:gap-y-1">
         <span class="text-base font-semibold tracking-wider text-gray-700 dark:text-nalika-text">
           {{ title }}
         </span>
