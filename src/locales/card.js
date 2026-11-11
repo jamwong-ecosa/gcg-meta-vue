@@ -68,12 +68,27 @@ export default {
       withVsWithout: 'with it vs without',
       couldBeChance: '{vs}, could be chance',
     },
+    // A card's own entry on the current ban & restricted list (archetype cards)
+    banRule: {
+      banned: "Banned: can't be put in a deck",
+      limited: 'Limited: up to {limit} copies per deck',
+      pair: "Banned pair: can't be used with {cards}",
+      vanilla:
+        'Lv.2 cost 1 AP2 HP2 vanilla unit: a deck may run only one kind of these, up to 4 copies',
+    },
     tag: {
       sig: { text: '★ SIG', title: 'Signature card' },
       tech: { text: 'TECH', title: 'Top tech pick: uncommon, but its decks win well' },
       new: { text: 'NEW', title: 'Not played by this archetype last series' },
       flex: { text: 'FLEX', title: 'Flex slot' },
       uncommon: { text: 'RARE', title: 'Rare pick: few of these decks play it' },
+      banned: { text: 'BANNED', title: 'Banned under the current list' },
+      limited: { text: 'LIMITED', title: 'Over its copy limit under the current list' },
+      pair: { text: 'BANNED PAIR', title: "Banned pair under the current list: can't run both" },
+      vanilla: {
+        text: 'ONE KIND',
+        title: 'Lv.2 cost 1 AP2 HP2 vanilla unit: the current list allows one kind per deck',
+      },
     },
   },
   'zh-HK': {
@@ -144,12 +159,25 @@ export default {
       withVsWithout: '採用 vs 未採用',
       couldBeChance: '{vs}，可能是偶然',
     },
+    banRule: {
+      banned: '禁用卡：不得加入卡組',
+      limited: '限制卡：卡組中最多 {limit} 張',
+      pair: '禁用組合：不可與 {cards} 同時使用',
+      vanilla: 'Lv.2、費用1、AP2、HP2 的白板機體：卡組中只限1種，最多4張',
+    },
     tag: {
       sig: { text: '★ 核心', title: '核心卡' },
       tech: { text: '奇招', title: '首選奇招：採用不多，但採用的卡組勝率高' },
       new: { text: '新', title: '此牌型上一系列未使用' },
       flex: { text: '彈性', title: '彈性欄位' },
       uncommon: { text: '冷門', title: '冷門：同牌型卡組中少有採用' },
+      banned: { text: '禁用', title: '現行禁用卡' },
+      limited: { text: '限制卡', title: '超出現行限制卡的張數上限' },
+      pair: { text: '禁用組合', title: '現行禁用組合：不可同時使用' },
+      vanilla: {
+        text: '限1種',
+        title: 'Lv.2、費用1、AP2、HP2 的白板機體：現行規則每副卡組只限1種',
+      },
     },
   },
 }

@@ -163,6 +163,7 @@
         :deck-count="archetype.deckCount"
         :sig-ids="sigCardIds"
         :is-new="isNewCard"
+        :ban-rule-of="banRuleOf"
         @zoom="onZoom"
       />
     </section>
@@ -188,6 +189,7 @@
           :deck-count="archetype.deckCount"
           :sig-ids="sigCardIds"
           :is-new="isNewCard"
+          :ban-rule-of="banRuleOf"
           @zoom="onZoom"
         />
       </UiFoldedSection>
@@ -201,7 +203,13 @@
         :count="removedCards.length"
         @toggle="showRemoved = !showRemoved"
       >
-        <ArchetypeCardGrid class="p-3 pt-4 sm:p-4" :cards="removedCards" removed @zoom="onZoom" />
+        <ArchetypeCardGrid
+          class="p-3 pt-4 sm:p-4"
+          :cards="removedCards"
+          removed
+          :ban-rule-of="banRuleOf"
+          @zoom="onZoom"
+        />
       </UiFoldedSection>
     </div>
 
@@ -272,7 +280,6 @@
         :group-of="effectGroupOf"
       />
     </section>
-
   </div>
 </template>
 
@@ -307,6 +314,27 @@ const cardIdToName = computed(() => {
   }
   return map
 })
+
+// A card's entry on the current ban list, as it bears on this archetype: a
+// banned pair card only when its partner is played here too, and a vanilla
+// unit only when another one is
+const banRuleOf = cardId => {
+  const rule = banListRule(cardId)
+  const played = cardIdToName.value
+  if (rule?.kind === 'pair') {
+    const partnerIds = rule.partnerIds.filter(id => played.has(id))
+    return partnerIds.length
+      ? { ...rule, partnerIds, partnerNames: partnerIds.map(id => played.get(id)) }
+      : null
+  }
+  if (rule?.kind === 'vanilla') {
+    const others = [...played.keys()].some(
+      id => id !== cardId && banListRule(id)?.kind === 'vanilla',
+    )
+    return others ? rule : null
+  }
+  return rule
+}
 
 const cardIdToInfo = computed(() => {
   const map = new Map()

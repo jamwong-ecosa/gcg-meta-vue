@@ -119,7 +119,14 @@ const TAG_BADGES = [
   // decks play (flex), and one few of them play (uncommon)
   { key: 'flex', class: tw`bg-gray-600 text-white` },
   { key: 'uncommon', class: tw`bg-ruri text-white` },
+  // Cards that break the current ban list (deck lists only); see banList.js
+  { key: 'banned', class: tw`bg-red-600 text-white` },
+  { key: 'limited', class: tw`bg-red-600 text-white` },
+  { key: 'pair', class: tw`bg-red-600 text-white` },
+  { key: 'vanilla', class: tw`bg-red-600 text-white` },
 ]
+
+const BAN_TAGS = ['banned', 'limited', 'pair', 'vanilla']
 
 export function tagBadges(tags, titles = {}) {
   return TAG_BADGES.filter(b => tags[b.key]).map(b => ({
@@ -129,9 +136,13 @@ export function tagBadges(tags, titles = {}) {
   }))
 }
 
-// Ring drawn behind the card: TECH yellow, NEW green, both split on the diagonal
-// (yellow top-left, green bottom-right); '' for neither
+// Ring drawn behind the card: red for a ban-list card, else TECH yellow, NEW
+// green, both split on the diagonal (yellow top-left, green bottom-right); ''
+// for none
 export function tagRingClass(tags) {
+  if (BAN_TAGS.some(key => tags[key])) {
+    return tw`bg-red-600`
+  }
   if (tags.tech && tags.new) {
     return tw`bg-[linear-gradient(135deg,var(--color-yellow-400)_50%,var(--color-green-500)_50%)]`
   }

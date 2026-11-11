@@ -114,6 +114,20 @@ export default {
       flexTag: 'flex',
       techTag: 'rare',
       empty: 'No decks here',
+      legalOnly: 'Legal now only',
+      notLegal: 'Not legal now',
+      banNote:
+        "{n} of these decks can't be played as listed under the current {link}; they were played before it took effect.",
+      banNoteAll:
+        'None of these {n} decks can be played as listed under the current {link}; they were played before it took effect.',
+      banListLink: 'ban & restricted list',
+      legalNow: 'Legal now',
+      hit: {
+        banned: 'Banned: {cards}',
+        limited: 'Over {limit} copies: {cards}',
+        pair: 'Banned pair: {cards}',
+        vanilla: 'Vanilla units, one kind only: {cards}',
+      },
     },
     place: {
       p1: '1st',
@@ -270,6 +284,18 @@ export default {
       flexTag: '彈性',
       techTag: '冷門',
       empty: '沒有卡組',
+      legalOnly: '只看現時合規',
+      notLegal: '現已不合規',
+      banNote: '當中 {n} 副卡組在現行{link}下不能照用；這些卡組在規則生效前使用。',
+      banNoteAll: '這 {n} 副卡組全部在現行{link}下不能照用；這些卡組在規則生效前使用。',
+      banListLink: '禁用＆限制卡一覽',
+      legalNow: '現時合規',
+      hit: {
+        banned: '禁用卡：{cards}',
+        limited: '超過 {limit} 張：{cards}',
+        pair: '禁用組合：{cards}',
+        vanilla: '白板機體只限1種：{cards}',
+      },
     },
     place: {
       p1: '冠軍',

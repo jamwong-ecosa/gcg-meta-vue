@@ -4,20 +4,68 @@
       <div class="overflow-x-auto">
         <UiMetaTabGroup v-model="filter" :options="filterOptions" />
       </div>
-      <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        {{ $t('archetype.decks.sort') }}
-        <select
-          v-model="sortKey"
-          class="rounded border border-gray-500/20 bg-transparent px-1.5 py-0.5 text-xs text-gray-700 dark:border-nalika-border dark:bg-nalika-surface dark:text-nalika-text"
+      <div class="flex items-center gap-3">
+        <label
+          v-if="illegalCount && legalCount"
+          class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
         >
-          <option v-for="o in sortOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-        </select>
-      </label>
+          <input v-model="legalOnly" type="checkbox" class="accent-ruri dark:accent-sora" />
+          {{ $t('archetype.decks.legalOnly') }}
+        </label>
+        <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          {{ $t('archetype.decks.sort') }}
+          <select
+            v-model="sortKey"
+            class="rounded border border-gray-500/20 bg-transparent px-1.5 py-0.5 text-xs text-gray-700 dark:border-nalika-border dark:bg-nalika-surface dark:text-nalika-text"
+          >
+            <option v-for="o in sortOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+          </select>
+        </label>
+      </div>
     </div>
 
     <p v-if="showTech" class="mb-2 text-xs text-gray-500 dark:text-gray-400">
       {{ $t('archetype.decks.note', { tech: TECH_SHARE * 100, staple: STAPLE_SHARE * 100 }) }}
     </p>
+    <!-- Ban-list callout: red like the deck and card tags, so it reads as a
+         warning rather than one more line of fine print -->
+    <div
+      v-if="illegalCount"
+      class="mb-2 flex items-start gap-2 rounded border border-l-4 border-red-200 border-l-red-500 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-500/30 dark:border-l-red-500 dark:bg-red-500/10 dark:text-red-200"
+      role="note"
+    >
+      <svg
+        class="mt-px size-4 shrink-0 text-red-500"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <i18n-t
+        :keypath="legalCount ? 'archetype.decks.banNote' : 'archetype.decks.banNoteAll'"
+        tag="p"
+        scope="global"
+      >
+        <template #n>
+          <b class="font-mono font-bold tabular-nums">{{ illegalCount }}</b>
+        </template>
+        <template #link>
+          <a
+            :href="banListUrl"
+            target="_blank"
+            rel="noopener"
+            class="font-semibold underline decoration-red-400/50 hover:decoration-red-600 dark:decoration-red-300/40 dark:hover:decoration-red-200"
+          >
+            {{ $t('archetype.decks.banListLink') }}
+          </a>
+        </template>
+      </i18n-t>
+    </div>
 
     <!-- Scrolls inside its own box; more rows render as the end comes into view,
          so there is nothing to click. Two columns read across (newspaper
@@ -29,7 +77,12 @@
     >
       <ul class="grid grid-cols-[minmax(0,1fr)] gap-x-6 lg:grid-cols-[repeat(2,minmax(0,1fr))]">
         <li v-for="d in shown" :key="d.idx" class="border-b border-gray-500/8 dark:border-white/5">
-          <UiDeckPopover :cards="d.cards" :url="d.url" :label="d.popoverLabel" :tags-of="tagsOf">
+          <UiDeckPopover
+            :cards="d.cards"
+            :url="d.url"
+            :label="d.popoverLabel"
+            :tags-of="card => tagsOf(card, d.banKinds)"
+          >
             <component
               :is="d.url ? 'a' : 'div'"
               :href="d.url || undefined"
@@ -52,6 +105,28 @@
               </span>
               <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-nalika-text">
                 {{ d.shop || $t('archetype.decks.unknownEvent') }}
+              </span>
+              <!-- Ban-list status, marked only on the fewer side so a list where most
+                   decks are hit isn't a wall of red: the hit decks (reasons in the
+                   tooltip; the popover tags the cards), or else the decks still legal.
+                   Every deck one way: no chips, the note above says it -->
+              <span
+                v-if="flagged === 'illegal' && d.banHits.length"
+                class="shrink-0 rounded-full border border-red-300 bg-red-50 px-1.5 text-xxs whitespace-nowrap text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300"
+                :title="d.banReasons"
+                :aria-label="$t('archetype.decks.notLegal')"
+              >
+                <!-- Phones keep the room for the event name; the popover tags say why -->
+                <span class="sm:hidden" aria-hidden="true">✕</span>
+                <span class="max-sm:hidden">{{ $t('archetype.decks.notLegal') }}</span>
+              </span>
+              <span
+                v-else-if="flagged === 'legal' && !d.banHits.length"
+                class="shrink-0 rounded-full border border-green-300 bg-green-50 px-1.5 text-xxs whitespace-nowrap text-green-700 dark:border-green-500/40 dark:bg-green-500/10 dark:text-green-300"
+                :aria-label="$t('archetype.decks.legalNow')"
+              >
+                <span class="sm:hidden" aria-hidden="true">✓</span>
+                <span class="max-sm:hidden">{{ $t('archetype.decks.legalNow') }}</span>
               </span>
               <!-- Tag counts as pills like the trait chips, tinted in the card tags'
                    colours: 奇招, 冷門, 彈性; empty ones are left out -->
@@ -103,7 +178,7 @@ const props = defineProps({
   groupOf: { type: Function, default: cardId => cardId },
 })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 // Rows rendered at a time; the next batch renders as the list's end scrolls in
 const PAGE = 40
@@ -122,8 +197,10 @@ watch(
   },
 )
 const sortKey = ref('newest')
+// Hide the decks today's ban list rules out
+const legalOnly = ref(false)
 const limit = ref(PAGE)
-watch([filter, sortKey], () => {
+watch([filter, sortKey, legalOnly], () => {
   limit.value = PAGE
   scrollBox.value?.scrollTo({ top: 0 })
 })
@@ -153,8 +230,10 @@ const cardShare = computed(() => {
 })
 
 // Tags for a card in a deck's popover: the archetype cards' tags, plus 彈性 and
-// 冷門 for the cards the row's chips count (a top tech pick keeps just 奇招)
-function tagsOf(card) {
+// 冷門 for the cards the row's chips count (a top tech pick keeps just 奇招), and
+// the deck's ban-list hits (`banKinds`: cardId → kind)
+function tagsOf(card, banKinds) {
+  const ban = banKinds?.get(card.cardId)
   const tech = props.techIds.has(card.cardId)
   const share = cardShare.value.get(props.groupOf(card.cardId)) ?? 0
   const counted = props.showTech && !tech
@@ -164,6 +243,7 @@ function tagsOf(card) {
     new: props.isNew(card.cardId),
     flex: counted && share >= TECH_SHARE && share < STAPLE_SHARE,
     uncommon: counted && share < TECH_SHARE,
+    ...(ban && { [ban]: true }),
   }
 }
 
@@ -180,12 +260,14 @@ function placeLabel(place) {
 const rows = computed(() =>
   props.decks.map(d => {
     // Count from the popover's tags, so each chip matches the tagged cards
-    const tagged = d.cards.map(tagsOf)
+    const tagged = d.cards.map(card => tagsOf(card))
     const techCards = tagged.filter(tags => tags.uncommon)
     const flexCards = tagged.filter(tags => tags.flex)
     const placeText = placeLabel(d.place)
     // Event names often end with the date ("…定員64名2026/11/2"); the date has its own column
     const shop = (d.shop ?? '').replace(/\s*\d{4}\/\d{1,2}\/\d{1,2}$/, '')
+    const banHits = banListHits(d.cards)
+    const nameOf = id => d.cards.find(c => c.cardId === id)?.name ?? id
     return {
       ...d,
       shop,
@@ -194,6 +276,16 @@ const rows = computed(() =>
       topTech: d.cards.filter(c => props.techIds.has(c.cardId)).length,
       flex: flexCards.length,
       popoverLabel: [placeText, d.date, shop].filter(Boolean).join(' · '),
+      banHits,
+      banKinds: banListCardKinds(banHits),
+      banReasons: banHits
+        .map(hit =>
+          t(`archetype.decks.hit.${hit.kind}`, {
+            cards: hit.cardIds.map(nameOf).join(hit.kind === 'pair' ? ' + ' : ', '),
+            limit: hit.limit,
+          }),
+        )
+        .join('\n'),
     }
   }),
 )
@@ -221,8 +313,26 @@ function chipsOf(d) {
     }))
 }
 
+const illegalCount = computed(() => rows.value.filter(d => d.banHits.length).length)
+const legalCount = computed(() => rows.value.length - illegalCount.value)
+// Which decks get a chip: whichever side is smaller, none when all are one way
+const flagged = computed(() => {
+  if (!illegalCount.value || !legalCount.value) {
+    return null
+  }
+  return illegalCount.value > legalCount.value ? 'legal' : 'illegal'
+})
+// The official list, in the page's language
+const banListUrl = computed(
+  () => `https://www.gundam-gcg.com/${locale.value === 'en' ? 'en' : 'zh-tw'}/news/01_279.html`,
+)
+// Rows the tabs and list draw from: every deck, or only those playable today
+const pool = computed(() =>
+  legalOnly.value ? rows.value.filter(d => !d.banHits.length) : rows.value,
+)
+
 const filterOptions = computed(() => {
-  const all = rows.value
+  const all = pool.value
   const count = fn => all.filter(fn).length
   return [
     { value: 'all', label: t('archetype.decks.filter.all', { n: all.length }) },
@@ -252,7 +362,7 @@ const SORTS = {
 }
 
 const filtered = computed(() =>
-  rows.value.filter(FILTERS[filter.value]).sort(SORTS[sortKey.value] ?? SORTS.newest),
+  pool.value.filter(FILTERS[filter.value]).sort(SORTS[sortKey.value] ?? SORTS.newest),
 )
 const shown = computed(() => filtered.value.slice(0, limit.value))
 
