@@ -57,7 +57,7 @@ export default {
     preliminaryTitle: '{label} 的初步排行榜',
     inProgress: '{label} 進行中 · {n} 場賽事',
     inProgressNote: '，目前級別僅供參考',
-    rowStats: '{wins} 冠 · 佔入賞 {use}',
+    rowStats: '{wins} 冠 · 使用率 {use}',
     explore: '探索',
     features: {
       tier: {
