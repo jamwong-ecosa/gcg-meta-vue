@@ -160,7 +160,7 @@
             PODIUM[i].border,
             i === 0
               ? 'aspect-[4/3] sm:col-span-2 sm:aspect-[2/1] lg:col-span-1 lg:row-span-2 lg:aspect-auto'
-              : 'aspect-[4/3] lg:aspect-auto lg:h-56',
+              : 'aspect-[2/1] sm:aspect-[4/3] lg:aspect-auto lg:h-56',
           ]"
         >
           <img
@@ -245,7 +245,7 @@
             class="absolute inset-0 -z-10 bg-linear-to-t from-nalika-bg/95 via-nalika-bg/55 via-50% to-transparent"
           />
           <span
-            class="absolute top-0 left-0 flex h-9 w-9 items-center justify-center rounded-br-md bg-white/90 text-xl font-black text-sumi dark:bg-nalika-surface/90 dark:text-nalika-text"
+            class="absolute top-0 left-0 flex h-7 w-7 items-center justify-center rounded-br-md bg-white/90 text-base font-black text-sumi dark:bg-nalika-surface/90 dark:text-nalika-text"
           >
             {{ i + 4 }}
           </span>
