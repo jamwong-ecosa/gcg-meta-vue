@@ -95,7 +95,7 @@
          the archetype's signature card art with its share of placed decks on top -->
     <section
       v-if="featured"
-      class="relative mt-14 overflow-hidden rounded-lg border border-gray-500/15 bg-white p-3 text-sumi shadow-sm shadow-black/[0.03] sm:p-5 md:mt-20 md:p-6 dark:border-nalika-border dark:bg-nalika-surface dark:text-nalika-text"
+      class="relative mt-14 text-sumi md:mt-20 dark:text-nalika-text"
     >
       <header class="relative">
         <p
@@ -180,13 +180,14 @@
           >
             {{ i + 1 }}
           </span>
-          <span
-            class="absolute top-2 right-2 rounded px-2 py-0.5 text-xs leading-none font-bold"
-            :class="tierPillClass(row.tier)"
+          <div
+            class="absolute right-3 flex items-baseline leading-none font-black tracking-tight text-sora tabular-nums text-shadow-black/70 text-shadow-lg"
+            :class="i === 0 ? 'top-3 text-5xl' : 'top-2 text-3xl'"
           >
-            {{ row.tier }}
-          </span>
-          <!-- Names get the full width; the share sits beside the counts below -->
+            {{ row.share }}
+            <span class="ml-0.5" :class="i === 0 ? 'text-lg' : 'text-sm'">%</span>
+          </div>
+          <!-- Names get the full width; the tier sits beside the counts below -->
           <div class="absolute inset-x-0 bottom-0" :class="i === 0 ? 'p-3 md:p-4' : 'p-3'">
             <div class="flex items-center gap-2">
               <span class="h-2.5 w-7 shrink-0 rounded-full" :style="row.bar" />
@@ -207,8 +208,8 @@
                 v-text="ni < row.names.length - 1 ? `${name} /` : name"
               />
             </div>
-            <div class="mt-1 flex items-end justify-between gap-3">
-              <div class="flex gap-3 pb-0.5 text-xs font-bold tabular-nums">
+            <div class="mt-1 flex items-center justify-between gap-3">
+              <div class="flex gap-3 text-xs font-bold tabular-nums">
                 <span class="text-white/75">
                   {{ $t('home.ranking.placed', { n: row.decks }) }}
                 </span>
@@ -216,13 +217,12 @@
                   {{ $t('home.ranking.wins', { n: row.wins }) }}
                 </span>
               </div>
-              <div
-                class="flex shrink-0 items-baseline leading-none font-black tracking-tight text-sora tabular-nums"
-                :class="i === 0 ? 'text-5xl' : 'text-3xl'"
+              <span
+                class="shrink-0 rounded px-2 py-0.5 text-xs leading-none font-bold"
+                :class="tierPillClass(row.tier)"
               >
-                {{ row.share }}
-                <span class="ml-0.5" :class="i === 0 ? 'text-lg' : 'text-sm'">%</span>
-              </div>
+                {{ row.tier }}
+              </span>
             </div>
           </div>
         </RouterLink>
@@ -231,7 +231,7 @@
           v-for="(row, i) in rest"
           :key="row.archetype"
           :to="row.to"
-          class="group relative isolate h-28 overflow-hidden rounded-lg border border-gray-500/20 bg-gray-100 text-white transition-[translate,border-color,box-shadow] duration-200 hover:border-ruri/60 hover:shadow-lg hover:shadow-ruri/20 motion-safe:hover:-translate-y-0.5 md:h-32 dark:border-nalika-border dark:bg-nalika-bg dark:hover:border-sora/60 dark:hover:shadow-black/40"
+          class="group relative isolate h-32 overflow-hidden rounded-lg border border-gray-500/20 bg-gray-100 text-white transition-[translate,border-color,box-shadow] duration-200 hover:border-ruri/60 hover:shadow-lg hover:shadow-ruri/20 motion-safe:hover:-translate-y-0.5 md:h-36 dark:border-nalika-border dark:bg-nalika-bg dark:hover:border-sora/60 dark:hover:shadow-black/40"
         >
           <img
             v-if="row.art"
@@ -249,12 +249,12 @@
           >
             {{ i + 4 }}
           </span>
-          <span
-            class="absolute top-2 right-2 rounded px-1.5 py-0.5 text-[11px] leading-none font-bold"
-            :class="tierPillClass(row.tier)"
+          <div
+            class="absolute top-2 right-3 flex items-baseline text-2xl leading-none font-black text-sora tabular-nums text-shadow-black/70 text-shadow-lg"
           >
-            {{ row.tier }}
-          </span>
+            {{ row.share }}
+            <span class="ml-0.5 text-sm">%</span>
+          </div>
           <div class="absolute inset-x-0 bottom-0 px-3 pb-2">
             <div class="flex min-w-0 items-center gap-1.5">
               <span class="h-2 w-5 shrink-0 rounded-full" :style="row.bar" />
@@ -270,8 +270,8 @@
                 <span class="min-w-0 truncate">{{ name }}</span>
               </template>
             </div>
-            <div class="mt-0.5 flex items-end justify-between gap-2">
-              <div class="flex gap-2.5 pb-0.5 text-[11px] font-bold tabular-nums">
+            <div class="mt-1 flex items-center justify-between gap-2">
+              <div class="flex gap-2.5 text-[11px] font-bold tabular-nums">
                 <span class="text-white/75">
                   {{ $t('home.ranking.placed', { n: row.decks }) }}
                 </span>
@@ -279,12 +279,12 @@
                   {{ $t('home.ranking.wins', { n: row.wins }) }}
                 </span>
               </div>
-              <div
-                class="flex shrink-0 items-baseline text-2xl leading-none font-black text-sora tabular-nums"
+              <span
+                class="shrink-0 rounded px-1.5 py-0.5 text-[11px] leading-none font-bold"
+                :class="tierPillClass(row.tier)"
               >
-                {{ row.share }}
-                <span class="ml-0.5 text-sm">%</span>
-              </div>
+                {{ row.tier }}
+              </span>
             </div>
           </div>
         </RouterLink>
