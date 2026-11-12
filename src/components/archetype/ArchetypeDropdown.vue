@@ -20,7 +20,6 @@
               :style="{ background: h }"
             />
             <span class="ml-1">{{ comboName(selectedParts.base) }}</span>
-            <UiStylePill class="ml-0.5" :play-style="selected?.style" :hint="false" />
           </div>
           <ArchetypeCardNames
             v-if="selectedParts.cards.length"
@@ -43,7 +42,6 @@
               <span v-else>{{ seg.text }}</span>
             </template>
           </div>
-          <UiStylePill class="md:px-1.5 md:text-xs" :play-style="selected?.style" :hint="false" />
         </div>
 
         <div class="mt-0.5 flex items-center gap-2 md:mt-2">
@@ -54,6 +52,7 @@
           >
             {{ selectedTier }}
           </div>
+          <UiStylePill class="md:px-1.5 md:text-xs" :play-style="selected?.style" :hint="false" />
 
           <!-- Bold counts with their units, like the page header's stats line -->
           <div
@@ -115,7 +114,6 @@
                 :style="{ background: h }"
               />
               <span class="ml-1 font-semibold">{{ comboName(opt.nameParts.base) }}</span>
-              <UiStylePill class="ml-0.5" :play-style="opt.style" :hint="false" />
             </div>
             <ArchetypeCardNames
               v-if="opt.nameParts.cards.length"
@@ -139,18 +137,34 @@
                 <span v-else>{{ seg.text }}</span>
               </template>
             </div>
-            <UiStylePill :play-style="opt.style" :hint="false" />
           </div>
 
+          <!-- Tier badge and bold counts, styled as on the selected archetype above -->
           <div class="mt-1 flex items-center gap-2">
             <div
               v-if="opt.tier"
-              class="mr-1 h-fit w-10 rounded px-1.5 py-0.5 text-center text-xxs font-bold"
+              class="rounded px-1.5 py-0.5 text-xxs font-bold"
               :class="tierPillClass(opt.tier)"
             >
               {{ opt.tier }}
             </div>
-            <div v-if="opt.details" class="text-xs text-gray-500 dark:text-nalika-text-muted/70">
+            <UiStylePill :play-style="opt.style" :hint="false" />
+            <div
+              v-if="opt.stats?.length"
+              class="flex flex-wrap items-baseline gap-x-2 text-xs text-gray-500 dark:text-nalika-text-muted"
+            >
+              <span v-for="(s, i) in opt.stats" :key="i">
+                <b class="font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text">
+                  {{ s.n }}
+                </b>
+                {{ s.unit }}
+                <span v-if="s.note" class="text-gray-400 dark:text-gray-500">({{ s.note }})</span>
+              </span>
+            </div>
+            <div
+              v-else-if="opt.details"
+              class="text-xs text-gray-500 dark:text-nalika-text-muted/70"
+            >
               {{ opt.details }}
             </div>
           </div>
