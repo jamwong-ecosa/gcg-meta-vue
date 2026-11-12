@@ -106,6 +106,7 @@ const archOptions = computed(() => {
       // Combo and card names apart, for the two-line name on phones
       nameParts: archetypeNameParts(a.combo, a.sigCards),
       tier: a.tier || null,
+      style: a.style ?? null,
       combo: a.combo,
     }))
     .sort((x, y) => rowOrder(x.combo) - rowOrder(y.combo))

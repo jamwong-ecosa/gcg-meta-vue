@@ -69,6 +69,9 @@
         </UiHint>
       </div>
     </td>
+    <td class="px-3 py-2">
+      <UiStylePill :play-style="row.style" />
+    </td>
     <td class="px-3 py-2 text-right font-mono tabular-nums">{{ row.decks }}</td>
     <td class="px-3 py-2 text-right font-mono tabular-nums">{{ row.wins }}</td>
     <td class="px-3 py-2 text-right font-mono tabular-nums">{{ row.usePct }}</td>

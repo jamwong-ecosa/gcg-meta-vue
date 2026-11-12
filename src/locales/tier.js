@@ -16,6 +16,8 @@ export default {
       move: '{term} is the rank change since {series}: ▲ climbed, ▼ dropped, NEW wasn’t placed then.',
       darkHorse: '🐴 marks a dark horse: rarely played but winning far more often than average.',
       noLR: 'No LR marks an archetype built without LR units, named after its core units instead.',
+      style:
+        'Aggro, Mid-range, Control or Combo is the play style, estimated from the decks’ level curve, card types and card effects. Hover it for what it means.',
       hover:
         'Hover a column header for its definition, and click it to sort. Hover a row’s deck icon (tap on phones) for its staples.',
     },
@@ -34,6 +36,22 @@ export default {
     staplesLabel: 'Staples · in {pct}%+ of decks',
     staplesPeek: 'Quick view of the staples',
     noLR: 'No LR',
+    style: {
+      aggro: 'Aggro',
+      midrange: 'Mid-range',
+      control: 'Control',
+      combo: 'Combo',
+    },
+    styleHelp: {
+      aggro:
+        'Aggro: a low level curve packed with units, or evasive attackers, aiming to win early. Estimated from the deck lists.',
+      midrange:
+        'Mid-range: a balanced curve that neither rushes nor stalls. Estimated from the deck lists.',
+      control:
+        'Control: a higher curve behind blockers and removal, with card draw to outlast the opponent. Estimated from the deck lists.',
+      combo:
+        'Combo: built around command cards and the draw to find them rather than around units. Estimated from the deck lists.',
+    },
     sectionCount: '{n} archetype | {n} archetypes',
     sectionTotals: '{decks} decks · {wins} wins',
     hideStats: 'Hide stats',
@@ -49,6 +67,7 @@ export default {
     moveTitleTier: 'Rank {from} → {to}, tier {fromTier} → {toTier}',
     col: {
       archetype: 'Archetype',
+      style: 'Style',
       rank: 'Tier',
       score: 'Score',
       use: 'Use%',
@@ -60,6 +79,8 @@ export default {
     },
     help: {
       rank: 'Tier order: strongest archetype first',
+      style:
+        'Play style, estimated from the decks’ level curve, card types and card effects. Hover a label for what it means',
       decks: 'Placed decks: top 8 (top 16 at larger events) of each event',
       wins: 'Events won (1st place)',
       use: 'Usage: share of all placed decks',
@@ -88,6 +109,8 @@ export default {
       move: '{term}為自 {series} 以來的排名變化：▲ 上升、▼ 下降、NEW 表示當時未入賞。',
       darkHorse: '🐴 代表黑馬：使用人數少，但奪冠率遠高於平均。',
       noLR: '無 LR 代表不靠 LR 機體的牌型，改以其主力機體命名。',
+      style:
+        '快攻、中速、控制、組合技為打法類型，按卡組的等級分佈、卡牌類型及效果估算；將鼠標移到標籤可查看說明。',
       hover:
         '將鼠標移到欄位標題可查看說明，點擊可排序；移到每行的卡組圖示（手機請按一下）可查看主力卡。',
     },
@@ -106,6 +129,19 @@ export default {
     staplesLabel: '主力卡 · {pct}% 以上卡組採用',
     staplesPeek: '快速查看主力卡',
     noLR: '無 LR',
+    style: {
+      aggro: '快攻',
+      midrange: '中速',
+      control: '控制',
+      combo: '組合技',
+    },
+    styleHelp: {
+      aggro: '快攻：低等級機體為主，或靠難以阻擋的攻擊手，務求及早取勝。按卡組內容估算。',
+      midrange: '中速：等級分佈平均，不急攻亦不拖延。按卡組內容估算。',
+      control:
+        '控制：等級較高，靠阻擋者及除去對手機體的效果防守，再以抽牌拖入後期。按卡組內容估算。',
+      combo: '組合技：以指令卡及抽牌為核心，而非依靠機體。按卡組內容估算。',
+    },
     sectionCount: '{n} 個牌型',
     sectionTotals: '{decks} 副卡組 · {wins} 冠',
     hideStats: '隱藏數據',
@@ -121,6 +157,7 @@ export default {
     moveTitleTier: '排名 {from} → {to}，級別 {fromTier} → {toTier}',
     col: {
       archetype: '牌型',
+      style: '打法',
       rank: '級別',
       score: '分數',
       use: '使用率',
@@ -132,6 +169,7 @@ export default {
     },
     help: {
       rank: '排行順序：最強的牌型排在最前',
+      style: '打法類型，按卡組的等級分佈、卡牌類型及效果估算；將鼠標移到標籤可查看說明',
       decks: '入賞卡組：每場賽事的前 8 名（大型賽事為前 16 名）',
       wins: '奪得冠軍（第 1 名）的賽事數',
       use: '使用率：佔所有入賞卡組的比例',

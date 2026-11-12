@@ -64,6 +64,7 @@
             >
               {{ $t('tier.noLR') }}
             </UiHint>
+            <UiStylePill :play-style="row.style" />
           </div>
           <ArchetypeCardNames
             v-if="cardNames.length"
@@ -89,6 +90,7 @@
             >
               {{ $t('tier.noLR') }}
             </UiHint>
+            <UiStylePill v-if="!headline" class="ml-1 align-middle" :play-style="row.style" />
           </ArchetypeCardNames>
         </div>
       </button>

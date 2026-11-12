@@ -53,6 +53,7 @@
         </i18n-t>
         <li>{{ $t('tier.howTo.darkHorse') }}</li>
         <li>{{ $t('tier.howTo.noLR') }}</li>
+        <li>{{ $t('tier.howTo.style') }}</li>
         <li>{{ $t('tier.howTo.hover') }}</li>
       </ul>
     </details>

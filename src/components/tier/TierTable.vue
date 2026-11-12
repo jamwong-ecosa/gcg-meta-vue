@@ -5,6 +5,7 @@
     <table class="w-full table-fixed text-left text-sm">
       <colgroup>
         <col class="w-auto" />
+        <col class="w-20" />
         <col v-for="c in numericCols" :key="c.key" class="w-18" />
         <col class="w-28" />
         <col v-if="hasMovement" class="w-14" />
@@ -21,9 +22,11 @@
           >
             <!-- Numeric headers end flush with the numbers below: the sort arrow hangs
                  into the cell padding, and a label wider than the cell overflows leftward -->
-            <div :class="i === 0 ? '' : 'flex justify-end'">
+            <div :class="i === 0 || c.plain ? '' : 'flex justify-end'">
               <UiHint :text="tierColumnHelp(c.key)">
+                <span v-if="c.plain" class="whitespace-nowrap">{{ c.label }}</span>
                 <button
+                  v-else
                   class="relative inline-flex cursor-pointer items-center whitespace-nowrap hover:text-white"
                   @click="$emit('sort', sortFieldOf(c.key))"
                 >
@@ -173,9 +176,11 @@ const numericCols = ['decks', 'wins', 'use', 'winEv', 'winDk', 'score'].map(key 
   key,
 }))
 
-// The Archetype and Tier headers both sort by tier order
+// The Archetype and Tier headers both sort by tier order; Style is a label,
+// not a measure, so its header doesn't sort (`plain`)
 const headerCols = computed(() => [
   { key: 'rank', label: t('tier.col.archetype') },
+  { key: 'style', label: t('tier.col.style'), plain: true },
   ...numericCols.map(c => ({ ...c, label: t(`tier.col.${c.key}`) })),
   { key: 'tier', label: t('tier.col.rank') },
   ...(props.hasMovement ? [{ key: 'move', label: 'Δ' }] : []),

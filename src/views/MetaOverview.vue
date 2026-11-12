@@ -11,6 +11,8 @@
 
     <CardStatsSection />
 
+    <ChartPlayStyleSection />
+
     <ChartDistributionsGrid />
 
     <ArchetypeQuadrantsSection />

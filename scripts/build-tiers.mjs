@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs'
 import * as ss from 'simple-statistics'
 import { WINNER, COLOR_HEX, TYPE_ORDER, TYPE_PICK_ORDER } from './constants.mjs'
+import { playStyle } from './play-style.mjs'
 
 // Winner rule: 優勝 always counts as a win. For events with ≥16 players,
 // 準優勝 (2nd place) also counts as a winner.
@@ -603,6 +604,7 @@ function formatTierRows(series) {
         winPerDk: `${winRateDeck.toFixed(1)}%`,
         score: a.tierScore,
         tier: a.tierLabel,
+        style: a.style ?? null,
         darkHorse: a.darkHorse ?? false,
         // Named after non-LR units: the deck runs no LR unit at 2+ copies
         noLR: a.sigCardIds.every(id => !lookup(id).rarity?.startsWith('LR')),
@@ -816,6 +818,8 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, totalAll) {
       combo,
       sigCards,
       sigCardIds,
+      // aggro | midrange | control | combo (see play-style.mjs)
+      style: playStyle(combo, allCards, count, lookup),
       cardCount: allCards.length,
       deckCount: count,
       percent: +((count / totalAll) * 100).toFixed(1),
@@ -1115,6 +1119,7 @@ function processSeries(series) {
       winnerDeckCount: a.winnerDeckCount,
       tier: a.tierLabel,
       rank: rankOf.get(a.combo) ?? null,
+      style: a.style ?? null,
       darkHorse: a.darkHorse ?? false,
     })),
   }

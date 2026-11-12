@@ -52,6 +52,7 @@
           >
             {{ selectedTier }}
           </div>
+          <UiStylePill class="md:px-1.5 md:text-xs" :play-style="selected?.style" :hint="false" />
 
           <!-- Bold counts with their units, like the page header's stats line -->
           <div
@@ -146,6 +147,7 @@
             >
               {{ opt.tier }}
             </div>
+            <UiStylePill :play-style="opt.style" :hint="false" />
             <div v-if="opt.details" class="text-xs text-gray-500 dark:text-nalika-text-muted/70">
               {{ opt.details }}
             </div>

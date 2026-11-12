@@ -239,12 +239,20 @@
                   {{ $t('home.ranking.wins', { n: row.wins }) }}
                 </span>
               </div>
-              <span
-                class="shrink-0 rounded px-2 py-0.5 text-xs leading-none font-bold"
-                :class="tierPillClass(row.tier)"
-              >
-                {{ row.tier }}
-              </span>
+              <div class="flex shrink-0 items-center gap-1.5">
+                <UiStylePill
+                  class="px-2 py-0.5 text-xs"
+                  :play-style="row.style"
+                  :hint="false"
+                  on-art
+                />
+                <span
+                  class="rounded px-2 py-0.5 text-xs leading-none font-bold"
+                  :class="tierPillClass(row.tier)"
+                >
+                  {{ row.tier }}
+                </span>
+              </div>
             </div>
           </div>
         </RouterLink>
@@ -301,12 +309,20 @@
                   {{ $t('home.ranking.wins', { n: row.wins }) }}
                 </span>
               </div>
-              <span
-                class="shrink-0 rounded px-1.5 py-0.5 text-[11px] leading-none font-bold"
-                :class="tierPillClass(row.tier)"
-              >
-                {{ row.tier }}
-              </span>
+              <div class="flex shrink-0 items-center gap-1.5">
+                <UiStylePill
+                  class="px-1.5 py-0.5 text-[11px]"
+                  :play-style="row.style"
+                  :hint="false"
+                  on-art
+                />
+                <span
+                  class="rounded px-1.5 py-0.5 text-[11px] leading-none font-bold"
+                  :class="tierPillClass(row.tier)"
+                >
+                  {{ row.tier }}
+                </span>
+              </div>
             </div>
           </div>
         </RouterLink>

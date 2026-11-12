@@ -7,6 +7,7 @@ export default {
     cost: 'Cost',
     dist: {
       tier: 'Tier Distribution',
+      style: 'Placed Decks by Play Style',
       color: 'Color Distribution',
       wins: 'Events Won by Color Combo',
       viewAll: 'View All →',
@@ -59,6 +60,7 @@ export default {
     cost: '費用',
     dist: {
       tier: '級別分佈',
+      style: '打法分佈',
       color: '顏色分佈',
       wins: '各顏色組合奪冠率',
       viewAll: '查看全部 →',
