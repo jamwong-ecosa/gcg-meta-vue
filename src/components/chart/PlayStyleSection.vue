@@ -50,7 +50,8 @@
 <script setup>
 const { currentSeries } = inject('meta')
 
-// Placed decks and archetypes per play style, in PLAY_STYLES order. Shares are
+// Placed decks and archetypes per play style, in PLAY_STYLES order. Shares keep
+// one decimal, so a handful of decks reads 0.2% rather than 0%, and are
 // of the decks that belong to an archetype; empty for data built before styles
 const styles = computed(() => {
   const rows = currentSeries.value?.rows ?? []
@@ -58,7 +59,7 @@ const styles = computed(() => {
   return PLAY_STYLES.map(style => {
     const mine = rows.filter(r => r.style === style)
     const decks = mine.reduce((n, r) => n + r.decks, 0)
-    return { style, decks, archetypes: mine.length, pct: percentOf(decks, total) }
+    return { style, decks, archetypes: mine.length, pct: percentOf1(decks, total) }
   }).filter(item => item.decks > 0)
 })
 </script>

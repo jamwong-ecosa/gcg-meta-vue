@@ -1,7 +1,7 @@
 // Play style per archetype (aggro / midrange / control / combo), worked out
 // from what an average deck of the archetype runs: its level curve, its mix of
 // card types and what its cards' effects do. There is no official field for
-// this; the thresholds were tuned by eye against the 2026-08 → 2026-11 series,
+// this; the thresholds were tuned by eye against the 2026-03 → 2026-11 series,
 // so an archetype the rules get wrong goes in OVERRIDES rather than bending them.
 
 // Archetype (the combo key, e.g. 'Blue+Green (ガンダム / νガンダム)') → style
@@ -17,8 +17,6 @@ const stripReminders = effect => (effect ?? '').replace(/\n?[(（][^)）]*[)）]
 const SIGNALS = {
   draw: /ドロー/,
   blocker: /《ブロッカー》(?!を持つ)/,
-  // Attackers that get past blockers or hit harder: 突破, 高機動, 制圧, 先制攻撃
-  evasive: /《(突破|高機動|制圧|先制攻撃)/,
   removal:
     /相手の[^【]{0,25}ユニット[^【]{0,45}?(ダメージを与える|破壊する)|ユニットすべてに[^。]{0,12}ダメージ/,
   rest: /相手の[^【]{0,25}ユニット[^【]{0,35}?レストに/,
@@ -69,16 +67,21 @@ export function playStyle(combo, cards, deckCount, lookup) {
   if (p.COMMAND >= 15 && p.draw >= 12) {
     return 'combo'
   }
-  // Aggro: a low curve, or a unit-heavy deck of evasive attackers on a lowish one
+  // Aggro: wins through its units on a low curve. Either the deck is mostly
+  // low-level cards, or it is unit-heavy (two thirds of the deck) with an
+  // average level of 3.7 or less; what else those units do (removal, evasion,
+  // trash synergy) doesn't change that
   if (p.low >= 28 && p.level <= 3.4) {
     return 'aggro'
   }
-  if (p.evasive >= 7 && p.level <= 3.7 && p.UNIT >= 33) {
+  if (p.UNIT >= 33 && p.level <= 3.7) {
     return 'aggro'
   }
-  // Control: a higher curve behind blockers and removal, with draw to keep going
+  // Control: a higher curve behind blockers and removal. A deck with a moderate
+  // number of answers also needs draw to keep going; one stacked with them
+  // doesn't (the 2026-03 → 2026-06 card pool had little draw to run)
   const answers = p.blocker + p.removal + p.rest + p.bounce
-  if (p.level >= 3.9 && answers >= 14 && p.draw >= 9) {
+  if (p.level >= 3.9 && ((answers >= 14 && p.draw >= 9) || answers >= 22)) {
     return 'control'
   }
   return 'midrange'
