@@ -11,7 +11,7 @@
           {{ $t('home.eyebrow') }}
         </p>
         <h1
-          class="mt-3 text-3xl leading-tight font-black tracking-tight text-sumi md:text-5xl dark:text-nalika-text"
+          class="mt-3 text-3xl leading-tight font-bold tracking-tight text-sumi md:text-4xl dark:text-nalika-text zh:tracking-normal"
         >
           {{ $t('home.title') }}
         </h1>

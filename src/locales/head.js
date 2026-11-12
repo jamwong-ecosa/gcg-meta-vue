@@ -6,9 +6,9 @@ export default {
     imageAlt: 'GCG Decks Analysis: Gundam Card Game tournament meta, tier list from S to D',
     titleFormat: '{page} · GCG Decks Analysis',
     home: {
-      title: 'GCG Decks Analysis · Gundam Card Game Tournament Meta',
+      title: 'Stay on Top of the GCG Meta · Gundam Card Game Decks Analysis',
       description:
-        'Gundam Card Game tournament meta: which decks are winning, the cards they run and how the meta shifts each series, built from official results.',
+        'Stay on top of the Gundam Card Game meta: the decks winning right now, the cards that power them, and how each new series shakes things up, all from official tournament results.',
     },
     tier: {
       title: 'Archetype Tier List',
@@ -31,9 +31,9 @@ export default {
     imageAlt: '高達卡牌遊戲環境分析：按官方賽果將牌型由 S 到 D 分級的排行榜',
     titleFormat: '{page}｜高達卡牌遊戲環境分析',
     home: {
-      title: '高達卡牌遊戲環境分析｜牌型排行榜 · 卡組數據',
+      title: '掌握高達卡牌最新環境｜牌型排行榜 · 卡組數據',
       description:
-        '高達卡牌遊戲（GUNDAM CARD GAME）賽事環境分析：哪些卡組最常勝出、用甚麼卡，以及每個系列的環境變化，全部根據官方賽果整理。',
+        '掌握高達卡牌遊戲（GUNDAM CARD GAME）最新環境：當下最常勝出的卡組、撐起它們的核心卡，以及每個新系列帶來的環境變化，全部取自官方賽果。',
     },
     tier: {
       title: '牌型排行榜',

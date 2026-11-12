@@ -1,9 +1,9 @@
 export default {
   en: {
-    eyebrow: 'Gundam Card Game · Tournament meta',
-    title: 'GCG Decks Analysis',
+    eyebrow: 'Gundam Card Game · Tournament data',
+    title: 'Stay on top of the GCG meta',
     intro:
-      'Which decks are winning right now, which cards they run, and how the meta shifts from one series to the next — built from official tournament results.',
+      'The decks winning right now, the cards that power them, and how each new series shakes things up — all drawn from official tournament results.',
     viewTierList: 'View tier list',
     metaOverview: 'Meta overview',
     totals: {
@@ -45,9 +45,9 @@ export default {
     aboutOfficial: 'Gundam Card Game tournament results',
   },
   'zh-HK': {
-    eyebrow: 'GCG · 官方賽果數據',
-    title: '高達卡牌遊戲環境分析',
-    intro: '目前哪些卡組最常勝出、它們用甚麼卡，以及環境如何隨系列更迭——全部根據官方賽事結果整理。',
+    eyebrow: 'Gundam Card Game · 賽事環境數據',
+    title: '掌握高達卡牌最新環境',
+    intro: '當下最常勝出的卡組、撐起它們的核心卡，以及每個新系列帶來的環境變化，全部取自官方賽果。',
     viewTierList: '查看排行榜',
     metaOverview: '環境總覽',
     totals: {
