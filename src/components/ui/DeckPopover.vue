@@ -92,31 +92,14 @@
             class="mx-2 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-2 shadow-2xl select-none dark:bg-gray-800"
             @click.stop
           >
-            <div class="mb-2 flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <div
-                  v-if="label"
-                  class="truncate text-xs font-medium text-gray-600 dark:text-gray-300"
-                >
-                  {{ label }}
-                </div>
-                <div
-                  class="mt-0.5 flex flex-wrap items-baseline gap-x-2.5 text-xs text-gray-500 dark:text-gray-400"
-                >
-                  <span
-                    v-for="p in summary"
-                    :key="p.key"
-                    class="flex items-center gap-1 whitespace-nowrap"
-                  >
-                    <span class="size-2 shrink-0 rounded-[2px]" :class="p.swatch" />
-                    {{ p.label }}
-                    <b class="font-mono font-bold text-gray-800 tabular-nums dark:text-gray-100">
-                      {{ p.n }}
-                    </b>
-                  </span>
-                </div>
+            <div class="flex items-center justify-between gap-3">
+              <div
+                v-if="label"
+                class="min-w-0 truncate text-xs font-medium text-gray-600 dark:text-gray-300"
+              >
+                {{ label }}
               </div>
-              <div class="flex shrink-0 gap-2">
+              <div class="ml-auto flex shrink-0 gap-2">
                 <button
                   v-if="url"
                   class="flex h-8 w-12 items-center justify-center rounded-lg bg-ruri/10 text-ruri dark:bg-sora/15 dark:text-sora"
@@ -144,6 +127,18 @@
                   </svg>
                 </button>
               </div>
+            </div>
+            <!-- Own full-width row under the buttons, so the four types fit on one line -->
+            <div
+              class="mt-1 mb-2 flex items-baseline gap-x-3 text-xs text-gray-500 dark:text-gray-400"
+            >
+              <span v-for="p in summary" :key="p.key" class="flex items-center gap-1 whitespace-nowrap">
+                <span class="size-2 shrink-0 rounded-[2px]" :class="p.swatch" />
+                {{ p.label }}
+                <b class="font-mono font-bold text-gray-800 tabular-nums dark:text-gray-100">
+                  {{ p.n }}
+                </b>
+              </span>
             </div>
             <div class="grid grid-cols-4 gap-2">
               <div v-for="card in sortedCards" :key="card.cardId" class="relative">

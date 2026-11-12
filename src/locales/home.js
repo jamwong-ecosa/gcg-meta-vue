@@ -17,7 +17,12 @@ export default {
     preliminaryTitle: 'Preliminary tiers for {label}',
     inProgress: '{label} in progress · {n} events',
     inProgressNote: 'so far, tiers are preliminary',
-    rowStats: '{wins} wins · {use} of placements',
+    ranking: {
+      decks: '{n} placed decks',
+      placed: 'Placed {n}',
+      wins: 'Won {n}',
+      viewAll: 'Full tier list',
+    },
     explore: 'Explore',
     features: {
       tier: {
@@ -57,7 +62,12 @@ export default {
     preliminaryTitle: '{label} 的初步排行榜',
     inProgress: '{label} 進行中 · {n} 場賽事',
     inProgressNote: '，目前級別僅供參考',
-    rowStats: '{wins} 冠 · 佔入賞 {use}',
+    ranking: {
+      decks: '{n} 副入賞卡組',
+      placed: '入賞 {n} 副',
+      wins: '冠軍 {n} 次',
+      viewAll: '完整排行榜',
+    },
     explore: '探索',
     features: {
       tier: {

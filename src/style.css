@@ -6,6 +6,7 @@
 
 /* Chinese UI (<html lang="zh-Hant-HK">): CJK needs more size and no wide caps tracking */
 @custom-variant zh (&:lang(zh));
+@custom-variant standalone (@media (display-mode: standalone));
 
 @theme {
   --font-display: 'Roboto Mono', 'Noto Sans TC', monospace;

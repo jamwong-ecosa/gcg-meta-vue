@@ -1,7 +1,7 @@
 <template>
   <div ref="dropdownRef" class="relative">
     <button
-      class="relative flex w-full cursor-pointer items-center gap-2 overflow-hidden rounded-lg border border-gray-500/10 bg-gray-50 px-3 pt-3 pb-2 text-left transition-colors hover:border-gray-300 focus:border-sora focus:ring-2 focus:ring-hai/5 focus:outline-none md:gap-3 md:px-5 md:pt-4 md:pb-3 dark:border-nalika-border dark:bg-nalika-surface dark:text-nalika-text dark:hover:border-gray-600/70 dark:focus:border-ruri"
+      class="relative flex w-full cursor-pointer items-center gap-2 overflow-hidden rounded-lg border border-gray-500/10 bg-gray-50 px-3 pt-2 pb-1.5 text-left transition-colors hover:border-gray-300 focus:border-sora focus:ring-2 focus:ring-hai/5 focus:outline-none md:gap-3 md:px-5 md:pt-4 md:pb-3 dark:border-nalika-border dark:bg-nalika-surface dark:text-nalika-text dark:hover:border-gray-600/70 dark:focus:border-ruri"
       @click="open = !open"
     >
       <div class="absolute inset-x-0 top-0 h-1" :style="{ background: colorStrip }" />
@@ -44,7 +44,7 @@
           </div>
         </div>
 
-        <div class="mt-1 flex items-center gap-2 md:mt-2">
+        <div class="mt-0.5 flex items-center gap-2 md:mt-2">
           <div
             v-if="selectedTier"
             class="rounded px-1.5 py-0.5 text-xxs font-bold md:px-2 md:text-sm"
@@ -56,7 +56,7 @@
           <!-- Bold counts with their units, like the page header's stats line -->
           <div
             v-if="selectedStats.length"
-            class="flex flex-wrap items-baseline gap-x-2.5 text-xs text-gray-500 md:text-sm dark:text-nalika-text-muted"
+            class="flex flex-wrap items-baseline gap-x-2 text-xs text-gray-500 md:gap-x-2.5 md:text-sm dark:text-nalika-text-muted"
           >
             <span v-for="(s, i) in selectedStats" :key="i">
               <b class="font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text">

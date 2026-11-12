@@ -2,7 +2,7 @@
   <!-- The series' most played cards as a rotating fan: the front card sits in the
        middle, its neighbours fan out to each side, and every few seconds the fan
        slides one card along (wrapping round). Pauses on hover or keyboard focus;
-       side cards and the dots jump to a card -->
+       side cards and the dots jump to a card, and on touch screens a drag turns it -->
   <div
     class="relative flex flex-col items-center"
     @mouseenter="hovered = true"
@@ -16,15 +16,16 @@
     />
 
     <div
-      class="relative h-38 w-full overflow-x-clip sm:h-60 lg:h-56 xl:h-64"
+      ref="stageRef"
+      class="relative h-38 w-full touch-pan-y overflow-x-clip sm:h-60 lg:h-56 xl:h-64"
       aria-roledescription="carousel"
     >
       <button
         v-for="slot in slots"
         :key="slot.card.cardId"
         type="button"
-        class="absolute bottom-0 left-1/2 w-24 origin-bottom cursor-pointer transition-[transform,opacity] duration-700 ease-out sm:w-36 lg:w-32 xl:w-40"
-        :class="slot.hidden && 'pointer-events-none'"
+        class="absolute bottom-0 left-1/2 w-24 origin-bottom cursor-pointer transition-[transform,opacity] ease-out sm:w-36 lg:w-32 xl:w-40"
+        :class="[slot.hidden && tw`pointer-events-none`, isSwiping ? tw`duration-300` : tw`duration-700`]"
         :style="slot.style"
         :tabindex="slot.offset === 0 || slot.hidden ? -1 : 0"
         :aria-hidden="slot.offset !== 0"
@@ -94,7 +95,7 @@
 </template>
 
 <script setup>
-import { useIntervalFn, useDocumentVisibility } from '@vueuse/core'
+import { useIntervalFn, useDocumentVisibility, useSwipe } from '@vueuse/core'
 
 const props = defineProps({
   seriesKey: { type: String, required: true },
@@ -170,6 +171,26 @@ function goTo(i) {
   }
 }
 
+// Hold and drag to turn the fan: one card per STEP_PX of travel (the first at
+// half that, so a flick still turns one), live under the
+// finger, so a long drag runs through several (left = next, right = previous)
+const STEP_PX = 60
+const stageRef = ref(null)
+let dragFrom = 0
+const { isSwiping, lengthX } = useSwipe(stageRef, {
+  threshold: 10,
+  onSwipeStart() {
+    dragFrom = active.value
+  },
+  onSwipe() {
+    const n = cards.value.length
+    if (n) {
+      const steps = Math.round(lengthX.value / STEP_PX)
+      active.value = (((dragFrom + steps) % n) + n) % n
+    }
+  },
+})
+
 const hovered = ref(false)
 // Only keyboard focus pauses: a mouse click leaves focus on the button, which
 // would otherwise keep the fan paused after the pointer has left
@@ -185,7 +206,8 @@ const { pause, resume, isActive } = useIntervalFn(
   { immediate: false },
 )
 watchEffect(() => {
-  const run = !hovered.value && !focused.value && visibility.value === 'visible'
+  const run =
+    !hovered.value && !focused.value && !isSwiping.value && visibility.value === 'visible'
   if (run && !isActive.value) {
     resume()
   } else if (!run && isActive.value) {

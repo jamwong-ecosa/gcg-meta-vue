@@ -118,6 +118,8 @@ function writeCardMeta() {
     acquisitionInfo: c.acquisitionInfo,
     level: c.level,
     cost: c.cost,
+    ...(c.type === 'UNIT' && { ap: c.ap, hp: c.hp }),
+    ...(c.effect === '-' && { noEffect: true }),
   }))
   writeFileSync('data-processed/card-meta.json', JSON.stringify(meta, null, 2))
   console.log(`Saved data-processed/card-meta.json (${meta.length} cards)`)
@@ -581,6 +583,13 @@ function formatTierRows(series) {
           const card = [...(a.cards ?? []), ...(a.filteredCards ?? [])].find(c => c.cardId === id)
           return { copies: card?.totalQty ?? 0, level: Number(card?.level) || 0 }
         }),
+        // Backup art for the home page ranking, for when other archetypes
+        // already show both signature cards: the most-played other units
+        artCardIds: [...(a.cards ?? []), ...(a.filteredCards ?? [])]
+          .filter(c => !a.sigCardIds.includes(c.cardId) && lookup(c.cardId).type === 'UNIT')
+          .sort((x, y) => (y.totalQty ?? 0) - (x.totalQty ?? 0))
+          .slice(0, 6)
+          .map(c => c.cardId),
         // The tier page's quick view of the list; moved out to
         // tier-staples.json before tiers.json is written
         staples: stapleCards(a),

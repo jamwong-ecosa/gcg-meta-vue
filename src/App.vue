@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen font-display dark:bg-nalika-bg dark:text-nalika-text-muted">
+  <div class="min-h-screen font-display standalone:pb-[calc(2rem+env(safe-area-inset-bottom))] dark:bg-nalika-bg dark:text-nalika-text-muted">
     <!-- Fixed, not sticky: the series row folding away must not change the page's
          layout, or the content jumps, the browser corrects the scroll and that
          reads as a scroll-up that brings the row back. The spacer holds the full
@@ -10,7 +10,7 @@
     />
     <nav
       ref="navRef"
-      class="fixed inset-x-0 top-0 z-999 w-full border-b border-gray-500/10 bg-white py-2 dark:bg-nalika-surface"
+      class="fixed inset-x-0 top-0 z-999 w-full border-b border-gray-500/10 bg-white py-1 sm:py-2 dark:bg-nalika-surface"
     >
       <!-- Same box as the pages (max-w-340 with the padding inside it) so the links
            start at the content's left edge and the toggles end at its right -->
@@ -76,7 +76,7 @@
           :class="hideSeries ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'"
         >
           <div class="min-h-0 overflow-hidden has-aria-expanded:overflow-visible">
-            <div ref="seriesRowRef" class="flex min-w-0 items-center gap-2 pt-1.5">
+            <div ref="seriesRowRef" class="flex min-w-0 items-center gap-2">
               <span class="shrink-0 text-xs text-gray-500 dark:text-gray-400">
                 {{ $t('common.nav.series') }}
               </span>

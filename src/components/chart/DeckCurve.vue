@@ -74,7 +74,7 @@
               :class="TYPE_STYLE[c.type].bar"
             />
             <span class="min-w-0 flex-1 truncate">{{ c.name }}</span>
-            <span class="font-mono text-gray-400 tabular-nums">{{ copiesLabel(c.copies) }}</span>
+            <span class="font-mono text-gray-400 tabular-nums">{{ cardLabel(c) }}</span>
           </div>
           <div v-if="bar.cards.length > POPOVER_CARDS" class="mt-0.5 text-gray-400">
             {{ $t('chart.curve.more', { n: bar.cards.length - POPOVER_CARDS }) }}
@@ -173,11 +173,16 @@ const bars = computed(() => {
       type,
       copies: here.filter(e => e.type === type).reduce((n, e) => n + e.copies, 0),
     })).filter(s => s.copies > 0)
+    const total = segments.reduce((n, s) => n + s.copies, 0)
+    const shown = apportion(here, Math.round(total))
     return {
       value,
-      total: segments.reduce((n, s) => n + s.copies, 0),
+      total,
       segments,
-      cards: here.filter(e => e.copies >= 0.05).sort((a, b) => b.copies - a.copies),
+      cards: here
+        .map((e, j) => ({ ...e, shown: shown[j] }))
+        .filter(e => e.copies >= 0.05)
+        .sort((a, b) => b.copies - a.copies),
     }
   })
 })
@@ -186,8 +191,31 @@ const bars = computed(() => {
 // as present
 const copiesLabel = n => (n < 0.5 ? '<1' : String(Math.round(n)))
 
-const maxTotal = computed(() => Math.max(1, ...bars.value.map(b => b.total)))
-const barHeight = bar => (bar.total / maxTotal.value) * BAR_MAX
+// Whole copies per card that add up to the bar's rounded total (largest
+// remainder), so two 3.4s under a 7 read 4 and 3 rather than 3 and 3
+function apportion(cards, target) {
+  const shown = cards.map(c => Math.floor(c.copies))
+  let left = target - shown.reduce((n, s) => n + s, 0)
+  const byRemainder = cards
+    .map((c, j) => j)
+    .sort((a, b) => (cards[b].copies % 1) - (cards[a].copies % 1))
+  for (const j of byRemainder) {
+    if (left <= 0) {
+      break
+    }
+    shown[j]++
+    left--
+  }
+  return shown
+}
+// A card's popover figure: its share of the total, or "<1" when that's 0
+const cardLabel = c => (c.shown ? String(c.shown) : '<1')
+
+// Heights follow the whole-number labels, so two bars both labelled 7 stand
+// equal; a "<1" bar keeps its exact sliver so it still shows
+const shownTotal = bar => (bar.total < 0.5 ? bar.total : Math.round(bar.total))
+const maxTotal = computed(() => Math.max(1, ...bars.value.map(shownTotal)))
+const barHeight = bar => (shownTotal(bar) / maxTotal.value) * BAR_MAX
 
 function popoverAlign(i) {
   const n = bars.value.length
@@ -209,6 +237,6 @@ const average = computed(() => {
   if (!total) {
     return '—'
   }
-  return (entries.value.reduce((n, e) => n + e.value * e.copies, 0) / total).toFixed(1)
+  return String(Math.round(entries.value.reduce((n, e) => n + e.value * e.copies, 0) / total))
 })
 </script>
