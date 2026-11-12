@@ -17,6 +17,9 @@ const props = defineProps({
   hint: { type: Boolean, default: true },
   // On card art (the home page tiles) rather than on the page background
   onArt: { type: Boolean, default: false },
+  // Just the word in its style's colour, no pill: for a stats grid, where the
+  // caller sets the size and weight to match the numbers beside it
+  plain: { type: Boolean, default: false },
 })
 
 // Chinese glyphs (Noto Sans TC) sit about 1px high in Roboto Mono's line box,
@@ -35,5 +38,13 @@ const TONES = {
 const ON_ART = tw`shrink-0 rounded bg-black/45 leading-none font-bold whitespace-nowrap text-white/90 ring-1 ring-white/30 ring-inset`
 
 const known = computed(() => props.playStyle in TONES)
-const tone = computed(() => (props.onArt ? ON_ART : [PILL, TONES[props.playStyle]]))
+const tone = computed(() => {
+  if (props.onArt) {
+    return ON_ART
+  }
+  // The tones' border colours do nothing without a border width
+  return props.plain
+    ? [tw`whitespace-nowrap`, TONES[props.playStyle]]
+    : [PILL, TONES[props.playStyle]]
+})
 </script>

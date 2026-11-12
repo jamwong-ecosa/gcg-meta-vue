@@ -96,3 +96,13 @@ export function cardFace(cardId, width, zoom = 1.3) {
     v: (fy - cropY) / side,
   }
 }
+
+// An archetype row's signature cards as round faces (two at most), each with
+// its card's colour for a ring, so the faces can stand in for the colour dots
+export function sigCardFaces(row, width = 64) {
+  return (row.sigCardIds ?? []).slice(0, 2).map((id, i) => ({
+    id,
+    url: cardFace(id, width).url,
+    ring: COLOR_HEX[row.sigCards?.[i]?.color] ?? COLOR_HEX.White,
+  }))
+}

@@ -7,11 +7,13 @@
     <span class="absolute -top-px bottom-0 left-0 w-1" :class="tierBarClass(row.tier)" />
     <!-- One line with the essentials: tapping the name opens the analysis,
          tapping the score shows the rest of the stats -->
-    <div class="flex items-stretch">
-      <!-- Staples quick view: a tap opens DeckPopover's fullscreen overlay. A
-           deck-stack icon leading the row as on the desktop table, under the
-           section header's arrow (same pl-3.5 and size), so the names start
-           where the header's tier pill starts -->
+    <!-- min-h-14: about a two-line name's height, so a one-line row gets the same
+         breathing room instead of hugging the score block -->
+    <div class="flex min-h-14 items-stretch">
+      <!-- Staples quick view: a tap opens DeckPopover's fullscreen overlay. The
+           signature cards' faces lead the row as on the desktop table, ringed in
+           their colours; a deck-stack icon under the section header's arrow when
+           there are none -->
       <UiDeckPopover
         class="flex shrink-0"
         :cards="row.staples ?? []"
@@ -19,14 +21,25 @@
         :tags-of="card => ({ sig: row.sigCardIds?.includes(card.cardId) })"
       >
         <button
-          class="flex cursor-pointer items-center pr-2 pl-3.5 text-gray-400 active:text-ruri dark:text-gray-500 dark:active:text-sora"
+          class="flex cursor-pointer items-center pr-1.5 pl-3.5 text-gray-400 active:text-ruri dark:text-gray-500 dark:active:text-sora"
           :aria-label="$t('tier.staplesPeek')"
         >
-          <UiIconDeckStack class="size-4" />
+          <span v-if="faces.length" class="flex items-center">
+            <img
+              v-for="f in faces"
+              :key="f.id"
+              :src="f.url"
+              alt=""
+              loading="lazy"
+              class="-ml-2.5 size-7 rounded-full bg-gray-100 object-cover ring-2 first:ml-0 dark:bg-nalika-surface"
+              :style="{ '--tw-ring-color': f.ring }"
+            />
+          </span>
+          <UiIconDeckStack v-else class="size-4" />
         </button>
       </UiDeckPopover>
       <button
-        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-3 pr-1 text-left transition-colors hover:bg-sky-50 active:bg-sky-50 dark:hover:bg-sky-400/10 dark:active:bg-sky-400/10"
+        class="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 py-3 pr-0.5 text-left transition-colors hover:bg-sky-50 active:bg-sky-50 dark:hover:bg-sky-400/10 dark:active:bg-sky-400/10"
         @click="$emit('detail', row)"
       >
         <span
@@ -64,7 +77,6 @@
             >
               {{ $t('tier.noLR') }}
             </UiHint>
-            <UiStylePill :play-style="row.style" />
           </div>
           <ArchetypeCardNames
             v-if="cardNames.length"
@@ -72,7 +84,7 @@
             :class="
               headline
                 ? 'mt-0.5 text-xs text-gray-400 dark:text-gray-500'
-                : 'text-[13px] text-gray-800 dark:text-nalika-text'
+                : 'text-xs text-gray-800 dark:text-nalika-text'
             "
             :cards="cardNames"
           >
@@ -90,7 +102,6 @@
             >
               {{ $t('tier.noLR') }}
             </UiHint>
-            <UiStylePill v-if="!headline" class="ml-1 align-middle" :play-style="row.style" />
           </ArchetypeCardNames>
         </div>
       </button>
@@ -138,12 +149,13 @@
       </button>
     </div>
 
-    <!-- A tinted panel under the name column: pl-7 + the panel's px-2.5 puts the
-         labels where the names start (past the deck-stack icon), pr-3 ends it
-         where the scores end -->
-    <div v-if="open" class="pr-3 pb-3 pl-7">
+    <!-- A tinted panel across the row: pl-3.5 starts it where the card faces (or
+         the deck-stack icon) start, pr-3 ends it where the scores end. The play
+         style lives here rather than in the row, which keeps the names room to fit -->
+    <div v-if="open" class="pr-3 pb-3 pl-3.5">
       <dl
-        class="grid grid-cols-4 gap-x-2 rounded-md bg-gray-500/[0.03] px-2.5 py-2 dark:bg-white/[0.025]"
+        class="grid gap-x-2 rounded-md bg-gray-500/[0.03] px-2.5 py-2 dark:bg-white/[0.025]"
+        :class="row.style ? tw`grid-cols-5` : tw`grid-cols-4`"
       >
         <div v-for="s in stats" :key="s.key">
           <dt
@@ -155,6 +167,16 @@
             class="mt-px font-mono text-sm font-bold text-aisumicha tabular-nums dark:text-nalika-text-muted"
           >
             {{ s.value }}
+          </dd>
+        </div>
+        <div v-if="row.style">
+          <dt
+            class="text-xxs font-semibold tracking-widest text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"
+          >
+            {{ $t('tier.col.style') }}
+          </dt>
+          <dd class="mt-px font-mono text-sm font-bold">
+            <UiStylePill plain :play-style="row.style" />
           </dd>
         </div>
       </dl>
@@ -194,12 +216,17 @@ const stats = computed(() =>
   ].map(s => ({ ...s, label: t(`tier.col.${s.key}`) })),
 )
 
-// Grouped by color the section header already names the combo, so only the
-// cards are shown (falling back to the combo when the archetype has no cards)
+const faces = computed(() => sigCardFaces(props.row))
+
+// Only the cards are shown when their faces' rings already give the colours, or
+// when grouped by color (the section header names the combo); the combo stays
+// when the archetype has no cards
 const nameParts = computed(() => archetypeNameParts(props.row.archetype, props.row.sigCards))
 
 const headline = computed(() =>
-  props.hideColor && nameParts.value.cards.length ? '' : comboName(nameParts.value.base),
+  (faces.value.length || props.hideColor) && nameParts.value.cards.length
+    ? ''
+    : comboName(nameParts.value.base),
 )
 
 const cardNames = computed(() => nameParts.value.cards)
