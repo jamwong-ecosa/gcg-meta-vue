@@ -4,12 +4,12 @@
     @click="$emit('detail', row)"
   >
     <td class="py-2 pr-4 pl-4">
-      <div class="flex min-w-0 items-baseline gap-1.5">
+      <div class="flex min-w-0 items-center gap-1.5">
         <!-- Staples quick view: the signature cards' faces lead the row (a deck-stack
              icon when there are none); hover them for the popover. A click stays on
              the page instead of opening the analysis -->
         <UiDeckPopover
-          class="-ml-1.5 shrink-0 self-center"
+          class="-ml-1.5 shrink-0"
           :cards="row.staples ?? []"
           :label="$t('tier.staplesLabel', { pct: 85 })"
           :tags-of="card => ({ sig: row.sigCardIds?.includes(card.cardId) })"
