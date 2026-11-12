@@ -30,16 +30,16 @@
               {{ $t(`tier.style.${item.style}`) }}
             </UiHint>
           </dt>
-          <dd class="mt-0.5 flex flex-wrap items-baseline gap-x-1.5">
+          <dd class="mt-0.5 flex items-baseline gap-x-1.5">
             <span class="text-xl font-bold text-gray-700 tabular-nums dark:text-nalika-text">
               {{ $n(item.decks) }}
             </span>
             <span class="text-xs font-semibold text-gray-400 tabular-nums dark:text-gray-500">
               {{ item.pct }}%
             </span>
-            <span class="text-xs text-gray-400 dark:text-gray-500">
-              · {{ $t('ui.seriesHeader.archetypes', { n: item.archetypes }, item.archetypes) }}
-            </span>
+          </dd>
+          <dd class="text-xs text-gray-400 dark:text-gray-500">
+            {{ $t('ui.seriesHeader.archetypes', { n: item.archetypes }, item.archetypes) }}
           </dd>
         </div>
       </dl>
