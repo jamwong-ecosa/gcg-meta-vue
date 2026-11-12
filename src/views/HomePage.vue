@@ -3,13 +3,15 @@
     <!-- Hero -->
     <section class="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
       <div class="max-lg:order-2 max-lg:text-center">
+        <!-- Eyebrow: a short accent rule, then the label in the accent colour -->
         <p
-          class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70 zh:text-sm zh:tracking-wide"
+          class="flex items-center gap-2.5 text-xs font-semibold tracking-widest text-ruri uppercase max-lg:justify-center dark:text-sora zh:text-sm zh:tracking-wide"
         >
+          <span class="h-0.5 w-6 shrink-0 rounded-full bg-ruri dark:bg-sora" aria-hidden="true" />
           {{ $t('home.eyebrow') }}
         </p>
         <h1
-          class="mt-2 text-3xl font-bold tracking-tight text-sumi md:text-4xl dark:text-nalika-text"
+          class="mt-3 text-3xl leading-tight font-black tracking-tight text-sumi md:text-5xl dark:text-nalika-text"
         >
           {{ $t('home.title') }}
         </h1>
@@ -93,31 +95,51 @@
 
     <!-- Current meta: the top eight of the tier list, poster style; each tile is
          the archetype's signature card art with its share of placed decks on top -->
-    <section
-      v-if="featured"
-      class="relative mt-14 text-sumi md:mt-20 dark:text-nalika-text"
-    >
+    <section v-if="featured" class="relative mt-14 text-sumi md:mt-20 dark:text-nalika-text">
       <header class="relative">
         <p
-          class="text-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-nalika-text-muted/70 zh:text-sm zh:tracking-wide"
+          class="flex items-center gap-2.5 text-xs font-semibold tracking-widest text-ruri uppercase dark:text-sora zh:text-sm zh:tracking-wide"
         >
+          <span class="h-0.5 w-6 shrink-0 rounded-full bg-ruri dark:bg-sora" aria-hidden="true" />
           {{ $t('home.currentMeta') }}
         </p>
+        <!-- The series name ("NTC M5") sits beside the month as a pill -->
         <h2
-          class="mt-1 flex flex-wrap items-baseline gap-x-2 text-2xl font-bold text-sumi md:text-3xl dark:text-nalika-text"
+          class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-black tracking-tight text-sumi tabular-nums md:text-4xl dark:text-nalika-text"
         >
           {{ featuredTitle.main }}
           <span
             v-if="featuredTitle.sub"
-            class="text-base font-semibold text-ruri md:text-lg dark:text-sora"
+            class="rounded-full bg-ruri/10 px-2.5 py-1 text-xs leading-none font-bold tracking-wide text-ruri md:text-sm dark:bg-sora/15 dark:text-sora"
           >
             {{ featuredTitle.sub }}
           </span>
         </h2>
-        <p class="mt-1.5 text-xs text-gray-500 tabular-nums dark:text-gray-400">
-          {{ $t('home.eventsRange', { n: $n(featured.events), range: featuredRange }) }}
-          · {{ $t('home.ranking.decks', { n: $n(featured.totalDecks) }) }}
-        </p>
+        <!-- Same stat line as the other pages' headers (UiSeriesHeader): numbers
+             bold and dark, units light, stats spaced apart -->
+        <ul
+          class="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-xs text-gray-500 dark:text-nalika-text-muted"
+        >
+          <li>
+            <i18n-t keypath="ui.seriesHeader.events" :plural="featured.events" scope="global">
+              <template #n>
+                <b class="text-sm font-bold text-sumi tabular-nums dark:text-nalika-text">
+                  {{ $n(featured.events) }}
+                </b>
+              </template>
+            </i18n-t>
+          </li>
+          <li>
+            <i18n-t keypath="home.ranking.decks" scope="global">
+              <template #n>
+                <b class="text-sm font-bold text-sumi tabular-nums dark:text-nalika-text">
+                  {{ $n(featured.totalDecks) }}
+                </b>
+              </template>
+            </i18n-t>
+          </li>
+          <li v-if="featuredRange" class="tabular-nums">{{ featuredRange }}</li>
+        </ul>
       </header>
 
       <!-- A status line, not a CTA: the whole row opens the in-progress series' tiers -->
