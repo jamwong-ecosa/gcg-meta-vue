@@ -92,18 +92,6 @@
         {{ bar.value }}
       </span>
     </div>
-
-    <div class="mt-2 text-xs">
-      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-gray-600 dark:text-gray-300">
-        <span v-for="t in usedTypes" :key="t" class="flex items-center gap-1">
-          <span class="inline-block h-2.5 w-2.5 rounded-sm" :class="TYPE_STYLE[t].bar" />
-          {{ cardTypeName(t) }}
-        </span>
-        <span class="text-gray-500 dark:text-gray-400">
-          {{ $t('chart.curve.legend') }}
-        </span>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -125,13 +113,8 @@ const HEIGHT = 150
 const POPOVER_CARDS = 12
 const BAR_MAX = 125
 
-const TYPE_STYLE = {
-  UNIT: { bar: tw`bg-ruri dark:bg-sky-600` },
-  PILOT: { bar: tw`bg-sky-400 dark:bg-sky-300` },
-  COMMAND: { bar: tw`bg-amber-400 dark:bg-amber-500` },
-  BASE: { bar: tw`bg-emerald-500 dark:bg-emerald-600` },
-}
-const TYPES = Object.keys(TYPE_STYLE)
+const TYPE_STYLE = CURVE_TYPE_STYLE
+const TYPES = CURVE_TYPES
 
 const hovered = ref(null)
 const pinned = ref(null)
@@ -230,7 +213,6 @@ const rootRef = ref(null)
 onClickOutside(rootRef, () => {
   pinned.value = null
 })
-const usedTypes = computed(() => TYPES.filter(t => entries.value.some(e => e.type === t)))
 
 const average = computed(() => {
   const total = entries.value.reduce((n, e) => n + e.copies, 0)

@@ -1,19 +1,12 @@
 <template>
   <!-- Copies per average deck across the series at each level and cost, by type -->
-  <div class="mb-6 grid gap-4 md:grid-cols-2">
-    <ChartDeckCurve
-      :title="$t('chart.level')"
-      field="level"
-      :cards="cards"
-      :deck-count="totalSeriesDecks"
-    />
-    <ChartDeckCurve
-      :title="$t('chart.cost')"
-      field="cost"
-      :cards="cards"
-      :deck-count="totalSeriesDecks"
-    />
-  </div>
+  <ChartDeckCurvePair
+    class="mb-6"
+    :level-title="$t('chart.level')"
+    :cost-title="$t('chart.cost')"
+    :cards="cards"
+    :deck-count="totalSeriesDecks"
+  />
 </template>
 
 <script setup>

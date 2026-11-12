@@ -218,20 +218,13 @@
     <CardImageOverlay v-model="enlargedCardId" :info="enlargedInfo" :z-index="1100" />
 
     <!-- Deck curve: copies per average deck at each level and cost, by type -->
-    <div class="mt-6 grid gap-4 md:grid-cols-2">
-      <ChartDeckCurve
-        :title="$t('archetype.detail.level')"
-        field="level"
-        :cards="allCards"
-        :deck-count="archetype.deckCount"
-      />
-      <ChartDeckCurve
-        :title="$t('archetype.detail.cost')"
-        field="cost"
-        :cards="allCards"
-        :deck-count="archetype.deckCount"
-      />
-    </div>
+    <ChartDeckCurvePair
+      class="mt-6"
+      :level-title="$t('archetype.detail.level')"
+      :cost-title="$t('archetype.detail.cost')"
+      :cards="allCards"
+      :deck-count="archetype.deckCount"
+    />
 
     <!-- Traits: copies per average deck carrying each trait -->
     <div v-if="traits.length" class="mt-4">
