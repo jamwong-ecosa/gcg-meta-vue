@@ -5,7 +5,7 @@
     <table class="w-full table-fixed text-left text-sm">
       <colgroup>
         <col class="w-auto" />
-        <col class="w-20" />
+        <col class="w-16" />
         <col v-for="c in numericCols" :key="c.key" class="w-18" />
         <col class="w-28" />
         <col v-if="hasMovement" class="w-14" />
@@ -20,9 +20,10 @@
             :class="i === 0 ? 'rounded-tl pr-4 pl-4' : 'px-3'"
             :aria-sort="ariaSort(c.key)"
           >
-            <!-- Numeric headers end flush with the numbers below: the sort arrow hangs
-                 into the cell padding, and a label wider than the cell overflows leftward -->
-            <div :class="i === 0 || c.plain ? '' : 'flex justify-end'">
+            <!-- Headers after the first end flush with the cells below (the style pill
+                 sits right, next to the deck count): the sort arrow hangs into the cell
+                 padding, and a label wider than the cell overflows leftward -->
+            <div :class="i === 0 ? '' : 'flex justify-end'">
               <UiHint :text="tierColumnHelp(c.key)">
                 <span v-if="c.plain" class="whitespace-nowrap">{{ c.label }}</span>
                 <button
