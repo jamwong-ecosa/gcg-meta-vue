@@ -32,12 +32,10 @@
           />
         </div>
         <!-- One line per archetype. Segments are flex items: the fixed text never
-             shrinks, and only card names give up width (in proportion to their
-             length) and ellipsize, so two long names still both show. Hover for all -->
-        <div
-          class="flex min-w-0 items-baseline text-sumi dark:text-nalika-text"
-          :title="row.archetype"
-        >
+             shrinks, and card names start from an equal share (flex-1, capped at
+             their own width), so a short name hands its leftover to the other and
+             a long one never squeezes its partner below half -->
+        <div class="flex min-w-0 items-baseline text-sumi dark:text-nalika-text">
           <template
             v-for="(seg, si) in buildLabelSegments(row.archetype, row.sigCards ?? [], {
               skipBaseCombo: hideColor,
@@ -46,7 +44,7 @@
           >
             <span
               v-if="seg.color"
-              class="min-w-0 truncate"
+              class="max-w-max min-w-0 flex-1 truncate"
               :style="{ color: seg.color }"
               v-text="seg.text"
             />
