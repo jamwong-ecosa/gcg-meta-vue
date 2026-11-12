@@ -20,6 +20,7 @@
               :style="{ background: h }"
             />
             <span class="ml-1">{{ comboName(selectedParts.base) }}</span>
+            <UiStylePill class="ml-0.5" :play-style="selected?.style" :hint="false" />
           </div>
           <ArchetypeCardNames
             v-if="selectedParts.cards.length"
@@ -28,7 +29,7 @@
             keep-weight
           />
         </div>
-        <div class="flex items-baseline gap-1.5 max-md:hidden">
+        <div class="flex items-center gap-1.5 max-md:hidden">
           <div
             v-for="h in selectedColors"
             :key="h"
@@ -42,6 +43,7 @@
               <span v-else>{{ seg.text }}</span>
             </template>
           </div>
+          <UiStylePill class="md:px-1.5 md:text-xs" :play-style="selected?.style" :hint="false" />
         </div>
 
         <div class="mt-0.5 flex items-center gap-2 md:mt-2">
@@ -52,7 +54,6 @@
           >
             {{ selectedTier }}
           </div>
-          <UiStylePill class="md:px-1.5 md:text-xs" :play-style="selected?.style" :hint="false" />
 
           <!-- Bold counts with their units, like the page header's stats line -->
           <div
@@ -114,6 +115,7 @@
                 :style="{ background: h }"
               />
               <span class="ml-1 font-semibold">{{ comboName(opt.nameParts.base) }}</span>
+              <UiStylePill class="ml-0.5" :play-style="opt.style" :hint="false" />
             </div>
             <ArchetypeCardNames
               v-if="opt.nameParts.cards.length"
@@ -122,7 +124,7 @@
             />
           </div>
           <div
-            class="flex items-baseline gap-1 text-left text-gray-700 max-md:hidden dark:text-nalika-text"
+            class="flex items-center gap-1 text-left text-gray-700 max-md:hidden dark:text-nalika-text"
           >
             <div
               v-for="h in opt.colors"
@@ -137,6 +139,7 @@
                 <span v-else>{{ seg.text }}</span>
               </template>
             </div>
+            <UiStylePill :play-style="opt.style" :hint="false" />
           </div>
 
           <div class="mt-1 flex items-center gap-2">
@@ -147,7 +150,6 @@
             >
               {{ opt.tier }}
             </div>
-            <UiStylePill :play-style="opt.style" :hint="false" />
             <div v-if="opt.details" class="text-xs text-gray-500 dark:text-nalika-text-muted/70">
               {{ opt.details }}
             </div>

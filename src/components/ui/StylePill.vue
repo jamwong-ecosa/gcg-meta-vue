@@ -19,7 +19,9 @@ const props = defineProps({
   onArt: { type: Boolean, default: false },
 })
 
-const PILL = tw`shrink-0 rounded border px-1 text-xxs leading-tight font-medium whitespace-nowrap`
+// Chinese glyphs (Noto Sans TC) sit about 1px high in Roboto Mono's line box,
+// so zh gets a 1px top pad to centre them; English is centred as is
+const PILL = tw`shrink-0 rounded border px-1 text-xxs font-medium whitespace-nowrap zh:pt-px`
 
 const TONES = {
   aggro: tw`border-rose-300 text-rose-700 dark:border-rose-400/40 dark:text-rose-300`,
