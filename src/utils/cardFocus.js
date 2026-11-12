@@ -9,7 +9,7 @@ const CARD_FOCUS = {
   'GD01-024': [0.67, 0.18], // ウイングガンダムゼロ
   'GD01-003': [0.52, 0.254], // ユニコーンガンダム2号機 バンシィ（デストロイモード）
   'GD01-044': [0.53, 0.32], // クシャトリヤ
-  'GD01-066': [0.63, 0.19], // ジャスティスガンダム
+  'GD01-066': [0.513, 0.265], // ジャスティスガンダム
   'GD02-054': [0.31, 0.184], // ガンダム・バルバトス（第1形態）
   // Head right under the cost box: trim from just below the box and right of
   // the purple bar, keeping as much art as possible left of and above the head
@@ -50,7 +50,8 @@ const SRC = { w: 600, h: 838 }
 // A crop of the illustration `aspect` (width / height) wide, as large as fits,
 // with the face centred across and `faceAt` of the way down (clamped inside
 // the illustration, so a face near its edge is off-target): { url, u, v } as
-// above. `zoom` narrows the crop to that fraction of the illustration's width
+// above. `zoom` narrows the crop to that fraction of the illustration's width.
+// `width` is a ceiling: the crop is never enlarged past its source pixels
 export function cardCrop(cardId, width, aspect, { faceAt = 0.4, zoom = 1 } = {}) {
   const [x, y, corner] = CARD_FOCUS[cardId] ?? DEFAULT_FOCUS
   const left = corner?.x ?? ART.x
@@ -71,7 +72,7 @@ export function cardCrop(cardId, width, aspect, { faceAt = 0.4, zoom = 1 } = {})
   const cropX = clamp(fx - w / 2, left, right - w)
   const cropY = clamp(fy - h * faceAt, top, bottom - h)
   return {
-    url: `https://jw-assets.imgix.net/gcg-img/${cardId}.webp?rect=${cropX},${cropY},${w},${h}&w=${width}&auto=format,compress`,
+    url: `https://jw-assets.imgix.net/gcg-img/${cardId}.webp?rect=${cropX},${cropY},${w},${h}&w=${width}&fit=max&auto=format,compress`,
     u: (fx - cropX) / w,
     v: (fy - cropY) / h,
   }

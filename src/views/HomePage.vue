@@ -427,13 +427,16 @@ const updated = computed(() => {
   }
 })
 
-// Tile backgrounds: the illustration cropped to roughly the tile's shape with
-// the unit's face upper middle, clear of the text along the bottom
-function cardArt(cardId, width, aspect, zoom) {
+// Tile backgrounds: the illustration cropped to roughly the tile's shape (its
+// desktop width / height) with the unit's face upper middle, clear of the text
+// along the bottom. The card images are small (the illustration is about 470px
+// wide), so the crop is as wide as the illustration allows and never zoomed in:
+// every source pixel is needed to keep a tile sharp
+function cardArt(cardId, aspect) {
   if (!cardId) {
     return null
   }
-  const { url, u, v } = cardCrop(cardId, width, aspect, { faceAt: 0.35, zoom })
+  const { url, u, v } = cardCrop(cardId, 600, aspect, { faceAt: 0.35 })
   return { url, position: `${(u * 100).toFixed(1)}% ${(v * 100).toFixed(1)}%` }
 }
 
@@ -492,10 +495,10 @@ const ranked = computed(() => {
       ...row,
       art:
         i === 0
-          ? cardArt(imageCardId, 800, 0.9, 1)
+          ? cardArt(imageCardId, 1.1)
           : i < 3
-            ? cardArt(imageCardId, 600, 1.8, 1.2)
-            : cardArt(imageCardId, 600, 3, 1.4),
+            ? cardArt(imageCardId, 1.9)
+            : cardArt(imageCardId, 2.9),
       names: names.length ? names : [comboName(row.colors)],
       share: s.totalDecks ? ((row.decks / s.totalDecks) * 100).toFixed(1) : '0.0',
       bar: {
