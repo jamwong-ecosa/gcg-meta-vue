@@ -203,25 +203,24 @@
             {{ i + 1 }}
           </span>
           <div
-            class="absolute right-3 flex items-baseline leading-none font-black tracking-tight text-sora tabular-nums text-shadow-black/70 text-shadow-lg"
-            :class="i === 0 ? 'top-3 text-5xl' : 'top-2 text-3xl'"
+            class="absolute right-3 flex items-baseline text-2xl leading-none font-black tracking-tight text-sora tabular-nums text-shadow-black/70 text-shadow-lg"
+            :class="i === 0 ? 'top-3' : 'top-2'"
           >
             {{ row.share }}
-            <span class="ml-0.5" :class="i === 0 ? 'text-lg' : 'text-sm'">%</span>
+            <span class="ml-0.5 text-sm">%</span>
           </div>
           <!-- Names get the full width; the tier sits beside the counts below -->
           <div class="absolute inset-x-0 bottom-0" :class="i === 0 ? 'p-3 md:p-4' : 'p-3'">
             <div class="flex items-center gap-2">
               <span class="h-2.5 w-7 shrink-0 rounded-full" :style="row.bar" />
-              <span class="truncate text-sm font-bold text-white/75">
+              <span class="truncate text-xs font-bold text-white/75">
                 {{ comboName(row.colors) }}
               </span>
             </div>
             <!-- Lines break between names only; a name wider than the line is
                  cut short on its own -->
             <div
-              class="mt-1 flex max-h-[2lh] flex-wrap gap-x-1.5 overflow-hidden leading-tight font-black"
-              :class="i === 0 ? 'text-xl' : 'text-base'"
+              class="mt-1 flex max-h-[2lh] flex-wrap gap-x-1.5 overflow-hidden text-sm leading-tight font-black"
             >
               <span
                 v-for="(name, ni) in row.names"
@@ -231,7 +230,7 @@
               />
             </div>
             <div class="mt-1 flex items-center justify-between gap-3">
-              <div class="flex gap-3 text-xs font-bold tabular-nums">
+              <div class="flex gap-3 text-[11px] font-bold tabular-nums">
                 <span class="text-white/75">
                   {{ $t('home.ranking.placed', { n: row.decks }) }}
                 </span>
@@ -241,13 +240,13 @@
               </div>
               <div class="flex shrink-0 items-center gap-1.5">
                 <UiStylePill
-                  class="px-2 py-0.5 text-xs"
+                  class="px-2 py-0.5 text-[11px]"
                   :play-style="row.style"
                   :hint="false"
                   on-art
                 />
                 <span
-                  class="rounded px-2 py-0.5 text-xs leading-none font-bold"
+                  class="rounded px-2 py-0.5 text-[11px] leading-none font-bold"
                   :class="tierPillClass(row.tier)"
                 >
                   {{ row.tier }}
