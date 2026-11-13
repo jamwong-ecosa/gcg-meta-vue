@@ -878,6 +878,9 @@ function buildCardState(mainDetails, eventMaxDate) {
 
 // ── Phase: Process one series ────────────────────────────────────────────────
 
+// Newest events listed on the home page
+const RECENT_EVENTS = 6
+
 function processSeries(series) {
   const { allPlayers, winners } = getSeriesMetadata(series)
   const { eventMinDate, eventMaxDate } = getSeriesEventDateRange(series)
@@ -910,6 +913,59 @@ function processSeries(series) {
       deckCardIds: serializeDeckCards(p.deck),
       meta: deckMeta(p),
     }))
+
+  // The newest events and their winning decks, for the home page. `archetype`
+  // is the combo key of a ranked archetype, null for an unassigned deck, which
+  // is shown by its own `cards` instead
+  const mainCombos = new Set(mainDetails.map(a => a.combo))
+  const recentEvents = series.events
+    .filter(e => e.date)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, RECENT_EVENTS)
+    .map(e => {
+      const winner = e.players.find(p => p.rank === WINNER && p.deck.length > 0)
+      const { key, sigCardIds } = winner ? keyOf(winner.deck) : {}
+      // The deck's own faces, for an unassigned one: its signature cards, or
+      // failing those its two highest-level units
+      const faceIds = sigCardIds?.length
+        ? sigCardIds
+        : (winner?.deck ?? [])
+            .filter(c => lookup(c.cardId).type === 'UNIT')
+            .sort(
+              (a, b) =>
+                (parseInt(lookup(b.cardId).level) || 0) - (parseInt(lookup(a.cardId).level) || 0) ||
+                b.quantity - a.quantity,
+            )
+            .slice(0, 2)
+            .map(c => c.cardId)
+      return {
+        date: e.date,
+        shop: e.shop ?? '',
+        url: e.url ?? '',
+        winner: winner
+          ? {
+              deckUrl: winner.deckUrl || e.url || '',
+              colors: getDeckColors(winner.deck).join('+'),
+              archetype: mainCombos.has(key) ? key : null,
+              cards: faceIds.map(id => ({ cardId: id, name: lookup(id).name })),
+              sigCardIds: sigCardIds ?? [],
+              // The whole list for the deck popover, with what it sorts by
+              deck: winner.deck.map(c => {
+                const info = lookup(c.cardId)
+                return {
+                  cardId: c.cardId,
+                  qty: c.quantity,
+                  name: info.name,
+                  type: info.type,
+                  color: info.color,
+                  level: parseInt(info.level) || 0,
+                  cost: parseInt(info.cost) || 0,
+                }
+              }),
+            }
+          : null,
+      }
+    })
 
   // Aggregate all decks by color combo for the pie chart
   const colorComboMap = {}
@@ -1146,6 +1202,7 @@ function processSeries(series) {
       deckWinnerFlags: unassignedDeckData.map(d => d.isWinner),
       deckMeta: unassignedDeckData.map(d => d.meta),
     },
+    recentEvents,
     colorComboData,
   }
 

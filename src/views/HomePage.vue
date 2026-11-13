@@ -3,12 +3,17 @@
     <!-- Hero -->
     <section class="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
       <div class="max-lg:order-2 max-lg:text-center">
-        <!-- Eyebrow: a short accent rule, then the label in the accent colour -->
+        <!-- Eyebrow: a short accent rule, then the label in the accent colour;
+             centred on narrow screens, with a rule on each side to balance it -->
         <p
           class="flex items-center gap-2.5 text-xs font-semibold tracking-widest text-ruri uppercase max-lg:justify-center dark:text-sora zh:text-sm zh:tracking-wide"
         >
           <span class="h-0.5 w-6 shrink-0 rounded-full bg-ruri dark:bg-sora" aria-hidden="true" />
           {{ $t('home.eyebrow') }}
+          <span
+            class="h-0.5 w-6 shrink-0 rounded-full bg-ruri lg:hidden dark:bg-sora"
+            aria-hidden="true"
+          />
         </p>
         <h1
           class="mt-3 text-3xl leading-tight font-bold tracking-tight text-sumi md:text-4xl dark:text-nalika-text zh:tracking-normal"
@@ -336,6 +341,90 @@
       </RouterLink>
     </section>
 
+    <!-- The newest events and the decks that won them -->
+    <section v-if="recentEvents.length" class="mt-14 md:mt-20">
+      <h2 class="text-xl font-bold text-sumi md:text-2xl dark:text-nalika-text">
+        {{ $t('home.recent.title') }}
+      </h2>
+      <ul class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <li v-for="(e, i) in recentEvents" :key="i" class="min-w-0">
+          <!-- Hover (or tap, on phones) shows the winning list, as in the
+               analysis page's deck list -->
+          <UiDeckPopover
+            class="h-full"
+            :cards="e.deck"
+            :url="e.deckUrl"
+            :label="e.label"
+            :tags-of="card => ({ sig: e.sigIds.has(card.cardId) })"
+          >
+            <a
+              :href="e.deckUrl || undefined"
+              target="_blank"
+              rel="noopener"
+              class="group flex h-full items-center gap-3 rounded-lg border border-gray-500/15 bg-white p-2.5 transition-[border-color,box-shadow] duration-200 hover:border-ruri/30 hover:shadow-md hover:shadow-ruri/10 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/40 dark:hover:shadow-black/30"
+            >
+              <span
+                class="relative size-14 shrink-0 overflow-hidden rounded-md bg-gray-100 dark:bg-nalika-bg"
+                :style="e.art ? null : e.bar"
+              >
+                <img
+                  v-if="e.art"
+                  :src="e.art.url"
+                  alt=""
+                  loading="lazy"
+                  class="absolute inset-0 h-full w-full object-cover"
+                  :style="{ objectPosition: e.art.position }"
+                />
+              </span>
+              <span class="min-w-0 flex-1">
+                <span
+                  class="flex items-baseline gap-2 text-xs text-gray-500 dark:text-nalika-text-muted"
+                >
+                  <span class="shrink-0 font-mono tabular-nums">{{ e.date.slice(5) }}</span>
+                  <span class="truncate">{{ e.shop || $t('archetype.decks.unknownEvent') }}</span>
+                </span>
+                <span class="mt-1 flex items-center gap-1.5">
+                  <span class="h-2 w-5 shrink-0 rounded-full" :style="e.bar" />
+                  <span class="truncate text-xs font-bold text-gray-500 dark:text-nalika-text-muted">
+                    {{ comboName(e.colors) }}
+                  </span>
+                  <span
+                    v-if="e.tier"
+                    class="ml-auto shrink-0 rounded px-1.5 py-0.5 text-[11px] leading-none font-bold"
+                    :class="tierPillClass(e.tier)"
+                  >
+                    {{ e.tier }}
+                  </span>
+                  <span
+                    v-else-if="e.unassigned"
+                    class="ml-auto shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[11px] leading-none font-bold text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                  >
+                    {{ $t('home.recent.unassigned') }}
+                  </span>
+                </span>
+                <!-- One line: when the names don't fit, each is cut short in
+                     proportion to its length, so both stay readable -->
+                <span
+                  class="mt-0.5 flex min-w-0 text-sm font-bold text-gray-800 dark:text-nalika-text"
+                >
+                  <template v-for="(name, ni) in e.names" :key="ni">
+                    <span v-if="ni" class="shrink-0 px-1.5">/</span>
+                    <span class="min-w-0 truncate">{{ name }}</span>
+                  </template>
+                </span>
+              </span>
+              <span
+                class="shrink-0 self-start text-gray-300 transition-colors group-hover:text-ruri dark:text-gray-600 dark:group-hover:text-sora"
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+            </a>
+          </UiDeckPopover>
+        </li>
+      </ul>
+    </section>
+
     <!-- Explore -->
     <section class="mt-14 md:mt-20">
       <h2 class="text-xl font-bold text-sumi md:text-2xl dark:text-nalika-text">
@@ -550,6 +639,43 @@ const ranked = computed(() => {
 })
 const podium = computed(() => ranked.value.slice(0, 3))
 const rest = computed(() => ranked.value.slice(3))
+
+// The newest series' latest events, each with its winning deck: named and
+// pictured after its archetype's signature cards, or just its colours when the
+// deck is unassigned
+const recentEvents = computed(() => {
+  const s = latest.value
+  if (!s?.recentEvents) {
+    return []
+  }
+  const rowOf = new Map(s.rows.map(r => [normalizeArchetypeName(r.archetype), r]))
+  return s.recentEvents
+    .filter(e => e.winner)
+    .map(e => {
+      const { colors, archetype, deckUrl, cards = [], deck = [], sigCardIds = [] } = e.winner
+      const row = archetype ? rowOf.get(normalizeArchetypeName(archetype)) : null
+      const hexes = colors.split('+').map(c => COLOR_HEX[c] ?? '#9ca3af')
+      const names = (row?.sigCards?.length ? row.sigCards : cards).map(c => c.name)
+      // Event names often end with the date, which has its own column
+      const shop = e.shop.replace(/\s*\d{4}\/\d{1,2}\/\d{1,2}$/, '')
+      return {
+        date: e.date,
+        shop,
+        deckUrl,
+        deck,
+        sigIds: new Set(sigCardIds),
+        label: [e.date, shop].filter(Boolean).join(' · '),
+        colors,
+        tier: row?.tier ?? null,
+        names: names.length ? names : [comboName(colors)],
+        unassigned: !row,
+        art: cardArt(row?.sigCardIds?.[0] ?? cards[0]?.cardId, 1),
+        bar: {
+          background: hexes.length > 1 ? `linear-gradient(90deg, ${hexes.join(', ')})` : hexes[0],
+        },
+      }
+    })
+})
 
 // Fanned hero cards: signature cards of the same top six decks as the Current
 // meta blocks, ranked 5 3 1 2 4 6 from left to right so #1 and #2 sit in the
