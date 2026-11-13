@@ -96,6 +96,19 @@
               >
                 {{ d.placeLabel }}
               </span>
+              <!-- Mixed lists (unassigned decks) show each deck's colours -->
+              <span
+                v-if="d.colors?.length"
+                class="flex w-6 shrink-0 items-center gap-0.5"
+                :title="comboName(d.colors.join('+'))"
+              >
+                <span
+                  v-for="c in d.colors"
+                  :key="c"
+                  class="size-2.5 rounded-full"
+                  :style="{ background: COLOR_HEX[c] }"
+                />
+              </span>
               <!-- Month-day on phones; the year is the series' anyway -->
               <span
                 class="shrink-0 font-mono text-gray-500 tabular-nums sm:w-20 dark:text-gray-400"

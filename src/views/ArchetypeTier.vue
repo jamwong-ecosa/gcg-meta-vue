@@ -176,12 +176,12 @@
       :show="showUnassigned"
       :title="$t('tier.unassigned')"
       :blurb="$t('tier.unassignedBlurb')"
-      :count-text="$t('archetype.deckCount', unassignedDecks.count)"
+      :count-text="$t('archetype.deckCount', unassignedShown.length)"
       :peek-ids="unassignedAces"
-      :count="unassignedDecks.count"
+      :count="unassignedShown.length"
       @toggle="showUnassigned = !showUnassigned"
     >
-      <ArchetypeDeckList class="p-3 sm:p-4" :decks="unassignedDeckPreviews" :show-tech="false" />
+      <ArchetypeDeckList class="p-3 sm:p-4" :decks="unassignedShown" :show-tech="false" />
     </UiFoldedSection>
   </div>
 </template>
@@ -247,7 +247,7 @@ const unassignedDecks = computed(() => currentSeries.value?.unassignedDecks ?? n
 
 // One face per deck for the folded header: its highest-level unit
 const unassignedAces = computed(() =>
-  unassignedDeckPreviews.value
+  unassignedShown.value
     .slice(0, 5)
     .map(d =>
       d.cards
@@ -287,12 +287,19 @@ const unassignedDeckPreviews = computed(() => {
       idx: i,
       isWinner: ud.deckWinnerFlags?.[i] ?? false,
       cards,
+      // The deck's colours, sorted as the pipeline names combos ('Blue+White')
+      colors: [...new Set(cards.map(c => c.color).filter(c => COLOR_HEX[c]))].sort(),
       date: meta.date ?? null,
       shop: meta.shop ?? '',
       place: meta.place ?? null,
     }
   })
 })
+
+// The tier table's colour chips apply here too: decks playing every picked colour
+const unassignedShown = computed(() =>
+  unassignedDeckPreviews.value.filter(d => colors.value.every(c => d.colors.includes(c))),
+)
 
 function openDetail(row) {
   const entry = manifest.find(s => s.value === selectedKey.value)
