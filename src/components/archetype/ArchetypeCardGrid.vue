@@ -67,7 +67,7 @@
                 : $t('archetype.group.collapse')
             }}
           </button>
-          <!-- An open group's one WR, under its last card; a stack shows it in
+          <!-- An open group's one WPA, under its last card; a stack shows it in
                its own stats line instead -->
           <UiHint
             v-if="item.isLast && !item.stack && item.group.liftText"
@@ -169,7 +169,7 @@ function toggleGroup(id) {
   expanded.value = next
 }
 
-// A stack's stats line shows its group's WR; an open group's versions show
+// A stack's stats line shows its group's WPA; an open group's versions show
 // none of their own (the group's sits under the last one)
 function liftFor(item) {
   if (props.removed) {

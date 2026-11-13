@@ -10,7 +10,7 @@ export default {
       details: '{cards} · {wins} · {decks} ({pct}%)',
     },
     badge: {
-      wr: 'WR',
+      wr: 'WPA',
       sig: 'SIG',
       tech: 'TECH',
       new: 'NEW',
@@ -33,7 +33,7 @@ export default {
       newHint: 'Not played by this archetype last series',
       same: 'same card, other name',
       sameHint:
-        'Same card under another name: stacked as one card with one WR, decks running any version vs none. Hover the stack for its decks, click it to show every version',
+        'Same card under another name: stacked as one card with one WPA, decks running any version vs none. Hover the stack for its decks, click it to show every version',
       level: 'Level',
       cost: 'Cost',
       traits: 'Traits',
@@ -72,7 +72,7 @@ export default {
       runBoth: 'run both versions',
       runAll: 'run all {n} versions',
       vsNone: 'any version vs none',
-      footnote: 'WR: win rate of decks running any version vs none',
+      footnote: 'WPA: win probability added, decks running any version vs none',
       copies: 'Copies',
       copiesRange: 'middle half of the decks running it, all versions together',
       copiesTop: 'copies of the top card',
@@ -182,7 +182,7 @@ export default {
       details: '{cards} · {wins} · {decks}（{pct}%）',
     },
     badge: {
-      wr: '勝率',
+      wr: '勝率增值',
       sig: '核心',
       tech: '奇招',
       new: '新',
@@ -205,7 +205,7 @@ export default {
       newHint: '此牌型在上個系列未採用此卡',
       same: '同效果、不同卡名',
       sameHint:
-        '不同卡名但效果相同的卡：疊成一張，整組只算一個勝率，比較採用任一版本與完全未採用的卡組。將鼠標移到該組可查看其卡組數，按一下可顯示每個版本',
+        '不同卡名但效果相同的卡：疊成一張，整組只算一個勝率增值，比較採用任一版本與完全未採用的卡組。將鼠標移到該組可查看其卡組數，按一下可顯示每個版本',
       level: '等級',
       cost: '費用',
       traits: '特徵',
@@ -242,7 +242,7 @@ export default {
       runBoth: '兩個版本都有採用',
       runAll: '{n} 個版本全都有採用',
       vsNone: '任一版本 vs 未採用',
-      footnote: '勝率：採用任一版本的卡組 vs 完全未採用的卡組',
+      footnote: '勝率增值：採用任一版本的卡組 vs 完全未採用的卡組',
       copies: '張數',
       copiesRange: '採用此效果的卡組中，中間一半的張數，所有版本合計',
       copiesTop: '最常用版本的張數',

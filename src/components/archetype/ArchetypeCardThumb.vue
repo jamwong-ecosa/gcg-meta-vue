@@ -69,9 +69,9 @@
           <span class="font-bold text-gray-600 dark:text-gray-400">
             {{ sharePct(card.inclusionRate) }}%
           </span>
-          <!-- "WR" dropped on phones so the line never wraps on a narrow card -->
+          <!-- "WPA" dropped on phones so the line never wraps on a narrow card -->
           <span v-if="liftText" :class="liftClass">
-            <span class="max-sm:hidden">WR</span>
+            <span class="max-sm:hidden">{{ $t('archetype.badge.wr') }}</span>
             {{ liftText }}
           </span>
         </div>
