@@ -6,7 +6,7 @@
       <colgroup>
         <col class="w-auto" />
         <col class="w-16" />
-        <col v-for="c in numericCols" :key="c.key" class="w-18" />
+        <col v-for="c in numericCols" :key="c.key" :class="c.width" />
         <col class="w-28" />
         <col v-if="hasMovement" class="w-14" />
         <col class="w-8" />
@@ -173,8 +173,10 @@ defineEmits(['detail', 'toggleZeroWins', 'toggleSection', 'sort'])
 
 const { t, locale } = useI18n()
 
+// The two win rates are 5 characters in Chinese (賽事優勝率), so they get more room
 const numericCols = ['decks', 'wins', 'use', 'winEv', 'winDk', 'score'].map(key => ({
   key,
+  width: key === 'winEv' || key === 'winDk' ? tw`w-22` : tw`w-18`,
 }))
 
 // The Archetype and Tier headers both sort by tier order; Style is a label,

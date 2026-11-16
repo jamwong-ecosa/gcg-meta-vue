@@ -381,7 +381,10 @@
                   class="flex items-baseline gap-2 text-xs text-gray-500 dark:text-nalika-text-muted"
                 >
                   <span class="shrink-0 font-mono tabular-nums">{{ e.date.slice(5) }}</span>
-                  <span class="truncate">{{ e.shop || $t('archetype.decks.unknownEvent') }}</span>
+                  <span class="flex min-w-0">
+                    <span class="truncate">{{ e.venue || $t('archetype.decks.unknownEvent') }}</span>
+                    <span v-if="e.cap" class="shrink-0">{{ e.cap }}</span>
+                  </span>
                 </span>
                 <span class="mt-1 flex items-center gap-1.5">
                   <span class="h-2 w-5 shrink-0 rounded-full" :style="e.bar" />
@@ -661,6 +664,7 @@ const recentEvents = computed(() => {
       return {
         date: e.date,
         shop,
+        ...splitEventName(shop),
         deckUrl,
         deck,
         sigIds: new Set(sigCardIds),

@@ -116,8 +116,10 @@
                 <span class="sm:hidden">{{ d.date?.slice(5) ?? '—' }}</span>
                 <span class="max-sm:hidden">{{ d.date ?? '—' }}</span>
               </span>
-              <span class="min-w-0 flex-1 truncate text-gray-700 dark:text-nalika-text">
-                {{ d.shop || $t('archetype.decks.unknownEvent') }}
+              <!-- The venue clips, the player cap ("定員64名") stays at the end -->
+              <span class="flex min-w-0 flex-1 text-gray-700 dark:text-nalika-text">
+                <span class="truncate">{{ d.venue || $t('archetype.decks.unknownEvent') }}</span>
+                <span v-if="d.cap" class="shrink-0">{{ d.cap }}</span>
               </span>
               <!-- Ban-list status, marked only on the fewer side so a list where most
                    decks are hit isn't a wall of red: the hit decks (reasons in the
@@ -284,6 +286,7 @@ const rows = computed(() =>
     return {
       ...d,
       shop,
+      ...splitEventName(shop),
       placeLabel: d.isWinner && d.place === 1 ? `🏆 ${placeText}` : placeText,
       tech: techCards.length,
       topTech: d.cards.filter(c => props.techIds.has(c.cardId)).length,

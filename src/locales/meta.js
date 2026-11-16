@@ -15,7 +15,7 @@ export default {
     compare: {
       events: '賽事',
       totalDecks: '卡組總數',
-      winDecks: '冠軍卡組',
+      winDecks: '優勝卡組',
       archetypes: '牌型',
       topTierShare: 'S + A 比例',
     },

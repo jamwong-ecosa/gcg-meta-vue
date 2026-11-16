@@ -38,7 +38,7 @@ export default {
     tier: {
       title: '牌型排行榜',
       description:
-        '高達卡牌遊戲牌型排行榜：按各卡組的賽事入賞次數與奪冠表現，將牌型由 S 到 D 分級。',
+        '高達卡牌遊戲牌型排行榜：按各卡組的賽事入賞次數與優勝表現，將牌型由 S 到 D 分級。',
     },
     'archetype-analysis': {
       title: '牌型分析',

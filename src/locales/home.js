@@ -67,7 +67,7 @@ export default {
     ranking: {
       decks: '{n} 副入賞卡組',
       placed: '入賞 {n} 副',
-      wins: '冠軍 {n} 次',
+      wins: '優勝 {n} 次',
       viewAll: '完整排行榜',
     },
     recent: {
@@ -78,7 +78,7 @@ export default {
     features: {
       tier: {
         title: '排行榜',
-        description: '按入賞頻率與入賞轉冠表現，將所有牌型由 S 到 D 排名。',
+        description: '按入賞頻率與優勝比例，將所有牌型由 S 到 D 排名。',
       },
       analysis: {
         title: '牌型分析',
@@ -90,7 +90,7 @@ export default {
       },
     },
     about:
-      '賽果來自官方{official}與 {bandai}——兩者皆列出每場賽事的入賞卡組（前 8 名，大型賽事為前 16 名）。排行榜按牌型入賞頻率排名，並按入賞轉為冠軍的表現調整。',
+      '賽果來自官方{official}與 {bandai}——兩者皆列出每場賽事的入賞卡組（前 8 名，大型賽事為前 16 名）。排行榜按牌型入賞頻率排名，並按入賞卡組的優勝比例調整。',
     aboutOfficial: 'GUNDAM 卡牌遊戲賽事結果',
   },
 }

@@ -34,7 +34,7 @@ export default {
     },
     seriesHeader: {
       events: '{n} 場賽事',
-      wins: '{n} 冠軍',
+      wins: '{n} 優勝',
       decks: '{n} 副卡組',
       archetypes: '{n} 種牌型',
     },

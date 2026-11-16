@@ -20,8 +20,13 @@
           class="mb-2 flex items-baseline justify-between gap-4"
           :style="{ height: `${HEADER_H - 8}px` }"
         >
-          <span v-if="label" class="truncate text-xs font-medium text-gray-600 dark:text-gray-300">
-            {{ label }}
+          <!-- The event name clips, its player cap ("定員64名") stays at the end -->
+          <span
+            v-if="label"
+            class="flex min-w-0 text-xs font-medium text-gray-600 dark:text-gray-300"
+          >
+            <span class="truncate">{{ labelParts.venue }}</span>
+            <span v-if="labelParts.cap" class="shrink-0">{{ labelParts.cap }}</span>
           </span>
           <!-- Each type's copies: full names with the grid's type colours -->
           <span
@@ -95,9 +100,10 @@
             <div class="flex items-center justify-between gap-3">
               <div
                 v-if="label"
-                class="min-w-0 truncate text-xs font-medium text-gray-600 dark:text-gray-300"
+                class="flex min-w-0 text-xs font-medium text-gray-600 dark:text-gray-300"
               >
-                {{ label }}
+                <span class="truncate">{{ labelParts.venue }}</span>
+                <span v-if="labelParts.cap" class="shrink-0">{{ labelParts.cap }}</span>
               </div>
               <div class="ml-auto flex shrink-0 gap-2">
                 <button
@@ -132,7 +138,11 @@
             <div
               class="mt-1 mb-2 flex items-baseline gap-x-3 text-xs text-gray-500 dark:text-gray-400"
             >
-              <span v-for="p in summary" :key="p.key" class="flex items-center gap-1 whitespace-nowrap">
+              <span
+                v-for="p in summary"
+                :key="p.key"
+                class="flex items-center gap-1 whitespace-nowrap"
+              >
                 <span class="size-2 shrink-0 rounded-[2px]" :class="p.swatch" />
                 {{ p.label }}
                 <b class="font-mono font-bold text-gray-800 tabular-nums dark:text-gray-100">
@@ -188,6 +198,8 @@ const props = defineProps({
   // (card) => { sig, tech, new, flex }: tags drawn like on the archetype cards
   tagsOf: { type: Function, default: null },
 })
+
+const labelParts = computed(() => splitEventName(props.label))
 
 const open = ref(false)
 const mobileOpen = ref(false)
