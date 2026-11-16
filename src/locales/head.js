@@ -13,7 +13,7 @@ export default {
     tier: {
       title: 'Archetype Tier List',
       description:
-        'Gundam Card Game archetype tier list, ranked S to D by how often each deck places in tournaments and how often those placements turn into wins.',
+        'Gundam Card Game archetype tier list, ranked S to D by how often each deck places in tournaments and how high it finishes.',
     },
     'archetype-analysis': {
       title: 'Archetype Analysis',
@@ -38,7 +38,7 @@ export default {
     tier: {
       title: '牌型排行榜',
       description:
-        '高達卡牌遊戲牌型排行榜：按各卡組的賽事入賞次數與優勝表現，將牌型由 S 到 D 分級。',
+        '高達卡牌遊戲牌型排行榜：按各卡組的賽事入賞次數與名次高低，將牌型由 S 到 D 分級。',
     },
     'archetype-analysis': {
       title: '牌型分析',

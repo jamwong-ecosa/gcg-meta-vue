@@ -31,7 +31,7 @@ export default {
       tier: {
         title: 'Tier List',
         description:
-          'Every archetype ranked S to D by how often it places and converts placements into wins.',
+          'Every archetype ranked S to D by how often it places and how high it finishes.',
       },
       analysis: {
         title: 'Analysis',
@@ -45,7 +45,7 @@ export default {
       },
     },
     about:
-      'Results come from the official {official} and {bandai} — both list each event’s placed decks (top 8, or top 16 at larger events). Tiers rank archetypes by how often they place, nudged by how often those placements turn into wins.',
+      'Results come from the official {official} and {bandai} — both list each event’s placed decks (top 8, or top 16 at larger events). Tiers rank archetypes by how often they place, nudged by how high those decks finish.',
     aboutOfficial: 'Gundam Card Game tournament results',
   },
   'zh-HK': {
@@ -78,7 +78,7 @@ export default {
     features: {
       tier: {
         title: '排行榜',
-        description: '按入賞頻率與優勝比例，將所有牌型由 S 到 D 排名。',
+        description: '按入賞頻率與名次高低，將所有牌型由 S 到 D 排名。',
       },
       analysis: {
         title: '牌型分析',
@@ -90,7 +90,7 @@ export default {
       },
     },
     about:
-      '賽果來自官方{official}與 {bandai}——兩者皆列出每場賽事的入賞卡組（前 8 名，大型賽事為前 16 名）。排行榜按牌型入賞頻率排名，並按入賞卡組的優勝比例調整。',
+      '賽果來自官方{official}與 {bandai}——兩者皆列出每場賽事的入賞卡組（前 8 名，大型賽事為前 16 名）。排行榜按牌型入賞頻率排名，並按入賞卡組的名次高低調整。',
     aboutOfficial: 'GUNDAM 卡牌遊戲賽事結果',
   },
 }

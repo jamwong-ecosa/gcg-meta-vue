@@ -452,28 +452,52 @@ const ARCHETYPES_PER_TIER = 4
 const TIER_LABELS = ['S', 'A', 'B', 'C', 'D']
 
 // Wins per placed deck, shrunk toward the series average as if every archetype
-// had this many extra placed decks at the average rate
+// had this many extra placed decks at the average rate. Used to pick dark horses.
 const CONVERSION_PRIOR_DECKS = 10
 
 function smoothedConversion(wins, archDecks, avgConversion) {
   return (wins + CONVERSION_PRIOR_DECKS * avgConversion) / (archDecks + CONVERSION_PRIOR_DECKS)
 }
 
+// Points for a placed deck by its finish. Wins alone are too rare to tell
+// archetypes apart (about one placed deck in eight wins), so every finish counts.
+function placePoints(place) {
+  if (place === 1) {
+    return 8
+  }
+  if (place === 2) {
+    return 5
+  }
+  if (place <= 4) {
+    return 3
+  }
+  if (place <= 8) {
+    return 1
+  }
+  // 9th–16th, and the rare rank that doesn't parse
+  return 0.5
+}
+
+// Points per placed deck, shrunk toward the series average as if every archetype
+// had this many extra placed decks scoring the average
+const QUALITY_PRIOR_DECKS = 20
+
 // Results only list each event's placed decks (top 8, or top 16 for larger
 // events), so placement share (an archetype's placed decks ÷ all placed decks)
 // is itself a performance measure, and it is stable from one series to the next.
-// 9th–16th places count like 1st–8th: dropping them barely changed tiers and
-// backtested slightly worse. How well an archetype converts placements into wins
-// carries over less, but placing without winning should still cost: placement
-// share × (smoothed conversion ÷ series average). Converting at 60% of average
-// costs 40%; 15 placed decks with no wins keep 40%. Strength is the square root
-// of that, because shares are
-// heavily skewed (a few archetypes hold most placements) and the root spreads the
-// long tail for tiering and display.
-function archetypeStrength({ wins, archDecks, totalDecks, avgConversion }) {
+// How high those decks finish carries over less, but placing low should still
+// cost: placement share × (smoothed points per deck ÷ series average).
+// Backtested on held-out events against the earlier wins-per-deck factor (prior
+// 10): that one predicted an archetype's win rate worse than no factor at all,
+// while points per deck predict it better and give steadier tiers. Steeper and
+// flatter point scales made little difference. Strength is the square root of
+// the product, because shares are heavily skewed (a few archetypes hold most
+// placements) and the root spreads the long tail for tiering and display.
+function archetypeStrength({ points, archDecks, totalDecks, avgPoints }) {
   const placementShare = (archDecks / totalDecks) * 100
-  const conversionFactor = smoothedConversion(wins, archDecks, avgConversion) / avgConversion
-  return Math.sqrt(placementShare * conversionFactor)
+  const smoothedPoints =
+    (points + QUALITY_PRIOR_DECKS * avgPoints) / (archDecks + QUALITY_PRIOR_DECKS)
+  return Math.sqrt(placementShare * (smoothedPoints / avgPoints))
 }
 
 // Displayed score: strength as 0–100 of the series' strongest archetype
@@ -1105,12 +1129,14 @@ function processSeries(series) {
 
   // Score each archetype and assign a tier label
   const avgConversion = winners.length / allPlayers.length
+  const avgPoints =
+    allPlayers.reduce((sum, p) => sum + placePoints(placeNumber(p.rank)), 0) / allPlayers.length
   for (const a of seriesProcessed.archetypes) {
     a.tierStrength = archetypeStrength({
-      wins: a.winnerDeckCount,
+      points: a.deckMeta.reduce((sum, m) => sum + placePoints(m.place), 0),
       archDecks: a.deckCount,
       totalDecks: allPlayers.length,
-      avgConversion,
+      avgPoints,
     })
   }
   const strengths = seriesProcessed.archetypes.map(a => a.tierStrength)

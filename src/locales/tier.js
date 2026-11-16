@@ -6,7 +6,7 @@ export default {
     howTo: {
       toggle: 'How to read this table',
       score:
-        '{term} (0–100) ranks archetypes by their share of placed decks, nudged up or down by how well those placements turn into wins. 100 is the strongest archetype this series.',
+        '{term} (0–100) ranks archetypes by their share of placed decks, nudged up or down by how high those decks finish. 100 is the strongest archetype this series.',
       scoreTerm: 'Score',
       tiers:
         '{term} are cut by clustering the scores, so a tier holds archetypes with similar scores and tier sizes vary.',
@@ -87,7 +87,7 @@ export default {
       winEv: 'Win rate per event: share of all events this archetype won',
       winDk: 'Win rate per deck: wins ÷ placed decks',
       score:
-        'Tier score, 0–100 relative to the strongest archetype: placement share, nudged by how well placements convert into wins',
+        'Tier score, 0–100 relative to the strongest archetype: placement share, nudged by how high the placed decks finish',
       tier: 'Tiers are cut by clustering the scores, so tier sizes vary',
       move: 'Rank change since the previous series',
       darkHorse:
@@ -101,7 +101,7 @@ export default {
     howTo: {
       toggle: '如何閱讀此表',
       score:
-        '{term}（0–100）按入賞卡組佔比為牌型排名，並按入賞卡組的優勝比例上下調整。100 為本系列最強的牌型。',
+        '{term}（0–100）按入賞卡組佔比為牌型排名，並按入賞卡組的名次高低上下調整。100 為本系列最強的牌型。',
       scoreTerm: '分數',
       tiers: '{term}按分數分群切分，同一級別的牌型分數相近，各級別數量不一。',
       tiersTerm: '級別',
@@ -175,7 +175,7 @@ export default {
       use: '使用率：佔所有入賞卡組的比例',
       winEv: '賽事優勝率：此牌型優勝的賽事佔所有賽事的比例',
       winDk: '卡組優勝率：優勝數 ÷ 入賞卡組數',
-      score: '強度分數，以最強牌型為 100：按入賞佔比計算，並按入賞卡組的優勝比例調整',
+      score: '強度分數，以最強牌型為 100：按入賞佔比計算，並按入賞卡組的名次高低調整',
       tier: '級別按分數分群切分，因此各級別數量不一',
       move: '與上一個系列相比的排名變化',
       darkHorse: '黑馬：入賞卡組佔比不到 2%，但卡組優勝率比平均高出至少 30%',

@@ -29,7 +29,7 @@ const GROUPS = TIER_ORDER.map((name, i) => ({
   colorDark: TIER_COLORS_DARK[i],
 }))
 
-// Same prior as the tier score's smoothed conversion (scripts/build-tiers.mjs):
+// Same prior as the dark-horse pick's smoothed conversion (scripts/build-tiers.mjs):
 // each archetype is treated as having this many extra decks at the average win rate
 const PRIOR_DECKS = 10
 // Fewer archetypes and names on phones, where the small ones pile up near the origin
