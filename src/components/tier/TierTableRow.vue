@@ -83,6 +83,13 @@
         >
           {{ $t('tier.noLR') }}
         </UiHint>
+        <UiHint
+          v-if="row.builds?.length"
+          class="shrink-0 rounded bg-sky-100 px-1 text-xs whitespace-nowrap text-sky-700 dark:bg-sky-400/15 dark:text-sky-300"
+          :content="buildsHelp(row)"
+        >
+          {{ $t('tier.builds', row.builds.length) }}
+        </UiHint>
       </div>
     </td>
     <td class="px-3 py-2 text-right">

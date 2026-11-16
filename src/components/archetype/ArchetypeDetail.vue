@@ -1,5 +1,67 @@
 <template>
   <div>
+    <!-- Builds: the archetype's decks split in two by the package each runs
+         (subBuilds); picking one re-works every number below over its decks -->
+    <section v-if="buildOptions.length" class="mb-5">
+      <h4 class="mb-2 flex flex-wrap items-baseline gap-x-2">
+        <span
+          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
+        >
+          {{ $t('archetype.builds.title') }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          {{ $t('archetype.builds.blurb') }}
+        </span>
+      </h4>
+      <div class="grid gap-2 sm:grid-cols-[auto_1fr_1fr]">
+        <button
+          v-for="b in buildOptions"
+          :key="String(b.value)"
+          class="flex cursor-pointer flex-col gap-1.5 rounded border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ruri dark:focus-visible:outline-sora"
+          :class="
+            build === b.value
+              ? 'border-ruri/40 bg-ruri/[0.06] ring-1 ring-ruri/30 dark:border-sora/50 dark:bg-sora/[0.1] dark:ring-sora/30'
+              : 'border-gray-500/15 bg-gray-50 hover:bg-gray-500/[0.06] dark:border-nalika-border dark:bg-white/[0.02] dark:hover:bg-white/[0.04]'
+          "
+          :aria-pressed="build === b.value"
+          @click="build = b.value"
+        >
+          <span class="flex flex-wrap items-baseline gap-x-2">
+            <span
+              class="text-sm font-semibold"
+              :class="
+                build === b.value
+                  ? 'text-ruri dark:text-sora'
+                  : 'text-gray-700 dark:text-nalika-text'
+              "
+            >
+              {{ b.title }}
+            </span>
+            <span class="font-mono text-xs text-gray-500 tabular-nums dark:text-nalika-text-muted">
+              {{ $t('archetype.deckCount', b.decks) }}
+              <template v-if="b.share != null">({{ b.share }}%)</template>
+              · {{ $t('archetype.winCount', b.wins) }}
+            </span>
+          </span>
+          <span v-if="b.keyCards.length" class="flex flex-wrap items-center gap-1.5">
+            <span
+              v-for="c in b.keyCards"
+              :key="c.id"
+              class="flex items-center gap-1 rounded-full bg-white py-0.5 pr-2 pl-0.5 text-xs text-gray-700 ring-1 ring-gray-500/15 dark:bg-nalika-surface dark:text-nalika-text dark:ring-nalika-border"
+            >
+              <img
+                :src="cardFace(c.id, 64).url"
+                alt=""
+                loading="lazy"
+                class="size-5 rounded-full object-cover"
+              />
+              {{ c.name }}
+            </span>
+          </span>
+        </button>
+      </div>
+    </section>
+
     <!-- Average deck and the key to the card badges, as two labelled rows sharing one
          label column -->
     <dl
@@ -160,7 +222,7 @@
         :cards="sec.cards"
         :lift-of="winLift"
         :group-lift-of="groupWinLift"
-        :deck-count="archetype.deckCount"
+        :deck-count="view.deckCount"
         :sig-ids="sigCardIds"
         :is-new="isNewCard"
         :ban-rule-of="banRuleOf"
@@ -186,7 +248,7 @@
           :cards="otherCards"
           :lift-of="winLift"
           :group-lift-of="groupWinLift"
-          :deck-count="archetype.deckCount"
+          :deck-count="view.deckCount"
           :sig-ids="sigCardIds"
           :is-new="isNewCard"
           :ban-rule-of="banRuleOf"
@@ -223,7 +285,7 @@
       :level-title="$t('archetype.detail.level')"
       :cost-title="$t('archetype.detail.cost')"
       :cards="allCards"
-      :deck-count="archetype.deckCount"
+      :deck-count="view.deckCount"
     />
 
     <!-- Traits: copies per average deck carrying each trait -->
@@ -254,7 +316,7 @@
     </div>
 
     <!-- Decks: always shown -->
-    <section v-if="archetype.deckCardIds?.length" class="mt-6">
+    <section v-if="view.deckCardIds?.length" class="mt-6">
       <h4 class="mb-2 flex items-baseline gap-2">
         <span
           class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
@@ -262,7 +324,7 @@
           {{ $t('archetype.detail.decks') }}
         </span>
         <span class="font-mono text-xs text-gray-400 tabular-nums dark:text-gray-500">
-          {{ archetype.deckCardIds.length }}
+          {{ view.deckCardIds.length }}
         </span>
       </h4>
       <ArchetypeDeckList
@@ -285,6 +347,11 @@ const props = defineProps({
   removedCards: { type: Array, default: () => [] },
 })
 
+// The build picked in the Builds row (index into subBuilds.builds), or null for
+// every deck; the whole page below it follows the pick
+const build = ref(null)
+const view = computed(() => archetypeBuild(props.archetype, build.value))
+
 const isNewCard = cardId => props.prevCardIds?.size > 0 && !props.prevCardIds.has(cardId)
 
 const { showOther, showRemoved } = useCollapseState()
@@ -295,14 +362,47 @@ const KEY_ITEM = tw`flex items-center gap-1.5 max-sm:gap-2`
 // Fixed badge column on mobile so the meanings start in one line
 const KEY_BADGE = tw`flex shrink-0 max-sm:w-17`
 
-const sigCardIds = computed(() => new Set(props.archetype.sigCardIds ?? []))
+// The Builds row: every deck, then each build with the cards that set it apart
+const buildOptions = computed(() => {
+  const sb = props.archetype.subBuilds
+  if (!sb) {
+    return []
+  }
+  const total = props.archetype.deckCount || 1
+  const names = new Map(
+    [...(props.archetype.cards ?? []), ...(props.archetype.filteredCards ?? [])].map(c => [
+      c.cardId,
+      c.name,
+    ]),
+  )
+  return [
+    {
+      value: null,
+      title: t('archetype.builds.all'),
+      decks: props.archetype.deckCount,
+      wins: props.archetype.winnerDeckCount ?? 0,
+      share: null,
+      keyCards: [],
+    },
+    ...sb.builds.map((b, i) => ({
+      value: i,
+      title: t('archetype.builds.name', { n: String.fromCharCode(65 + i) }),
+      decks: b.decks,
+      wins: b.wins,
+      share: Math.round((b.decks / total) * 100),
+      keyCards: b.keyCardIds.map(id => ({ id, name: names.get(id) ?? id })),
+    })),
+  ]
+})
+
+const sigCardIds = computed(() => new Set(view.value.sigCardIds ?? []))
 
 const cardIdToName = computed(() => {
   const map = new Map()
-  for (const c of props.archetype.cards ?? []) {
+  for (const c of view.value.cards ?? []) {
     map.set(c.cardId, c.name)
   }
-  for (const c of props.archetype.filteredCards ?? []) {
+  for (const c of view.value.filteredCards ?? []) {
     map.set(c.cardId, c.name)
   }
   return map
@@ -331,7 +431,7 @@ const banRuleOf = cardId => {
 
 const cardIdToInfo = computed(() => {
   const map = new Map()
-  for (const c of props.archetype.cards ?? []) {
+  for (const c of view.value.cards ?? []) {
     map.set(c.cardId, {
       type: c.type,
       color: c.color,
@@ -340,7 +440,7 @@ const cardIdToInfo = computed(() => {
       inclusionRate: c.inclusionRate ?? 0,
     })
   }
-  for (const c of props.archetype.filteredCards ?? []) {
+  for (const c of view.value.filteredCards ?? []) {
     map.set(c.cardId, {
       type: c.type,
       color: c.color,
@@ -353,8 +453,8 @@ const cardIdToInfo = computed(() => {
 })
 
 const deckPreviews = computed(() =>
-  (props.archetype.deckCardIds ?? []).map((cardStr, i) => {
-    const url = props.archetype.deckUrls?.[i] ?? ''
+  (view.value.deckCardIds ?? []).map((cardStr, i) => {
+    const url = view.value.deckUrls?.[i] ?? ''
     const infoMap = cardIdToInfo.value
     const cards = cardStr
       .split('|')
@@ -373,11 +473,11 @@ const deckPreviews = computed(() =>
           inclusionRate: info?.inclusionRate ?? 0,
         }
       })
-    const meta = props.archetype.deckMeta?.[i] ?? {}
+    const meta = view.value.deckMeta?.[i] ?? {}
     return {
       url,
       idx: i,
-      isWinner: props.archetype.deckWinnerFlags?.[i] ?? false,
+      isWinner: view.value.deckWinnerFlags?.[i] ?? false,
       cards,
       date: meta.date ?? null,
       shop: meta.shop ?? '',
@@ -404,15 +504,12 @@ const TYPES = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
 // Same-effect versions (effectGroup, see build-tiers) stay together: each card
 // is placed by its group's most-played member, so a 5% version shows beside its
 // 85% twin instead of under Other Cards
-const allCards = computed(() => [
-  ...(props.archetype.cards ?? []),
-  ...(props.archetype.filteredCards ?? []),
-])
+const allCards = computed(() => [...(view.value.cards ?? []), ...(view.value.filteredCards ?? [])])
 // Top tech picks (inWinner, see build-tiers): the cards tagged 奇招 here and in deck lists
 const techCardIds = computed(
   () => new Set(allCards.value.filter(c => c.inWinner).map(c => c.cardId)),
 )
-const featuredIds = computed(() => new Set((props.archetype.cards ?? []).map(c => c.cardId)))
+const featuredIds = computed(() => new Set((view.value.cards ?? []).map(c => c.cardId)))
 const groupLeader = computed(() => {
   const map = new Map()
   for (const c of allCards.value) {
@@ -477,8 +574,8 @@ const TYPE_BAR = {
 }
 
 const avgDeck = computed(() => {
-  const decks = props.archetype.deckCount || 1
-  const all = [...(props.archetype.cards ?? []), ...(props.archetype.filteredCards ?? [])]
+  const decks = view.value.deckCount || 1
+  const all = [...(view.value.cards ?? []), ...(view.value.filteredCards ?? [])]
   const rows = TYPES.map(type => {
     const exact =
       all.filter(c => c.type === type).reduce((n, c) => n + (c.totalQty ?? 0), 0) / decks
@@ -519,8 +616,8 @@ const LIFT_MIN_WINS = 3
 const LIFT_MIN_SIDE = 20
 const LIFT_Z = 1.96
 function liftFor(withDecks, withWins) {
-  const decks = props.archetype.deckCount ?? 0
-  const wins = props.archetype.winnerDeckCount ?? 0
+  const decks = view.value.deckCount ?? 0
+  const wins = view.value.winnerDeckCount ?? 0
   const withoutDecks = decks - withDecks
   if (wins < LIFT_MIN_WINS || !withDecks) {
     return null
@@ -550,7 +647,7 @@ const groupWinLift = g => liftFor(g.decks, g.wins)
 // Traits by how many different cards carry them, among the featured cards
 // (staples and flex); ties go to the trait with more copies per deck
 const traits = computed(() => {
-  const decks = props.archetype.deckCount || 1
+  const decks = view.value.deckCount || 1
   const map = new Map()
   for (const c of featured.value) {
     const names = (c.features ?? '')

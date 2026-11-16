@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync
 import * as ss from 'simple-statistics'
 import { WINNER, COLOR_HEX, TYPE_ORDER, TYPE_PICK_ORDER } from './constants.mjs'
 import { playStyle } from './play-style.mjs'
+import { subBuilds } from './sub-builds.mjs'
 
 // Winner rule: 優勝 always counts as a win. For events with ≥16 players,
 // 準優勝 (2nd place) also counts as a winner.
@@ -243,6 +244,20 @@ function groupByCombo(players, keyOf, { init, accumulate }) {
 // largest same-colour archetype whose average list is at least MERGE_SIMILARITY
 // alike, and takes its name
 const MERGE_SIMILARITY = 0.8
+// Two LR units both played by almost every deck (Qubeley and Zeong) name the
+// deck after whichever has more copies, so a 4/3 list and a 3/4 list land under
+// different keys. When each archetype's signature cards are in at least
+// SHARED_SIG_SHARE of the other's decks, the names differ only by copy counts,
+// and a looser SHARED_SIG_SIMILARITY is enough to fold them together
+const SHARED_SIG_SIMILARITY = 0.7
+const SHARED_SIG_SHARE = 0.8
+const baseId = cardId => cardId.replace(/_p\d+$/, '')
+// Each archetype's signature cards are in most of the other's decks
+function sharesSignatures(a, b) {
+  const plays = (group, sigIds) =>
+    sigIds.every(id => (group.decksWith[baseId(id)] ?? 0) / group.decks >= SHARED_SIG_SHARE)
+  return plays(a, b.sigCardIds) && plays(b, a.sigCardIds)
+}
 
 // Weighted Jaccard over average copies per deck: 1 = identical lists, 0 = no shared cards
 function listSimilarity(a, b) {
@@ -311,12 +326,16 @@ function createComboKeyResolver(players) {
         colors: getDeckColors(player.deck).join('+'),
         decks: 0,
         copies: {},
+        decksWith: {},
       }
       groups.set(key, group)
     }
     group.decks++
     for (const card of player.deck) {
       group.copies[card.cardId] = (group.copies[card.cardId] ?? 0) + card.quantity
+    }
+    for (const id of new Set(player.deck.map(card => baseId(card.cardId)))) {
+      group.decksWith[id] = (group.decksWith[id] ?? 0) + 1
     }
   }
 
@@ -331,13 +350,16 @@ function createComboKeyResolver(players) {
       Object.entries(group.copies).map(([id, qty]) => [id, qty / group.decks]),
     )
     let best = null
-    let bestSimilarity = MERGE_SIMILARITY
+    let bestSimilarity = 0
     for (const other of kept) {
       if (other.colors !== group.colors) {
         continue
       }
       const similarity = listSimilarity(group.avgCopies, other.avgCopies)
-      if (similarity >= bestSimilarity) {
+      const enough =
+        similarity >= MERGE_SIMILARITY ||
+        (similarity >= SHARED_SIG_SIMILARITY && sharesSignatures(group, other))
+      if (enough && similarity > bestSimilarity) {
         best = other
         bestSimilarity = similarity
       }
@@ -634,6 +656,14 @@ function formatTierRows(series) {
         darkHorse: a.darkHorse ?? false,
         // Named after non-LR units: the deck runs no LR unit at 2+ copies
         noLR: a.sigCardIds.every(id => !lookup(id).rarity?.startsWith('LR')),
+        // The two builds sharing the archetype (sub-builds.mjs), for the tier
+        // list's badge: each one's decks, wins and the cards that set it apart
+        builds:
+          a.subBuilds?.builds.map(b => ({
+            decks: b.decks,
+            wins: b.wins,
+            keyCards: b.keyCardIds.map(id => lookup(id).name),
+          })) ?? null,
       }
     })
 }
@@ -711,6 +741,15 @@ function computeFeatureBadges(topCards) {
     }
   }
   return Object.entries(featureCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+}
+
+// Card identity for telling sub-builds apart: reprints with the same effect
+// are one card, but vanilla units stay apart, since functionKey would merge
+// every vanilla unit with the same stats (リック・ディアス with ST01-010) and
+// blur the packages that set the builds apart
+function buildCardKey(cardId) {
+  const id = cardId.replace(/_p\d+$/, '')
+  return vanillaGroup[id] ? id : functionKey(id)
 }
 
 // Full card analysis per archetype: aggregates card stats, computes tech scores,
@@ -859,6 +898,8 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, totalAll) {
       // Summed placePoints of the archetype's decks, for the tier score
       finishPoints: group.finishPoints,
       deckCardIds,
+      // Two builds sharing the archetype, or null (see sub-builds.mjs)
+      subBuilds: subBuilds(deckCardIds, group.deckWinnerFlags, buildCardKey),
     }
   })
 }

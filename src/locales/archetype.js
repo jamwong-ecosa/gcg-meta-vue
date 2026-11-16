@@ -15,6 +15,13 @@ export default {
       tech: 'TECH',
       new: 'NEW',
     },
+    builds: {
+      title: 'Builds',
+      blurb:
+        'Same signature cards, two different packages around them. Pick one to see only its cards and decks',
+      all: 'All decks',
+      name: 'Build {n}',
+    },
     detail: {
       avgDeck: 'Avg deck',
       key: 'Key',
@@ -186,6 +193,12 @@ export default {
       sig: '核心',
       tech: '奇招',
       new: '新',
+    },
+    builds: {
+      title: '構築分支',
+      blurb: '核心卡相同，但周邊配置分成兩套。選擇一套，只看該構築的卡牌及卡組',
+      all: '全部卡組',
+      name: '構築 {n}',
     },
     detail: {
       avgDeck: '平均卡組',

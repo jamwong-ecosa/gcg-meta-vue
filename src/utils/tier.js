@@ -65,3 +65,15 @@ export const tierColumnHelp = key => translate(`tier.help.${key}`)
 
 export const darkHorseHelp = () => translate('tier.help.darkHorse')
 export const noLRHelp = () => translate('tier.help.noLR')
+
+// The builds badge's hover: each build's decks and wins, with the cards that
+// set it apart
+export const buildsHelp = row => ({
+  title: translate('tier.buildsTitle'),
+  subtitle: translate('tier.help.builds'),
+  rows: (row.builds ?? []).map((b, i) => ({
+    label: String.fromCharCode(65 + i),
+    value: `${translate('archetype.deckCount', b.decks)} · ${translate('archetype.winCount', b.wins)}`,
+    note: b.keyCards.join('、'),
+  })),
+})

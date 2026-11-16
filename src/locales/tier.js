@@ -36,6 +36,8 @@ export default {
     staplesLabel: 'Staples · in {pct}%+ of decks',
     staplesPeek: 'Quick view of the staples',
     noLR: 'No LR',
+    builds: '{n} builds | {n} builds',
+    buildsTitle: 'Two builds',
     style: {
       aggro: 'Aggro',
       midrange: 'Mid-range',
@@ -93,6 +95,8 @@ export default {
       darkHorse:
         'Dark horse: under 2% of placed decks, but converting placements into wins at least 30% better than average',
       noLR: 'No LR: none of these decks runs an LR unit at 2+ copies, so the archetype is named after the units nearly every one of them plays',
+      builds:
+        'These decks share their signature cards but split into two packages, so this row blends both. Open the archetype to see each build on its own',
     },
   },
   'zh-HK': {
@@ -129,6 +133,8 @@ export default {
     staplesLabel: '主力卡 · {pct}% 以上卡組採用',
     staplesPeek: '快速查看主力卡',
     noLR: '無 LR',
+    builds: '{n} 構築 | {n} 構築',
+    buildsTitle: '兩套構築',
     style: {
       aggro: '快攻',
       midrange: '中速',
@@ -180,6 +186,8 @@ export default {
       move: '與上一個系列相比的排名變化',
       darkHorse: '黑馬：入賞卡組佔比不到 2%，但卡組優勝率比平均高出至少 30%',
       noLR: '無 LR：此牌型的卡組都沒有採用 2 張或以上的 LR 機體，因此以幾乎每副都採用的機體命名',
+      builds:
+        '這些卡組核心卡相同，但周邊配置分成兩套，此行數據是兩者合計。打開牌型可分別查看各構築',
     },
   },
 }
