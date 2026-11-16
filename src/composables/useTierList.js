@@ -218,6 +218,28 @@ export function useTierList({ allRows, previousSeries, seriesKey }) {
     )
   }
 
+  // The same filters for a single deck ({ colors: ['Blue', …], cards: [{ cardId }] }),
+  // used by the unassigned list, whose decks carry their full card lists
+  function matchesDeck(d) {
+    const q = query.value.trim().toLowerCase()
+    if (q && !comboName(d.colors.join('+')).toLowerCase().includes(q)) {
+      const num = cardNumberQuery(q)
+      const hit = d.cards.some(
+        ({ cardId }) =>
+          (q.length >= 2 && cardNameById.get(cardId)?.includes(q)) ||
+          (num &&
+            cardId
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, '')
+              .includes(num)),
+      )
+      if (!hit) {
+        return false
+      }
+    }
+    return colors.value.every(c => d.colors.includes(c))
+  }
+
   function sortValue(r) {
     if (sortKey.value === 'move') {
       // New archetypes count as the biggest climbers
@@ -328,5 +350,6 @@ export function useTierList({ allRows, previousSeries, seriesKey }) {
     toggleColor,
     toggleSection,
     clearFilters,
+    matchesDeck,
   }
 }

@@ -231,6 +231,7 @@ const {
   toggleColor,
   toggleSection,
   clearFilters,
+  matchesDeck,
 } = useTierList({ allRows, previousSeries, seriesKey: selectedKey })
 
 const sortOptions = TIER_SORT_OPTIONS
@@ -296,10 +297,8 @@ const unassignedDeckPreviews = computed(() => {
   })
 })
 
-// The tier table's colour chips apply here too: decks playing every picked colour
-const unassignedShown = computed(() =>
-  unassignedDeckPreviews.value.filter(d => colors.value.every(c => d.colors.includes(c))),
-)
+// The tier table's search and colour chips apply here too
+const unassignedShown = computed(() => unassignedDeckPreviews.value.filter(matchesDeck))
 
 function openDetail(row) {
   const entry = manifest.find(s => s.value === selectedKey.value)
