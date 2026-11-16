@@ -70,13 +70,13 @@ export function inclusionBarClass(rate) {
 
 // `lift` is ArchetypeDetail's { value, significant } | { value: null, note } | null
 
-// "WR +3.2" for a win-rate change in points; '' when there is none
+// "WPA +3.2" for a win-rate change in points; '' when there is none
 export function liftLabel(lift) {
   const value = liftValue(lift)
   return value && `${translate('card.stat.wr')} ${value}`
 }
 
-// The signed number alone ("+3.2"), for tight spots where "WR" is implied
+// The signed number alone ("+3.2"), for tight spots where "WPA" is implied
 export function liftValue(lift) {
   const v = lift?.value
   if (v === null || v === undefined) {

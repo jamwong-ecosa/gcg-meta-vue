@@ -22,6 +22,10 @@ export default {
       wins: 'Won {n}',
       viewAll: 'Full tier list',
     },
+    recent: {
+      title: 'Latest winners',
+      unassigned: 'Unassigned',
+    },
     explore: 'Explore',
     features: {
       tier: {
@@ -65,6 +69,10 @@ export default {
       placed: '入賞 {n} 副',
       wins: '冠軍 {n} 次',
       viewAll: '完整排行榜',
+    },
+    recent: {
+      title: '最新冠軍',
+      unassigned: '未分類',
     },
     explore: '探索',
     features: {
