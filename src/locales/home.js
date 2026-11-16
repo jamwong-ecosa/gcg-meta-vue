@@ -71,7 +71,7 @@ export default {
       viewAll: '完整排行榜',
     },
     recent: {
-      title: '最新冠軍',
+      title: '最新優勝卡組',
       unassigned: '未分類',
     },
     explore: '探索',
