@@ -385,9 +385,11 @@ function buildArchetypeMaps(allPlayers, winners, keyOf) {
       deckUrls: [],
       deckWinnerFlags: [],
       deckMeta: [],
+      finishPoints: 0,
     }),
     accumulate: (entry, player) => {
       entry.count++
+      entry.finishPoints += placePoints(player)
       entry.deckCardIds.push(serializeDeckCards(player.deck))
       accumulateCardAgg(entry.cardAgg, player.deck)
       accumulateEffectAgg(entry.effectAgg, player.deck)
@@ -461,32 +463,32 @@ function smoothedConversion(wins, archDecks, avgConversion) {
 
 // Points for a placed deck by its finish. Wins alone are too rare to tell
 // archetypes apart (about one placed deck in eight wins), so every finish counts.
-function placePoints(place) {
-  if (place === 1) {
-    return 8
-  }
-  if (place === 2) {
-    return 5
-  }
-  if (place <= 4) {
-    return 3
-  }
-  if (place <= 8) {
-    return 1
-  }
-  // 9th–16th, and the rare rank that doesn't parse
-  return 0.5
+// An event listing 16 decks is scored as two 8-deck events, in line with the
+// winner rule (isWinner): both finalists score as winners, 3rd–4th as
+// runners-up, and so on down, so either size averages the same points per deck.
+function placePoints(player) {
+  const place = placeNumber(player.rank)
+  // The rare rank that doesn't parse scores as the lowest finish
+  const bracket = place ? Math.ceil(Math.log2(place)) : 4
+  const rounds = player.eventPlayerCount >= 16 ? bracket - 1 : bracket
+  // Brackets: 1st, 2nd, 3rd–4th, 5th–8th, 9th–16th
+  return [8, 5, 3, 1, 0.5][Math.max(0, rounds)]
 }
 
 // Points per placed deck, shrunk toward the series average as if every archetype
 // had this many extra placed decks scoring the average
 const QUALITY_PRIOR_DECKS = 20
+// How hard finishing above or below average moves the score. At 1 a small
+// archetype on a run of wins ranked below bigger ones that rarely won; 1.5
+// fixes that while predicting held-out wins as well, and 2 starts to cost tier
+// stability and pulls down the most-played archetypes
+const QUALITY_EXPONENT = 1.5
 
 // Results only list each event's placed decks (top 8, or top 16 for larger
 // events), so placement share (an archetype's placed decks ÷ all placed decks)
 // is itself a performance measure, and it is stable from one series to the next.
 // How high those decks finish carries over less, but placing low should still
-// cost: placement share × (smoothed points per deck ÷ series average).
+// cost: placement share × (smoothed points per deck ÷ series average) ^ 1.5.
 // Backtested on held-out events against the earlier wins-per-deck factor (prior
 // 10): that one predicted an archetype's win rate worse than no factor at all,
 // while points per deck predict it better and give steadier tiers. Steeper and
@@ -497,7 +499,7 @@ function archetypeStrength({ points, archDecks, totalDecks, avgPoints }) {
   const placementShare = (archDecks / totalDecks) * 100
   const smoothedPoints =
     (points + QUALITY_PRIOR_DECKS * avgPoints) / (archDecks + QUALITY_PRIOR_DECKS)
-  return Math.sqrt(placementShare * (smoothedPoints / avgPoints))
+  return Math.sqrt(placementShare * (smoothedPoints / avgPoints) ** QUALITY_EXPONENT)
 }
 
 // Displayed score: strength as 0–100 of the series' strongest archetype
@@ -854,6 +856,8 @@ function buildArchetypeDetails(comboArchetypes, winnersByCombo, totalAll) {
       deckUrls: group.deckUrls,
       deckWinnerFlags: group.deckWinnerFlags,
       deckMeta: group.deckMeta,
+      // Summed placePoints of the archetype's decks, for the tier score
+      finishPoints: group.finishPoints,
       deckCardIds,
     }
   })
@@ -1129,11 +1133,10 @@ function processSeries(series) {
 
   // Score each archetype and assign a tier label
   const avgConversion = winners.length / allPlayers.length
-  const avgPoints =
-    allPlayers.reduce((sum, p) => sum + placePoints(placeNumber(p.rank)), 0) / allPlayers.length
+  const avgPoints = allPlayers.reduce((sum, p) => sum + placePoints(p), 0) / allPlayers.length
   for (const a of seriesProcessed.archetypes) {
     a.tierStrength = archetypeStrength({
-      points: a.deckMeta.reduce((sum, m) => sum + placePoints(m.place), 0),
+      points: a.finishPoints,
       archDecks: a.deckCount,
       totalDecks: allPlayers.length,
       avgPoints,

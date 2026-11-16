@@ -13,12 +13,13 @@ const stripReminders = effect => (effect ?? '').replace(/\n?[(（][^)）]*[)）]
 
 // What a card's effect does. The opponent-unit patterns reach across a sentence
 // break ("相手のユニット1つを選ぶ。それに2ダメージを与える") but not into the
-// next 【timing】 block
+// next 【timing】 block. Removal also covers making the opponent destroy one
+// of their own units ("相手プレイヤーすべては…自身のユニット1つを選ぶ。それらを破壊する")
 const SIGNALS = {
   draw: /ドロー/,
   blocker: /《ブロッカー》(?!を持つ)/,
   removal:
-    /相手の[^【]{0,25}ユニット[^【]{0,45}?(ダメージを与える|破壊する)|ユニットすべてに[^。]{0,12}ダメージ/,
+    /相手の[^【]{0,25}ユニット[^【]{0,45}?(ダメージを与える|破壊する)|ユニットすべてに[^。]{0,12}ダメージ|相手プレイヤー[^【]{0,30}自身のユニット[^【]{0,20}?破壊する/,
   rest: /相手の[^【]{0,25}ユニット[^【]{0,35}?レストに/,
   bounce: /相手の[^【]{0,25}ユニット[^【]{0,35}?手札に戻す/,
 }

@@ -44,7 +44,7 @@ export default {
     },
     styleHelp: {
       aggro:
-        'Aggro: a low level curve packed with units, or evasive attackers, aiming to win early. Estimated from the deck lists.',
+        'Aggro: a low level curve packed with units, aiming to win early. Estimated from the deck lists.',
       midrange:
         'Mid-range: a balanced curve that neither rushes nor stalls. Estimated from the deck lists.',
       control:
@@ -136,7 +136,7 @@ export default {
       combo: '組合技',
     },
     styleHelp: {
-      aggro: '快攻：低等級機體為主，或靠難以阻擋的攻擊手，務求及早取勝。按卡組內容估算。',
+      aggro: '快攻：以大量低等級機體為主，務求及早取勝。按卡組內容估算。',
       midrange: '中速：等級分佈平均，不急攻亦不拖延。按卡組內容估算。',
       control:
         '控制：等級較高，靠阻擋者及除去對手機體的效果防守，再以抽牌拖入後期。按卡組內容估算。',
