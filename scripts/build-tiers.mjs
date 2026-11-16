@@ -248,9 +248,12 @@ const MERGE_SIMILARITY = 0.8
 // deck after whichever has more copies, so a 4/3 list and a 3/4 list land under
 // different keys. When each archetype's signature cards are in at least
 // SHARED_SIG_SHARE of the other's decks, the names differ only by copy counts,
-// and a looser SHARED_SIG_SIMILARITY is enough to fold them together
+// and a looser SHARED_SIG_SIMILARITY is enough to fold them together.
+// SHARED_SIG_SHARE is 70%, not 80%, because one archetype can hold a second
+// build that doesn't run the other's signature (2026-10 Zeong / Sazabi: 82 of
+// its 115 decks run Qubeley, the other 33 are a Char build)
 const SHARED_SIG_SIMILARITY = 0.7
-const SHARED_SIG_SHARE = 0.8
+const SHARED_SIG_SHARE = 0.7
 const baseId = cardId => cardId.replace(/_p\d+$/, '')
 // Each archetype's signature cards are in most of the other's decks
 function sharesSignatures(a, b) {
