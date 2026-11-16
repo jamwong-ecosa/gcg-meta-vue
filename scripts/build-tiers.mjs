@@ -275,9 +275,10 @@ function listSimilarity(a, b) {
 
 // Decks with no LR unit at 2+ copies have no signature card, so their key is just
 // their colours. When a colour combo's such decks are one coherent list, they're
-// named after their defining units instead: the two most valuable units in at
-// least FALLBACK_MIN_SHARE of them, by rarity, then the signature score (copies
-// and level). A mixed bag with no shared units stays unnamed and goes to the
+// named after their defining units instead: the most valuable unit in at
+// least FALLBACK_MIN_SHARE of them (compareUnits), then the other colour's unit
+// (otherColourUnit), or the next most valuable in a one-colour deck. A mixed bag
+// with no shared units stays unnamed and goes to the
 // unassigned decks. Needs FALLBACK_MIN_DECKS, the size an archetype needs
 const FALLBACK_MIN_SHARE = 0.8
 const FALLBACK_MIN_DECKS = 3
@@ -296,17 +297,52 @@ function fallbackSignatures(decks) {
       units.set(card.cardId, u)
     }
   }
-  const score = u => (u.copies / u.decks) * 10 + (parseInt(u.info.level) || 0) * 7
-  return [...units.values()]
-    .filter(u => u.decks / decks.length >= FALLBACK_MIN_SHARE)
-    .sort(
-      (a, b) =>
-        (RARITY_RANK[b.info.rarity] ?? 0) - (RARITY_RANK[a.info.rarity] ?? 0) ||
-        score(b) - score(a) ||
-        a.cardId.localeCompare(b.cardId),
-    )
-    .slice(0, 2)
-    .map(u => ({ name: u.info.name, cardId: u.cardId }))
+  const all = [...units.values()].map(u => ({ ...u, share: u.decks / decks.length }))
+  const [first, next] = all.filter(u => u.share >= FALLBACK_MIN_SHARE).sort(compareUnits)
+  if (!first) {
+    return []
+  }
+  const colors = getDeckColors(decks[0])
+  const other = colors.find(c => c !== first.info.color)
+  const second = (other && otherColourUnit(all, other)) ?? next
+  return [first, second].filter(Boolean).map(u => ({ name: u.info.name, cardId: u.cardId }))
+}
+
+// Most valuable first: rarity, then the signature score (copies and level)
+const unitScore = u => (u.copies / u.decks) * 10 + (parseInt(u.info.level) || 0) * 7
+function compareUnits(a, b) {
+  return (
+    (RARITY_RANK[b.info.rarity] ?? 0) - (RARITY_RANK[a.info.rarity] ?? 0) ||
+    unitScore(b) - unitScore(a) ||
+    a.cardId.localeCompare(b.cardId)
+  )
+}
+
+// A two-colour archetype is named after a unit of each colour, so the name doesn't
+// read as one colour. The second colour often brings only pilots and commands with
+// a few units that vary from list to list, so its unit is the one in the most
+// decks, in at least OTHER_COLOUR_MIN_SHARE of them
+const OTHER_COLOUR_MIN_SHARE = 0.25
+function otherColourUnit(units, color) {
+  return units
+    .filter(u => u.info.type === 'UNIT' && u.info.color === color)
+    .filter(u => u.share >= OTHER_COLOUR_MIN_SHARE)
+    .sort((a, b) => b.share - a.share || compareUnits(a, b))[0]
+}
+
+// An archetype's units with their deck share, by base card id
+function groupUnits(group) {
+  const copies = {}
+  for (const [id, total] of Object.entries(group.copies)) {
+    copies[baseId(id)] = (copies[baseId(id)] ?? 0) + total
+  }
+  return Object.keys(copies).map(cardId => ({
+    cardId,
+    info: lookup(cardId),
+    decks: group.decksWith[cardId],
+    copies: copies[cardId],
+    share: group.decksWith[cardId] / group.decks,
+  }))
 }
 
 // Returns keyOf(deck) → { key, sigCardIds } with merged keys resolved to the
@@ -375,6 +411,28 @@ function createComboKeyResolver(players) {
     } else {
       kept.push(group)
     }
+  }
+
+  // A two-colour archetype whose two signature cards share a colour (Blue+Red named
+  // after two Blue LRs) swaps its second one for the other colour's unit (otherColourUnit),
+  // so the name shows both colours. Renamed after merging, so merges don't change
+  for (const group of kept) {
+    const colors = group.colors.split('+')
+    const sigColors = group.sigCardIds.map(id => lookup(baseId(id)).color)
+    const missing = colors.filter(c => !sigColors.includes(c))
+    if (group.sigCardIds.length !== 2 || sigColors[0] !== sigColors[1] || missing.length !== 1) {
+      continue
+    }
+    const unit = otherColourUnit(groupUnits(group), missing[0])
+    if (!unit) {
+      continue
+    }
+    const sigIds = [group.sigCardIds[0], unit.cardId]
+    const oldKey = group.key
+    group.key = `${group.colors} (${sigIds.map(id => lookup(baseId(id)).name).join(' / ')})`
+    group.sigCardIds = sigIds
+    mergedInto.set(oldKey, group)
+    console.log(`  renamed ${oldKey} → ${group.key}`)
   }
 
   const named = new Map()
