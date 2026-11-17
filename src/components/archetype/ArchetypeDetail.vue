@@ -1,64 +1,123 @@
 <template>
   <div>
     <!-- Builds: the archetype's decks split in two by the package each runs
-         (subBuilds); picking one re-works every number below over its decks -->
-    <section v-if="buildOptions.length" class="mb-5">
-      <h4 class="mb-2 flex flex-wrap items-baseline gap-x-2">
-        <span
-          class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
-        >
-          {{ $t('archetype.builds.title') }}
-        </span>
-        <span class="text-xs text-gray-500 dark:text-gray-400">
-          {{ $t('archetype.builds.blurb') }}
-        </span>
-      </h4>
-      <div class="grid gap-2 sm:grid-cols-[auto_1fr_1fr]">
-        <button
-          v-for="b in buildOptions"
-          :key="String(b.value)"
-          class="flex cursor-pointer flex-col gap-1.5 rounded border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ruri dark:focus-visible:outline-sora"
-          :class="
-            build === b.value
-              ? 'border-ruri/40 bg-ruri/[0.06] ring-1 ring-ruri/30 dark:border-sora/50 dark:bg-sora/[0.1] dark:ring-sora/30'
-              : 'border-gray-500/15 bg-gray-50 hover:bg-gray-500/[0.06] dark:border-nalika-border dark:bg-white/[0.02] dark:hover:bg-white/[0.04]'
-          "
-          :aria-pressed="build === b.value"
-          @click="build = b.value"
-        >
-          <span class="flex flex-wrap items-baseline gap-x-2">
-            <span
-              class="text-sm font-semibold"
-              :class="
-                build === b.value
-                  ? 'text-ruri dark:text-sora'
-                  : 'text-gray-700 dark:text-nalika-text'
-              "
-            >
-              {{ b.title }}
-            </span>
-            <span class="font-mono text-xs text-gray-500 tabular-nums dark:text-nalika-text-muted">
-              {{ $t('archetype.deckCount', b.decks) }}
-              <template v-if="b.share != null">({{ b.share }}%)</template>
-              · {{ $t('archetype.winCount', b.wins) }}
-            </span>
+         (subBuilds); picking one re-works every number below over its decks.
+         One panel: a bar split by each build's share of decks, then a column per
+         build. Picking a build again, or "all decks", goes back to every deck -->
+    <section v-if="builds.length" class="mb-5">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+        <h4 class="flex flex-wrap items-baseline gap-x-2">
+          <span
+            class="text-sm font-bold tracking-wider text-gray-600 uppercase dark:text-nalika-text-muted zh:tracking-normal"
+          >
+            {{ $t('archetype.builds.title') }}
           </span>
-          <span v-if="b.keyCards.length" class="flex flex-wrap items-center gap-1.5">
-            <span
-              v-for="c in b.keyCards"
-              :key="c.id"
-              class="flex items-center gap-1 rounded-full bg-white py-0.5 pr-2 pl-0.5 text-xs text-gray-700 ring-1 ring-gray-500/15 dark:bg-nalika-surface dark:text-nalika-text dark:ring-nalika-border"
-            >
-              <img
-                :src="cardFace(c.id, 64).url"
-                alt=""
-                loading="lazy"
-                class="size-5 rounded-full object-cover"
-              />
-              {{ c.name }}
-            </span>
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+            {{ $t('archetype.builds.blurb') }}
+          </span>
+        </h4>
+        <button
+          class="flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 transition-colors focus-visible:outline-2 focus-visible:outline-ruri dark:focus-visible:outline-sora"
+          :class="
+            build === null
+              ? 'bg-ruri/[0.08] text-ruri ring-ruri/30 dark:bg-sora/[0.12] dark:text-sora dark:ring-sora/40'
+              : 'bg-white text-gray-600 ring-gray-500/20 hover:bg-gray-50 dark:bg-nalika-surface dark:text-nalika-text dark:ring-nalika-border dark:hover:bg-white/[0.06]'
+          "
+          :aria-pressed="build === null"
+          @click="build = null"
+        >
+          {{ build === null ? $t('archetype.builds.all') : $t('archetype.builds.showAll') }}
+          <span class="font-mono font-normal tabular-nums opacity-70">
+            {{ archetype.deckCount }}
           </span>
         </button>
+      </div>
+
+      <div
+        class="overflow-hidden rounded-lg border border-gray-500/15 bg-gray-50 dark:border-nalika-border dark:bg-white/[0.02]"
+      >
+        <!-- Share of decks: one segment per build, as wide as its share -->
+        <div class="flex h-6" aria-hidden="true">
+          <div
+            v-for="b in builds"
+            :key="b.value"
+            class="flex min-w-12 items-center gap-1.5 px-2.5 font-mono text-xs font-bold text-white tabular-nums transition-opacity"
+            :class="[b.tone.bar, build !== null && build !== b.value && tw`opacity-30`]"
+            :style="{ flexBasis: `${b.share}%` }"
+          >
+            {{ b.letter }}
+            <span class="font-normal opacity-90">{{ b.share }}%</span>
+          </div>
+        </div>
+
+        <div
+          class="grid divide-gray-500/15 max-sm:divide-y sm:grid-cols-2 sm:divide-x dark:divide-nalika-border"
+        >
+          <button
+            v-for="b in builds"
+            :key="b.value"
+            class="flex cursor-pointer flex-col gap-2.5 px-4 py-3 text-left transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ruri dark:focus-visible:outline-sora"
+            :class="
+              build === b.value
+                ? b.tone.picked
+                : build === null
+                  ? tw`hover:bg-gray-500/[0.05] dark:hover:bg-white/[0.04]`
+                  : tw`opacity-55 hover:bg-gray-500/[0.05] hover:opacity-100 dark:hover:bg-white/[0.04]`
+            "
+            :aria-pressed="build === b.value"
+            @click="build = build === b.value ? null : b.value"
+          >
+            <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span class="flex items-center gap-2">
+                <span
+                  class="flex size-6 shrink-0 items-center justify-center rounded font-mono text-sm font-bold text-white"
+                  :class="b.tone.bar"
+                >
+                  {{ b.letter }}
+                </span>
+                <span
+                  class="text-sm font-semibold"
+                  :class="build === b.value ? b.tone.text : tw`text-gray-800 dark:text-nalika-text`"
+                >
+                  {{ b.title }}
+                </span>
+              </span>
+              <span
+                class="flex flex-wrap items-baseline gap-x-2 font-mono text-xs text-gray-500 tabular-nums dark:text-nalika-text-muted"
+              >
+                <span>{{ $t('archetype.deckCount', b.decks) }}</span>
+                <span aria-hidden="true">·</span>
+                <span>{{ $t('archetype.winCount', b.wins) }}</span>
+                <span aria-hidden="true">·</span>
+                <span class="font-semibold text-gray-700 dark:text-nalika-text">
+                  {{ $t('archetype.builds.winRate', { pct: b.winRate }) }}
+                </span>
+              </span>
+            </span>
+            <span class="flex flex-col gap-1.5">
+              <span
+                class="text-[0.6875rem] font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500 zh:tracking-normal"
+              >
+                {{ $t('archetype.builds.keyCards') }}
+              </span>
+              <span class="flex flex-wrap items-center gap-1.5">
+                <span
+                  v-for="c in b.keyCards"
+                  :key="c.id"
+                  class="flex items-center gap-1.5 rounded-md bg-white py-0.5 pr-2 pl-0.5 text-xs text-gray-700 ring-1 ring-gray-500/15 dark:bg-nalika-surface dark:text-nalika-text dark:ring-nalika-border"
+                >
+                  <img
+                    :src="cardFace(c.id, 64).url"
+                    alt=""
+                    loading="lazy"
+                    class="size-6 rounded object-cover"
+                  />
+                  {{ c.name }}
+                </span>
+              </span>
+            </span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -362,8 +421,22 @@ const KEY_ITEM = tw`flex items-center gap-1.5 max-sm:gap-2`
 // Fixed badge column on mobile so the meanings start in one line
 const KEY_BADGE = tw`flex shrink-0 max-sm:w-17`
 
-// The Builds row: every deck, then each build with the cards that set it apart
-const buildOptions = computed(() => {
+// Each build's colour: its share segment, letter badge and picked column
+const BUILD_TONES = [
+  {
+    bar: tw`bg-indigo-500 dark:bg-indigo-400`,
+    text: tw`text-indigo-700 dark:text-indigo-300`,
+    picked: tw`bg-indigo-500/[0.07] shadow-[inset_0_3px_0] shadow-indigo-500 dark:bg-indigo-400/[0.1] dark:shadow-indigo-400`,
+  },
+  {
+    bar: tw`bg-amber-500 dark:bg-amber-500`,
+    text: tw`text-amber-700 dark:text-amber-300`,
+    picked: tw`bg-amber-500/[0.08] shadow-[inset_0_3px_0] shadow-amber-500 dark:bg-amber-400/[0.1] dark:shadow-amber-400`,
+  },
+]
+
+// The Builds panel: each build with its share, win rate and the cards that set it apart
+const builds = computed(() => {
   const sb = props.archetype.subBuilds
   if (!sb) {
     return []
@@ -375,24 +448,20 @@ const buildOptions = computed(() => {
       c.name,
     ]),
   )
-  return [
-    {
-      value: null,
-      title: t('archetype.builds.all'),
-      decks: props.archetype.deckCount,
-      wins: props.archetype.winnerDeckCount ?? 0,
-      share: null,
-      keyCards: [],
-    },
-    ...sb.builds.map((b, i) => ({
+  return sb.builds.map((b, i) => {
+    const letter = String.fromCharCode(65 + i)
+    return {
       value: i,
-      title: t('archetype.builds.name', { n: String.fromCharCode(65 + i) }),
+      letter,
+      title: t('archetype.builds.name', { n: letter }),
+      tone: BUILD_TONES[i % BUILD_TONES.length],
       decks: b.decks,
       wins: b.wins,
       share: Math.round((b.decks / total) * 100),
+      winRate: b.decks ? ((b.wins / b.decks) * 100).toFixed(1) : '0.0',
       keyCards: b.keyCardIds.map(id => ({ id, name: names.get(id) ?? id })),
-    })),
-  ]
+    }
+  })
 })
 
 const sigCardIds = computed(() => new Set(view.value.sigCardIds ?? []))

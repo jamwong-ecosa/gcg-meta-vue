@@ -21,6 +21,9 @@ export default {
         'Same signature cards, two different packages around them. Pick one to see only its cards and decks',
       all: 'All decks',
       name: 'Build {n}',
+      winRate: '{pct}% win rate',
+      keyCards: 'Sets it apart',
+      showAll: 'Show all decks',
     },
     detail: {
       avgDeck: 'Avg deck',
@@ -199,6 +202,9 @@ export default {
       blurb: '核心卡相同，但周邊配置分成兩套。選擇一套，只看該構築的卡牌及卡組',
       all: '全部卡組',
       name: '構築 {n}',
+      winRate: '卡組優勝率 {pct}%',
+      keyCards: '特色卡牌',
+      showAll: '顯示全部卡組',
     },
     detail: {
       avgDeck: '平均卡組',
