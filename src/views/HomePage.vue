@@ -346,12 +346,15 @@
       <h2 class="text-xl font-bold text-sumi md:text-2xl dark:text-nalika-text">
         {{ $t('home.recent.title') }}
       </h2>
-      <ul class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- A results list: one row per win (date, art, archetype over venue, then
+           colours and tier in fixed columns so the tiers line up) -->
+      <ul
+        class="mt-4 divide-y divide-gray-500/10 overflow-hidden rounded-lg border border-gray-500/15 bg-white dark:divide-nalika-border dark:border-nalika-border dark:bg-nalika-surface"
+      >
         <li v-for="(e, i) in recentEvents" :key="i" class="min-w-0">
           <!-- Hover (or tap, on phones) shows the winning list, as in the
                analysis page's deck list -->
           <UiDeckPopover
-            class="h-full"
             :cards="e.deck"
             :url="e.deckUrl"
             :label="e.label"
@@ -361,63 +364,106 @@
               :href="e.deckUrl || undefined"
               target="_blank"
               rel="noopener"
-              class="group flex h-full items-center gap-3 rounded-lg border border-gray-500/15 bg-white p-2.5 transition-[border-color,box-shadow] duration-200 hover:border-ruri/30 hover:shadow-md hover:shadow-ruri/10 dark:border-nalika-border dark:bg-nalika-surface dark:hover:border-sora/40 dark:hover:shadow-black/30"
+              class="group grid grid-cols-[4rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-3 py-2 transition-colors hover:bg-ruri/[0.04] sm:grid-cols-[2.75rem_4rem_minmax(0,1fr)_6rem_5.5rem_1rem] sm:px-4 dark:hover:bg-white/[0.03]"
             >
               <span
-                class="relative size-14 shrink-0 overflow-hidden rounded-md bg-gray-100 dark:bg-nalika-bg"
-                :style="e.art ? null : e.bar"
+                class="font-mono text-xs text-gray-400 tabular-nums max-sm:hidden dark:text-gray-500"
               >
+                {{ e.date.slice(5) }}
+              </span>
+              <span
+                class="relative h-10 w-16 overflow-hidden rounded-md bg-gray-100 max-sm:row-span-2 dark:bg-nalika-bg"
+                :style="e.faces.length ? null : e.bar"
+              >
+                <!-- Each key card as a square at its own end, the second laid over the
+                     first and cut on a slant through the middle, with a thin
+                     line along the cut; one card fills the box -->
                 <img
-                  v-if="e.art"
-                  :src="e.art.url"
+                  v-for="(url, fi) in e.faces"
+                  :key="fi"
+                  :src="url"
                   alt=""
                   loading="lazy"
-                  class="absolute inset-0 h-full w-full object-cover"
-                  :style="{ objectPosition: e.art.position }"
+                  class="absolute inset-y-0 h-full object-cover"
+                  :class="
+                    e.faces.length < 2
+                      ? tw`inset-x-0 w-full`
+                      : fi
+                        ? tw`right-0 w-10`
+                        : tw`left-0 w-10`
+                  "
+                  :style="fi ? { clipPath: 'polygon(40% 0, 100% 0, 100% 100%, 0 100%)' } : null"
                 />
-              </span>
-              <span class="min-w-0 flex-1">
-                <span
-                  class="flex items-baseline gap-2 text-xs text-gray-500 dark:text-nalika-text-muted"
+                <svg
+                  v-if="e.faces.length > 1"
+                  class="absolute inset-0 h-full w-full stroke-white dark:stroke-nalika-surface"
+                  viewBox="0 0 64 40"
+                  aria-hidden="true"
                 >
-                  <span class="shrink-0 font-mono tabular-nums">{{ e.date.slice(5) }}</span>
-                  <span class="flex min-w-0">
-                    <span class="truncate">{{ e.venue || $t('archetype.decks.unknownEvent') }}</span>
-                    <span v-if="e.cap" class="shrink-0">{{ e.cap }}</span>
-                  </span>
-                </span>
-                <span class="mt-1 flex items-center gap-1.5">
-                  <span class="h-2 w-5 shrink-0 rounded-full" :style="e.bar" />
-                  <span class="truncate text-xs font-bold text-gray-500 dark:text-nalika-text-muted">
-                    {{ comboName(e.colors) }}
-                  </span>
-                  <span
-                    v-if="e.tier"
-                    class="ml-auto shrink-0 rounded px-1.5 py-0.5 text-[11px] leading-none font-bold"
-                    :class="tierPillClass(e.tier)"
-                  >
-                    {{ e.tier }}
-                  </span>
-                  <span
-                    v-else-if="e.unassigned"
-                    class="ml-auto shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[11px] leading-none font-bold text-gray-500 dark:bg-white/5 dark:text-gray-400"
-                  >
-                    {{ $t('home.recent.unassigned') }}
-                  </span>
-                </span>
+                  <line x1="40" y1="0" x2="24" y2="40" stroke-width="1.5" />
+                </svg>
+              </span>
+              <span class="min-w-0">
                 <!-- One line: when the names don't fit, each is cut short in
                      proportion to its length, so both stay readable -->
                 <span
-                  class="mt-0.5 flex min-w-0 text-sm font-bold text-gray-800 dark:text-nalika-text"
+                  class="flex min-w-0 text-sm font-bold text-gray-800 group-hover:text-ruri dark:text-nalika-text dark:group-hover:text-sora"
                 >
                   <template v-for="(name, ni) in e.names" :key="ni">
-                    <span v-if="ni" class="shrink-0 px-1.5">/</span>
+                    <span
+                      v-if="ni"
+                      class="shrink-0 px-1.5 font-normal text-gray-400 dark:text-gray-500"
+                    >
+                      /
+                    </span>
                     <span class="min-w-0 truncate">{{ name }}</span>
                   </template>
                 </span>
+                <span class="mt-0.5 flex min-w-0 gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                  <span class="shrink-0 font-mono tabular-nums sm:hidden">
+                    {{ e.date.slice(5) }}
+                  </span>
+                  <span class="flex min-w-0">
+                    <span class="truncate">
+                      {{ e.venue || $t('archetype.decks.unknownEvent') }}
+                    </span>
+                    <span v-if="e.cap" class="shrink-0">{{ e.cap }}</span>
+                  </span>
+                </span>
               </span>
               <span
-                class="shrink-0 self-start text-gray-300 transition-colors group-hover:text-ruri dark:text-gray-600 dark:group-hover:text-sora"
+                class="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-gray-500 max-sm:hidden dark:text-nalika-text-muted"
+              >
+                <span class="h-2 w-5 shrink-0 rounded-full" :style="e.bar" />
+                <span class="truncate">{{ comboName(e.colors) }}</span>
+              </span>
+              <!-- On phones this drops under the name (beside the art, which spans
+                   both lines) so the name gets the full width, and takes the
+                   colour pill whose column is hidden there -->
+              <span class="flex items-center gap-1.5 max-sm:col-start-2 sm:justify-end">
+                <span
+                  class="mr-1 flex items-center gap-1.5 text-xs font-semibold text-gray-500 sm:hidden dark:text-nalika-text-muted"
+                >
+                  <span class="h-2 w-5 shrink-0 rounded-full" :style="e.bar" />
+                  {{ comboName(e.colors) }}
+                </span>
+                <UiStylePill class="py-0.5 text-[11px]" :play-style="e.style" :hint="false" />
+                <span
+                  v-if="e.tier"
+                  class="rounded px-1.5 py-0.5 text-[11px] leading-none font-bold"
+                  :class="tierPillClass(e.tier)"
+                >
+                  {{ e.tier }}
+                </span>
+                <span
+                  v-else-if="e.unassigned"
+                  class="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] leading-none font-bold whitespace-nowrap text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                >
+                  {{ $t('home.recent.unassigned') }}
+                </span>
+              </span>
+              <span
+                class="text-right text-gray-300 transition-colors group-hover:text-ruri max-sm:hidden dark:text-gray-600 dark:group-hover:text-sora"
                 aria-hidden="true"
               >
                 ↗
@@ -671,9 +717,14 @@ const recentEvents = computed(() => {
         label: [e.date, shop].filter(Boolean).join(' · '),
         colors,
         tier: row?.tier ?? null,
+        style: row?.style ?? null,
         names: names.length ? names : [comboName(colors)],
         unassigned: !row,
-        art: cardArt(row?.sigCardIds?.[0] ?? cards[0]?.cardId, 1),
+        // The two key cards' faces, split on the diagonal in the thumbnail
+        faces: (row?.sigCardIds?.length ? row.sigCardIds : cards.map(c => c.cardId))
+          .filter(Boolean)
+          .slice(0, 2)
+          .map(id => cardFace(id, 96).url),
         bar: {
           background: hexes.length > 1 ? `linear-gradient(90deg, ${hexes.join(', ')})` : hexes[0],
         },
