@@ -48,6 +48,20 @@ export function tierPillClass(tier) {
   return map[tier] || tw`bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400`
 }
 
+// Outlined tier badge for the tier group headings: the tier colour as a thin
+// ring and the letter, no fill, so it marks the group without pulling the eye
+// away from the rows (whose pills are filled)
+export function tierOutlineClass(tier) {
+  const map = {
+    S: tw`text-red-600 ring-red-500/50 dark:text-red-400 dark:ring-red-400/40`,
+    A: tw`text-orange-600 ring-orange-500/50 dark:text-orange-400 dark:ring-orange-400/40`,
+    B: tw`text-amber-600 ring-amber-500/50 dark:text-amber-400 dark:ring-amber-400/40`,
+    C: tw`text-green-600 ring-green-500/50 dark:text-green-400 dark:ring-green-400/40`,
+    D: tw`text-blue-600 ring-blue-500/50 dark:text-blue-400 dark:ring-blue-400/40`,
+  }
+  return map[tier] || tw`text-gray-500 ring-gray-400/50 dark:text-gray-400 dark:ring-gray-500/40`
+}
+
 const TIER_RANKS = ['S', 'A', 'B', 'C', 'D', '--']
 
 // Direction of a tier change: 'up' (promoted, e.g. B → A), 'down', or null when unchanged/unknown

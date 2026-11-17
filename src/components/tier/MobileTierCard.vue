@@ -44,8 +44,8 @@
         </svg>
         <span
           v-if="section.kind === 'tier'"
-          class="w-6 shrink-0 rounded py-0.5 text-center text-xxs font-bold"
-          :class="tierPillClass(section.tier)"
+          class="flex h-5 w-6 shrink-0 items-center justify-center rounded text-xs font-bold ring-1 ring-inset"
+          :class="tierOutlineClass(section.tier)"
         >
           {{ section.tier }}
         </span>

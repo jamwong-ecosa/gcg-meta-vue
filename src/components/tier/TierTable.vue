@@ -7,7 +7,7 @@
         <col class="w-auto" />
         <col class="w-16" />
         <col v-for="c in numericCols" :key="c.key" :class="c.width" />
-        <col class="w-28" />
+        <col class="w-24" />
         <col v-if="hasMovement" class="w-14" />
         <col class="w-8" />
       </colgroup>
@@ -65,8 +65,8 @@
               </span>
               <span
                 v-if="section.kind === 'tier'"
-                class="w-10 rounded px-1.5 py-0.5 text-center font-bold"
-                :class="tierPillClass(section.tier)"
+                class="flex h-5 min-w-7 items-center justify-center rounded px-1.5 text-xs font-bold ring-1 ring-inset"
+                :class="tierOutlineClass(section.tier)"
               >
                 {{ section.tier }}
               </span>

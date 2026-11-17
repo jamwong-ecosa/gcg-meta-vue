@@ -137,7 +137,7 @@
           </span>
         </span>
         <span
-          class="w-10 shrink-0 rounded px-1.5 py-0.5 text-center text-xs font-bold"
+          class="w-6 shrink-0 rounded py-0.5 text-center text-xs font-bold"
           :class="tierPillClass(row.tier)"
         >
           {{ row.tier }}
