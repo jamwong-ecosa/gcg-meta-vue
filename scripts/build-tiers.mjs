@@ -537,7 +537,8 @@ const ARCHETYPES_PER_TIER = 4
 const TIER_LABELS = ['S', 'A', 'B', 'C', 'D']
 
 // Wins per placed deck, shrunk toward the series average as if every archetype
-// had this many extra placed decks at the average rate. Used to pick dark horses.
+// had this many extra placed decks at the average rate. Used to pick dark horses
+// and in the tier score's win factor.
 const CONVERSION_PRIOR_DECKS = 10
 
 function smoothedConversion(wins, archDecks, avgConversion) {
@@ -566,6 +567,11 @@ const QUALITY_PRIOR_DECKS = 20
 // fixes that while predicting held-out wins as well, and 2 starts to cost tier
 // stability and pulls down the most-played archetypes
 const QUALITY_EXPONENT = 1.5
+// How hard winning more or less often than average moves the score. Without it
+// an archetype that places a lot but rarely wins (e.g. 32 decks, 1 win) ranked
+// level with ones that convert; 0.5 pulls those down without letting a few
+// lucky wins lift a small archetype past well-played ones
+const WIN_EXPONENT = 0.5
 
 // Results only list each event's placed decks (top 8, or top 16 for larger
 // events), so placement share (an archetype's placed decks ÷ all placed decks)
@@ -575,14 +581,24 @@ const QUALITY_EXPONENT = 1.5
 // Backtested on held-out events against the earlier wins-per-deck factor (prior
 // 10): that one predicted an archetype's win rate worse than no factor at all,
 // while points per deck predict it better and give steadier tiers. Steeper and
-// flatter point scales made little difference. Strength is the square root of
-// the product, because shares are heavily skewed (a few archetypes hold most
-// placements) and the root spreads the long tail for tiering and display.
-function archetypeStrength({ points, archDecks, totalDecks, avgPoints }) {
+// flatter point scales made little difference. Wins still matter to players
+// more than that backtest credits, so a milder win factor (smoothed wins per
+// deck ÷ series average) ^ 0.5 is applied on top, trading a little predictive
+// fit for tiers that don't rate rarely-winning archetypes as winning ones.
+// Strength is the square root of the product, because shares are heavily skewed
+// (a few archetypes hold most placements) and the root spreads the long tail
+// for tiering and display.
+function archetypeStrength({ points, wins, archDecks, totalDecks, avgPoints, avgConversion }) {
   const placementShare = (archDecks / totalDecks) * 100
   const smoothedPoints =
     (points + QUALITY_PRIOR_DECKS * avgPoints) / (archDecks + QUALITY_PRIOR_DECKS)
-  return Math.sqrt(placementShare * (smoothedPoints / avgPoints) ** QUALITY_EXPONENT)
+  const quality = (smoothedPoints / avgPoints) ** QUALITY_EXPONENT
+  // A series with no recorded wins yet has no win rate to compare against
+  const winRate =
+    avgConversion > 0
+      ? (smoothedConversion(wins, archDecks, avgConversion) / avgConversion) ** WIN_EXPONENT
+      : 1
+  return Math.sqrt(placementShare * quality * winRate)
 }
 
 // Displayed score: strength as 0–100 of the series' strongest archetype
@@ -1239,9 +1255,11 @@ function processSeries(series) {
   for (const a of seriesProcessed.archetypes) {
     a.tierStrength = archetypeStrength({
       points: a.finishPoints,
+      wins: a.winnerDeckCount,
       archDecks: a.deckCount,
       totalDecks: allPlayers.length,
       avgPoints,
+      avgConversion,
     })
   }
   const strengths = seriesProcessed.archetypes.map(a => a.tierStrength)
