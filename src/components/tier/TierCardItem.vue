@@ -167,13 +167,14 @@
          the deck-stack icon) start, pr-3 ends it where the scores end. The play
          style lives here rather than in the row, which keeps the names room to fit -->
     <div v-if="open" class="pr-3 pb-3 pl-3.5">
+      <!-- Spread rather than equal columns, so the long zh labels (賽事優勝率)
+           get the room the short ones (卡組) don't need and stay on one line -->
       <dl
-        class="grid gap-x-2 rounded-md bg-gray-500/[0.03] px-2.5 py-2 dark:bg-white/[0.025]"
-        :class="row.style ? tw`grid-cols-5` : tw`grid-cols-4`"
+        class="flex flex-wrap justify-between gap-x-3 gap-y-2 rounded-md bg-gray-500/[0.03] px-2.5 py-2 dark:bg-white/[0.025]"
       >
         <div v-for="s in stats" :key="s.key">
           <dt
-            class="text-xxs font-semibold tracking-widest text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"
+            class="text-xxs font-semibold tracking-widest whitespace-nowrap text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"
           >
             {{ s.label }}
           </dt>
@@ -185,7 +186,7 @@
         </div>
         <div v-if="row.style">
           <dt
-            class="text-xxs font-semibold tracking-widest text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"
+            class="text-xxs font-semibold tracking-widest whitespace-nowrap text-gray-400 uppercase zh:text-xs zh:tracking-normal zh:text-gray-500"
           >
             {{ $t('tier.col.style') }}
           </dt>
