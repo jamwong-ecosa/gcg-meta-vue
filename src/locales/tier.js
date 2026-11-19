@@ -94,7 +94,7 @@ export default {
       move: 'Rank change since the previous series',
       darkHorse:
         'Dark horse: under 2% of placed decks, but converting placements into wins at least 30% better than average',
-      noLR: 'No LR: none of these decks runs an LR unit at 2+ copies, so the archetype is named after the units nearly every one of them plays',
+      noLR: 'No LR: no LR unit is in nearly every one of these decks, so the archetype is named after the units that are',
       builds:
         'These decks share their signature cards but split into two packages, so this row blends both. Open the archetype to see each build on its own',
     },
@@ -185,7 +185,7 @@ export default {
       tier: '級別按分數分群切分，因此各級別數量不一',
       move: '與上一個系列相比的排名變化',
       darkHorse: '黑馬：入賞卡組佔比不到 2%，但卡組優勝率比平均高出至少 30%',
-      noLR: '無 LR：此牌型的卡組都沒有採用 2 張或以上的 LR 機體，因此以幾乎每副都採用的機體命名',
+      noLR: '無 LR：此牌型沒有幾乎每副都採用的 LR 機體，因此以幾乎每副都採用的機體命名',
       builds:
         '這些卡組核心卡相同，但周邊配置分成兩套，此行數據是兩者合計。打開牌型可分別查看各構築',
     },
