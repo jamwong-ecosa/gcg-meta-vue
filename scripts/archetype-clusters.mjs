@@ -62,8 +62,18 @@ const baseId = cardId => cardId.replace(/_p\d+$/, '')
 const rarityOf = info => (info.type === 'UNIT' ? (info.rarity?.replace(/\+*$/, '') ?? null) : null)
 const level = info => parseInt(info.level) || 0
 
+// A deck as sorted [card key, copies] pairs, for similarity
+export function deckVector(deck, cardKey) {
+  const copies = new Map()
+  for (const card of deck) {
+    const key = cardKey(card.cardId)
+    copies.set(key, (copies.get(key) ?? 0) + card.quantity)
+  }
+  return [...copies].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+}
+
 // Weighted Jaccard over two decks as sorted [id, copies] arrays
-function similarity(a, b) {
+export function similarity(a, b) {
   let i = 0
   let j = 0
   let shared = 0
@@ -373,14 +383,7 @@ export function createClusterResolver(players, { lookup, colorsOf, cardKey, minD
 
   const assigned = new Map()
   for (const [combo, { colors, decks }] of byCombo) {
-    const vectors = decks.map(deck => {
-      const copies = new Map()
-      for (const card of deck) {
-        const key = cardKey(card.cardId)
-        copies.set(key, (copies.get(key) ?? 0) + card.quantity)
-      }
-      return [...copies].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
-    })
+    const vectors = decks.map(deck => deckVector(deck, cardKey))
     const groups = assignCombo({ decks, colors, vectors, minDecks, lookup })
     // Two cards can share a name (GD02-038 / GD03-034 GQuuuuuuX（オメガ・サイコミュ
     // 起動時）); pairs that would read the same name their differing card by number
