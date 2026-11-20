@@ -165,6 +165,8 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
   const baseIds = decks.map(deck => new Set(deck.map(card => baseId(card.cardId))))
   const pairs = decks.map(deck => deckPair(deck, lookup, scores))
   const ranks = pairs.map(pair => (pair ? pairRank(pair, colors, lookup) : Infinity))
+  // A pair's key, whatever order its units are in
+  const pairKey = ids => [...ids].sort((a, b) => a.localeCompare(b)).join()
   // A deck's average similarity to a group's other decks
   const avgSim = (i, members) =>
     members.reduce((sum, j) => (j === i ? sum : sum + similarity(vectors[i], vectors[j])), 0) /
@@ -193,7 +195,7 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
     // Decks whose pair is this far from the first choice group by it…
     const byPair = new Map()
     for (const i of pool.filter(i => ranks[i] === rank)) {
-      const key = [...pairs[i]].sort().join('|')
+      const key = pairKey(pairs[i])
       const group = byPair.get(key) ?? { members: [], ids: pairs[i] }
       group.members.push(i)
       byPair.set(key, group)
@@ -250,7 +252,6 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
   }
   const acrossSim = (a, b) =>
     a.members.reduce((sum, i) => sum + avgSim(i, b.members), 0) / a.members.length
-  const pairKey = ids => [...ids].sort().join()
   // The merged name: the shared unit, and of the two groups' other name units
   // the one at least MERGE_SHARE of their decks run (at any copies) and no
   // further from the rule's first choice than the better of the two names
