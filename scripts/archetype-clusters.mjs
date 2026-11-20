@@ -1,41 +1,57 @@
-// Archetypes by deck list: decks of the same colours are grouped by how alike
-// their whole lists are, and each group is then named after the cards it plays
-// most. A deck's name used to come from its own copy counts (the LR unit with
-// the most copies), so near-identical decks landed under different names when
-// one ran a copy more of a second LR unit (Strike Freedom / Aile Strike vs
-// Strike Freedom / Justice), and merge, rename and reassign rules had to patch
-// that up after the fact.
+// Archetypes by LR pair: decks of the same colours are grouped by the two LR
+// units they lean on most, and each group is named after that pair.
 //
-// 1. Each deck is its cards with copies, reprints with the same effect as one
-//    card (cardKey). Two decks are compared by weighted Jaccard: shared copies
-//    over total copies, 1 = identical lists
-// 2. Decks of each colour combo are clustered bottom-up, average linkage: the
-//    two most alike groups merge first, until no two groups are CLUSTER_SIMILARITY
-//    alike on average. A flex slot (Justice in place of Freedom) is a few cards
-//    of fifty and doesn't split a group; a package of its own does
-// 3. Groups under minDecks are a handful of odd lists. Each of their decks joins
-//    the large group it's most alike, if at least ATTACH_SIMILARITY alike on
-//    average, and otherwise stays out of the ranked archetypes
-// 4. Each group is named (nameCluster) after a LR unit most of its decks run in
-//    each colour (or a R unit nearly all do), with at least one card not naming
-//    a bigger group, so one deck's copy counts can't change the name
+// 1. Decks are split by colour combo
+// 2. Each deck's pair (deckPair): in each colour, of the LR units it runs at
+//    least MIN_LR_COPIES of (alt arts counted with the base card), the one
+//    scoring highest across the combo (COPY_WEIGHT, LEVEL_WEIGHT). The score
+//    is the combo's, not the deck's, so a copy more or less doesn't move
+//    near-identical decks apart (2026-11 Green+Purple Qubeley / Sazabi decks
+//    run three LRs a colour at three or four copies each). One LR per colour
+//    when the deck runs a LR in both, else the top two LRs of one colour. A
+//    slot no LR fills takes a R unit the same way (another colour's first, then
+//    the named colour's)
+// 3. Pairs group in the rule's order (assignCombo): one LR per colour, then two
+//    LRs of one colour, then pairs taking a R. At each step, decks with such a
+//    pair form a group per pair of at least minDecks; then every deck still out
+//    joins the group it's most alike on average, if at least ATTACH_SIMILARITY
+//    alike, and only one whose two name units it runs (at any copies), before
+//    the next step's pairs group
+// 4. A deck more alike a bigger group whose name units it runs than the rest of
+//    its own moves there
+// 5. Two groups sharing one name unit, as alike across as within
+//    (MERGE_SIMILARITY), merge under the other name unit of either that
+//    MERGE_SHARE of their decks run; decks not running it stay where they were
+// 6. A group left under minDecks breaks up, its decks joining the most alike
+//    group whose name units they run.
+//    Every deck in a group runs both of its name units. A deck no step places
+//    stays out of the ranked archetypes
+//
+// Two decks are compared by weighted Jaccard over their cards with copies,
+// reprints with the same effect as one card (cardKey): shared copies over total
+// copies, 1 = identical lists
 
-// Groups merge while their decks are at least this alike on average
-const CLUSTER_SIMILARITY = 0.4
-// A deck from a group too small to rank joins a large group at least this alike
+// A unit's combo score: copies per deck of the combo × COPY_WEIGHT + level ×
+// LEVEL_WEIGHT. A level is worth two copies a deck, so a deck's top unit
+// leads over a cheaper staple every deck runs (2026-10 Green+Purple: Qubeley
+// Lv7, in half the decks at three or four, over Zeong Lv6 in nearly all)
+const COPY_WEIGHT = 10
+const LEVEL_WEIGHT = 20
+// A LR unit names a deck's group only with at least this many copies in it;
+// fewer is a tech pick
+const MIN_LR_COPIES = 3
+// A leftover deck joins a group at least this alike on average
 const ATTACH_SIMILARITY = 0.3
-// A name card: a LR unit in at least this share of the group's decks…
-const NAME_LR_SHARE = 0.5
-// …or, with no such LR in the colour, a R unit in at least this share
-const NAME_STAPLE_SHARE = 0.8
-// No unit that common in a colour: the colour's unit in the most decks, in at
-// least this share of them, names it instead
-const NAME_UNIT_SHARE = 0.25
-// LR+ and LR++ are alt-art LRs
-const RARITY_RANK = { LR: 2, R: 1 }
-const level = u => parseInt(u.info.level) || 0
-const staple = u => (u.share >= NAME_STAPLE_SHARE ? 1 : 0)
-const rarityRank = info => RARITY_RANK[info.rarity?.replace(/\+*$/, '')] ?? 0
+// Two groups sharing a name unit merge when their decks are, on average, at
+// least this share as alike across the two as within each…
+const MERGE_SIMILARITY = 0.85
+// …and at least this share of their decks run a second unit to name it by
+const MERGE_SHARE = 0.9
+
+const baseId = cardId => cardId.replace(/_p\d+$/, '')
+// A unit's rarity ('LR', 'R', …), null for other cards; LR+ and LR++ are alt-art LRs
+const rarityOf = info => (info.type === 'UNIT' ? (info.rarity?.replace(/\+*$/, '') ?? null) : null)
+const level = info => parseInt(info.level) || 0
 
 // Weighted Jaccard over two decks as sorted [id, copies] arrays
 function similarity(a, b) {
@@ -58,214 +74,263 @@ function similarity(a, b) {
   return total ? shared / total : 0
 }
 
-// Average-linkage clustering by nearest-neighbour chain: follows each group to
-// its most alike group until two are each other's most alike, and merges them.
-// Returns the merges as [a, b, similarity], a group named after its first deck
-function averageLinkage(sim, n) {
-  const row = Float64Array.from(sim)
-  const size = Array.from({ length: n }, () => 1)
-  const active = Array.from({ length: n }, () => true)
-  const merges = []
-  const chain = []
-  let remaining = n
-  while (remaining > 1) {
-    if (chain.length === 0) {
-      chain.push(active.indexOf(true))
-    }
-    const a = chain.at(-1)
-    const prev = chain.length > 1 ? chain.at(-2) : -1
-    let best = prev
-    let bestSim = prev >= 0 ? row[a * n + prev] : -1
-    for (let c = 0; c < n; c++) {
-      if (active[c] && c !== a && row[a * n + c] > bestSim) {
-        best = c
-        bestSim = row[a * n + c]
-      }
-    }
-    if (best !== prev) {
-      chain.push(best)
-      continue
-    }
-    chain.length -= 2
-    merges.push([a, best, bestSim])
-    const [na, nb] = [size[a], size[best]]
-    for (let c = 0; c < n; c++) {
-      if (active[c] && c !== a && c !== best) {
-        const merged = (na * row[a * n + c] + nb * row[best * n + c]) / (na + nb)
-        row[a * n + c] = merged
-        row[c * n + a] = merged
-      }
-    }
-    size[a] += nb
-    active[best] = false
-    remaining--
-  }
-  return merges
-}
-
-// Decks of one colour combo → groups of deck indexes, biggest first
-function clusterCombo(vectors, minDecks) {
-  const n = vectors.length
-  const sim = new Float64Array(n * n)
-  for (let i = 0; i < n; i++) {
-    sim[i * n + i] = 1
-    for (let j = i + 1; j < n; j++) {
-      const s = similarity(vectors[i], vectors[j])
-      sim[i * n + j] = s
-      sim[j * n + i] = s
-    }
-  }
-
-  // Average linkage has no inversions, so the merges at or above the cut-off
-  // are exactly the groups cut there
-  const parent = Array.from({ length: n }, (_, i) => i)
-  const find = i => (parent[i] === i ? i : (parent[i] = find(parent[i])))
-  for (const [a, b, s] of averageLinkage(sim, n)) {
-    if (s >= CLUSTER_SIMILARITY) {
-      parent[find(b)] = find(a)
-    }
-  }
-  const byRoot = new Map()
-  for (let i = 0; i < n; i++) {
-    byRoot.set(find(i), [...(byRoot.get(find(i)) ?? []), i])
-  }
-  const groups = [...byRoot.values()].sort((a, b) => b.length - a.length || a[0] - b[0])
-  const large = groups.filter(g => g.length >= minDecks)
-  const small = groups.filter(g => g.length < minDecks)
-
-  // Odd lists join the large group they're most alike on average
-  const joins = large.map(() => [])
-  for (const group of small) {
-    for (const i of group) {
-      let best = -1
-      let bestSim = ATTACH_SIMILARITY
-      large.forEach((members, g) => {
-        const avg = members.reduce((s, j) => s + sim[i * n + j], 0) / members.length
-        if (avg >= bestSim) {
-          best = g
-          bestSim = avg
-        }
-      })
-      if (best >= 0) {
-        joins[best].push(i)
-        group.splice(group.indexOf(i), 1, -1)
-      }
-    }
-  }
-  return [
-    ...large.map((members, g) => [...members, ...joins[g]]),
-    ...small.map(g => g.filter(i => i >= 0)).filter(g => g.length > 0),
-  ]
-}
-
-// Units across a group: per base card id, the share of decks running it and
-// its signature score (average copies where played ×10 + level ×7, as a deck
-// used to be named by)
-function groupUnits(decks, lookup) {
-  const units = new Map()
+// Each card's score across a colour combo, by base card id: copies per deck of
+// the combo ×COPY_WEIGHT + level ×LEVEL_WEIGHT
+function comboScores(decks, lookup) {
+  const copies = new Map()
   for (const deck of decks) {
-    const seen = new Set()
     for (const card of deck) {
-      const id = card.cardId.replace(/_p\d+$/, '')
-      const info = lookup(id)
-      if (info.type !== 'UNIT') {
+      const id = baseId(card.cardId)
+      copies.set(id, (copies.get(id) ?? 0) + card.quantity)
+    }
+  }
+  return new Map(
+    [...copies].map(([id, n]) => [
+      id,
+      (n / decks.length) * COPY_WEIGHT + level(lookup(id)) * LEVEL_WEIGHT,
+    ]),
+  )
+}
+
+// A deck's units of one rarity, highest combo score first; LR units only at
+// MIN_LR_COPIES or more
+function rankedUnits(deck, lookup, rarity, scores) {
+  const copies = new Map()
+  for (const card of deck) {
+    const id = baseId(card.cardId)
+    copies.set(id, (copies.get(id) ?? 0) + card.quantity)
+  }
+  return [...copies.keys()]
+    .filter(id => rarityOf(lookup(id)) === rarity)
+    .filter(id => rarity !== 'LR' || copies.get(id) >= MIN_LR_COPIES)
+    .sort((a, b) => scores.get(b) - scores.get(a) || a.localeCompare(b))
+}
+
+// The deck's two name units (step 2), or null with fewer than two LR and R
+// units. LR units fill the slots first, R units the rest; within each, a
+// colour not yet named is taken before a second unit of a named one
+function deckPair(deck, lookup, scores) {
+  const pair = []
+  for (const rarity of ['LR', 'R']) {
+    const units = rankedUnits(deck, lookup, rarity, scores)
+    while (pair.length < 2) {
+      const named = new Set(pair.map(id => lookup(id).color))
+      const next =
+        units.find(id => !named.has(lookup(id).color)) ?? units.find(id => !pair.includes(id))
+      if (!next) {
+        break
+      }
+      pair.push(next)
+    }
+  }
+  return pair.length === 2 ? pair : null
+}
+
+// Name order: the combo's colour order, and for two units of one colour LR
+// before R, then more copies across the group, then higher level
+function nameOrder(ids, members, decks, colors, lookup) {
+  const copies = id =>
+    members.reduce(
+      (sum, i) =>
+        sum +
+        decks[i]
+          .filter(card => baseId(card.cardId) === id)
+          .reduce((s, card) => s + card.quantity, 0),
+      0,
+    )
+  const rank = id => (rarityOf(lookup(id)) === 'LR' ? 0 : 1)
+  return [...ids].sort(
+    (x, y) =>
+      colors.indexOf(lookup(x).color) - colors.indexOf(lookup(y).color) ||
+      rank(x) - rank(y) ||
+      copies(y) - copies(x) ||
+      level(lookup(y)) - level(lookup(x)) ||
+      x.localeCompare(y),
+  )
+}
+
+// How far a pair is from the rule's first choice: 0 one LR per colour (or two
+// LRs of a one-colour combo), 1 two LRs of one colour, 2 a pair taking a R
+function pairRank(pair, colors, lookup) {
+  if (pair.some(id => rarityOf(lookup(id)) !== 'LR')) {
+    return 2
+  }
+  return colors.length > 1 && lookup(pair[0]).color === lookup(pair[1]).color ? 1 : 0
+}
+
+// One colour combo's groups as { members: deck indexes, ids: name pair }, ids
+// empty for the decks left out of every group
+function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
+  const scores = comboScores(decks, lookup)
+  const baseIds = decks.map(deck => new Set(deck.map(card => baseId(card.cardId))))
+  const pairs = decks.map(deck => deckPair(deck, lookup, scores))
+  const ranks = pairs.map(pair => (pair ? pairRank(pair, colors, lookup) : Infinity))
+  // A deck's average similarity to a group's other decks
+  const avgSim = (i, members) =>
+    members.reduce((sum, j) => (j === i ? sum : sum + similarity(vectors[i], vectors[j])), 0) /
+    (members.length - (members.includes(i) ? 1 : 0))
+  // The index of the group in `among` the deck is most alike, of those whose
+  // name units it runs (at any copies) and at least `floor` alike; -1 for none
+  const mostAlike = (i, among, floor, skip = () => false) => {
+    let best = -1
+    let bestSim = floor
+    among.forEach((group, g) => {
+      if (skip(group) || !group.ids.every(id => baseIds[i].has(id))) {
+        return
+      }
+      const sim = avgSim(i, group.members)
+      if (sim > bestSim || (sim === bestSim && best < 0)) {
+        best = g
+        bestSim = sim
+      }
+    })
+    return best
+  }
+
+  let groups = []
+  let pool = decks.map((_, i) => i)
+  for (const rank of [0, 1, 2]) {
+    // Decks whose pair is this far from the first choice group by it…
+    const byPair = new Map()
+    for (const i of pool.filter(i => ranks[i] === rank)) {
+      const key = [...pairs[i]].sort().join('|')
+      const group = byPair.get(key) ?? { members: [], ids: pairs[i] }
+      group.members.push(i)
+      byPair.set(key, group)
+    }
+    for (const group of byPair.values()) {
+      if (group.members.length >= minDecks) {
+        group.ids = nameOrder(group.ids, group.members, decks, colors, lookup)
+        groups.push(group)
+      }
+    }
+    // …then every deck still out joins the most alike group whose name units
+    // it runs, against the groups as they stood before any leftover joined,
+    // before a pair further from the rule groups it (2026-11 Blue+Green:
+    // ν Gundam ×4 with Gundam ×2 joins Gundam / ν Gundam rather than grouping
+    // as ν Gundam / Re-GZ)
+    const grouped = new Set(groups.flatMap(g => g.members))
+    const joins = groups.map(() => [])
+    for (const i of pool.filter(i => !grouped.has(i))) {
+      joins[mostAlike(i, groups, ATTACH_SIMILARITY)]?.push(i)
+    }
+    groups.forEach((group, g) => group.members.push(...joins[g]))
+    const placed = new Set(groups.flatMap(g => g.members))
+    pool = pool.filter(i => !placed.has(i))
+  }
+
+  // A deck more alike a bigger group whose name units it runs than the rest of
+  // its own moves there, against the groups as they stood before any deck moved
+  // (2026-11 Green+Purple: Qubeley / Gusion Rebake decks running Sazabi ×2 in
+  // place of ×3 join Qubeley / Sazabi)
+  const moves = groups.map(() => [])
+  for (const group of groups) {
+    const size = group.members.length
+    group.kept = group.members.filter(i => {
+      const floor = Math.max(avgSim(i, group.members), ATTACH_SIMILARITY)
+      const best = mostAlike(i, groups, floor, other => other.members.length <= size)
+      moves[best]?.push(i)
+      return best < 0
+    })
+  }
+  groups = groups.map((group, g) => ({ ids: group.ids, members: [...group.kept, ...moves[g]] }))
+
+  // Two groups sharing one name unit, their decks about as alike across as
+  // within, merge under the shared unit and the one most of their decks run
+  // (2026-11 Red+White: ΖΖ / Justice and ΖΖ / Altron are one shell of ΖΖ,
+  // Altron and Aerial, Justice ×3–4 or not, merging as ΖΖ / Altron). Decks not
+  // running the new name units stay in their own group
+  const within = new WeakMap()
+  const withinSim = group => {
+    if (!within.has(group)) {
+      const { members } = group
+      within.set(group, members.reduce((sum, i) => sum + avgSim(i, members), 0) / members.length)
+    }
+    return within.get(group)
+  }
+  const acrossSim = (a, b) =>
+    a.members.reduce((sum, i) => sum + avgSim(i, b.members), 0) / a.members.length
+  const pairKey = ids => [...ids].sort().join()
+  // The merged name: the shared unit, and of the two groups' other name units
+  // the one at least MERGE_SHARE of their decks run (at any copies) and no
+  // further from the rule's first choice than the better of the two names
+  // (2026-10 Green+Purple: Zeong / Barbatos can't become Zeong / Zaku II), in the
+  // rule's order, then by combo score as a deck's pair is chosen. Only their own
+  // name units, and not the most run, so a staple every deck of the combo runs
+  // can't take over (2026-10 Green+Purple: Zeong / Barbatos stays so named
+  // merging with Zaku II / Barbatos)
+  const rank = group => pairRank(group.ids, colors, lookup)
+  const mergeName = ([a, b]) => {
+    const shared = a.ids.find(id => b.ids.includes(id))
+    const members = [...a.members, ...b.members]
+    const [best] = [a, b]
+      .map(g => g.ids.find(id => id !== shared))
+      .map(id => [id, members.filter(i => baseIds[i].has(id)).length])
+      .filter(([, n]) => n >= MERGE_SHARE * members.length)
+      .filter(([id]) => pairRank([shared, id], colors, lookup) <= Math.min(rank(a), rank(b)))
+      .sort(
+        ([x, n], [y, m]) =>
+          pairRank([shared, x], colors, lookup) - pairRank([shared, y], colors, lookup) ||
+          scores.get(y) - scores.get(x) ||
+          m - n ||
+          x.localeCompare(y),
+      )
+    return best ? [shared, best[0]] : null
+  }
+  for (let round = 0; round < 100; round++) {
+    const sized = groups
+      .filter(g => g.members.length >= minDecks)
+      .sort((a, b) => b.members.length - a.members.length)
+    let next = null
+    for (const [a, b] of sized.flatMap((a, k) => sized.slice(k + 1).map(b => [a, b]))) {
+      if (a.ids.filter(id => b.ids.includes(id)).length !== 1) {
         continue
       }
-      const u = units.get(id) ?? { cardId: id, info, decks: 0, copies: 0 }
-      u.copies += card.quantity
-      if (!seen.has(id)) {
-        u.decks++
-        seen.add(id)
+      const name = mergeName([a, b])
+      if (!name) {
+        continue
       }
-      units.set(id, u)
+      // The group already so named takes the other's decks running its units
+      const [into, from] = pairKey(a.ids) === pairKey(name) ? [a, b] : [b, a]
+      const runs = i => into.ids.every(id => baseIds[i].has(id))
+      if (
+        from.members.some(runs) &&
+        acrossSim(a, b) >= MERGE_SIMILARITY * ((withinSim(a) + withinSim(b)) / 2)
+      ) {
+        next = { into, from, runs }
+        break
+      }
+    }
+    if (!next) {
+      break
+    }
+    const { into, from, runs } = next
+    groups = groups
+      .map(g =>
+        g === into
+          ? { ids: g.ids, members: [...g.members, ...from.members.filter(runs)] }
+          : g === from
+            ? { ids: g.ids, members: g.members.filter(i => !runs(i)) }
+            : g,
+      )
+      .filter(g => g.members.length > 0)
+  }
+
+  // A group left under minDecks breaks up, its decks joining the most alike
+  // group whose name units they run
+  const broken = groups.filter(g => g.members.length < minDecks).flatMap(g => g.members)
+  groups = groups.filter(g => g.members.length >= minDecks)
+  const rejoins = groups.map(() => [])
+  for (const i of broken) {
+    const best = mostAlike(i, groups, ATTACH_SIMILARITY)
+    if (best >= 0) {
+      rejoins[best].push(i)
+    } else {
+      pool.push(i)
     }
   }
-  return [...units.values()].map(u => ({
-    ...u,
-    share: u.decks / decks.length,
-    score: (u.copies / u.decks) * 10 + (parseInt(u.info.level) || 0) * 7,
-  }))
-}
-
-// Name candidates for one colour, best first: LR units in at least
-// NAME_LR_SHARE of decks, those in at least NAME_STAPLE_SHARE first, then
-// highest level first, then R units in at least
-// NAME_STAPLE_SHARE, by share × score, then any in at least NAME_UNIT_SHARE, most common first. Each
-// candidate carries its tier (0 LR, 1 R, 2 the rest)
-function colourCandidates(units, color) {
-  const own = units.filter(u => u.info.color === color)
-  const byValue = (a, b) =>
-    b.share * b.score - a.share * a.score || a.cardId.localeCompare(b.cardId)
-  const byLevel = (a, b) => staple(b) - staple(a) || level(b) - level(a) || byValue(a, b)
-  const lrs = own.filter(u => rarityRank(u.info) === 2 && u.share >= NAME_LR_SHARE).sort(byLevel)
-  const rs = own.filter(u => rarityRank(u.info) === 1 && u.share >= NAME_STAPLE_SHARE).sort(byValue)
-  const rest = own
-    .filter(u => !lrs.includes(u) && !rs.includes(u) && u.share >= NAME_UNIT_SHARE)
-    .sort((a, b) => b.share - a.share || rarityRank(b.info) - rarityRank(a.info) || byValue(a, b))
-  return [
-    ...lrs.map(u => ({ ...u, tier: 0 })),
-    ...rs.map(u => ({ ...u, tier: 1 })),
-    ...rest.map(u => ({ ...u, tier: 2 })),
-  ]
-}
-
-// The group's name cards: one per colour, or the top two of a one-colour group
-// or of a main colour with two LR units in at least NAME_STAPLE_SHARE of decks
-// when the other colour, a splash, has none (2026-08 V Gundam build: V Gundam
-// and Strike Freedom in nearly every deck, Aile Strike in half),
-// from its LR and R units only; a colour with neither common enough goes
-// unnamed, and a group with no common LR or R unit at all is named from any unit.
-// `taken` holds names already given to bigger groups, `used` their name cards.
-// The name needs a card of its own, not naming a bigger group, so a splash LR
-// every deck of the colours runs doesn't hide the one that sets the group apart
-// (2026-09 V Gundam build: V Gundam and Strike Freedom in every deck, Strike
-// Freedom / Aile Strike already a bigger group's name). Without one, one slot
-// swaps to its strongest such candidate (tier, then in at least
-// NAME_STAPLE_SHARE of decks, then level for a LR, then share × score)
-function nameCluster(decks, colors, lookup, keyFor, taken, used) {
-  const units = groupUnits(decks, lookup)
-  const stapleLRs = color =>
-    units.filter(u => u.info.color === color && rarityRank(u.info) === 2 && staple(u)).length
-  const main =
-    colors.length === 1
-      ? colors[0]
-      : colors.find(c => stapleLRs(c) >= 2 && colors.every(o => o === c || stapleLRs(o) === 0))
-  const slotsFrom = pool =>
-    main
-      ? (() => {
-          const c = colourCandidates(pool, main)
-          return [c, c.slice(1)]
-        })()
-      : colors.map(color => colourCandidates(pool, color))
-  const keySlots = slotsFrom(units.filter(u => rarityRank(u.info) > 0))
-  const slots = keySlots.some(s => s.length > 0) ? keySlots : slotsFrom(units)
-  const filled = slots.filter(s => s.length > 0)
-  if (filled.length === 0) {
-    return []
-  }
-  const first = filled.map(s => s[0])
-  const swaps = filled
-    .flatMap((s, k) => s.slice(1).map(u => first.map((v, m) => (m === k ? u : v))))
-    .sort((a, b) => {
-      const swapped = names => names.find((u, k) => u !== first[k])
-      const [x, y] = [swapped(a), swapped(b)]
-      return (
-        x.tier - y.tier ||
-        staple(y) - staple(x) ||
-        (x.tier === 0 ? level(y) - level(x) : 0) ||
-        y.share * y.score - x.share * x.score
-      )
-    })
-  const ids = names => names.map(u => u.cardId)
-  const free = names => new Set(ids(names)).size === names.length && !taken.has(keyFor(ids(names)))
-  const own = names => names.some(u => !used.has(u.cardId))
-  const best =
-    [first, ...swaps].find(names => free(names) && own(names)) ??
-    [first, ...swaps].find(free) ??
-    first
-  // Two cards of one colour: the one not naming a bigger group leads
-  const ordered = main ? [...best].sort((a, b) => used.has(a.cardId) - used.has(b.cardId)) : best
-  return ids(ordered)
+  groups.forEach((group, g) => group.members.push(...rejoins[g]))
+  return [...groups, { members: pool, ids: [] }]
 }
 
 // `players`: the series' decks. Returns keyOf(deck) → { key, sigCardIds } for
@@ -292,25 +357,26 @@ export function createClusterResolver(players, { lookup, colorsOf, cardKey, minD
       }
       return [...copies].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
     })
-    const keyFor = ids => `${combo} (${ids.map(id => lookup(id).name).join(' / ')})`
-    const taken = new Set()
-    const used = new Set()
-    for (const members of clusterCombo(vectors, minDecks)) {
-      const groupDecks = members.map(i => decks[i])
-      let result = { key: combo, sigCardIds: [] }
-      if (members.length >= minDecks) {
-        const ids = nameCluster(groupDecks, colors, lookup, keyFor, taken, used)
-        if (ids.length > 0) {
-          result = { key: keyFor(ids), sigCardIds: ids }
-          if (taken.has(result.key)) {
-            console.log(`  no free name for ${members.length} decks, counted as ${result.key}`)
-          }
-          taken.add(result.key)
-          ids.forEach(id => used.add(id))
-        }
-      }
-      for (const deck of groupDecks) {
-        assigned.set(deck, result)
+    const groups = assignCombo({ decks, colors, vectors, minDecks, lookup })
+    // Two cards can share a name (GD02-038 / GD03-034 GQuuuuuuX（オメガ・サイコミュ
+    // 起動時）); pairs that would read the same name their differing card by number
+    const plainKey = ids => `${combo} (${ids.map(id => lookup(id).name).join(' / ')})`
+    const sameName = new Map()
+    for (const { ids } of groups.filter(g => g.ids.length > 0)) {
+      sameName.set(plainKey(ids), [...(sameName.get(plainKey(ids)) ?? []), ids])
+    }
+    const keyFor = ids => {
+      const clash = sameName.get(plainKey(ids))
+      const shared = id => clash.every(other => other.includes(id))
+      const label = id =>
+        clash.length > 1 && !shared(id) ? `${lookup(id).name} ${id}` : lookup(id).name
+      return `${combo} (${ids.map(label).join(' / ')})`
+    }
+    for (const { members, ids } of groups) {
+      const result =
+        ids.length > 0 ? { key: keyFor(ids), sigCardIds: ids } : { key: combo, sigCardIds: [] }
+      for (const i of members) {
+        assigned.set(decks[i], result)
       }
     }
   }
