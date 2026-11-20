@@ -23,7 +23,8 @@
 // 5. Two groups sharing one name unit, as alike across as within
 //    (MERGE_SIMILARITY), merge under the other name unit of either that
 //    MERGE_SHARE of their decks run, unless that drops a unit scoring higher
-//    than the one kept; decks not running it stay where they were
+//    than the one kept from a group of KEEP_DECKS or more; decks not running it
+//    stay where they were
 // 6. A group left under minDecks breaks up, its decks joining the most alike
 //    group whose name units they run.
 //    Every deck in a group runs both of its name units, its LRs at
@@ -52,6 +53,9 @@ const ATTACH_SIMILARITY = 0.3
 const MERGE_SIMILARITY = 0.85
 // …and at least this share of their decks run a second unit to name it by
 const MERGE_SHARE = 0.9
+// A merge never drops a name unit scoring higher than the one kept from a
+// group of at least this many decks
+const KEEP_DECKS = 5
 
 const baseId = cardId => cardId.replace(/_p\d+$/, '')
 // A unit's rarity ('LR', 'R', …), null for other cards; LR+ and LR++ are alt-art LRs
@@ -303,15 +307,17 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
         continue
       }
       // The group already so named takes the other's decks running its units,
-      // unless the other's own unit outscores the one named (2026-11
-      // Green+Purple: Zeong / Barbatos, Zeong Lv6 in most but not MERGE_SHARE of
-      // the decks, stays apart from Zaku II (Char) / Barbatos)
+      // unless the other's own unit outscores the one named and the other has
+      // KEEP_DECKS or more (2026-11 Green+Purple: Zeong / Barbatos stays apart
+      // from Zaku II (Char) / Barbatos; 2026-11 Red+White: the three ΖΖ / Gold
+      // Smo decks, Gold Smo Lv6 added to Altron ×4, join ΖΖ / Altron)
       const [into, from] = pairKey(a.ids) === pairKey(name) ? [a, b] : [b, a]
       const lost = from.ids.find(id => !into.ids.includes(id))
       const kept = into.ids.find(id => !from.ids.includes(id))
       const runs = i => into.ids.every(id => runsUnit(i, id))
+      const keepsApart = scores.get(lost) > scores.get(kept) && from.members.length >= KEEP_DECKS
       if (
-        scores.get(lost) <= scores.get(kept) &&
+        !keepsApart &&
         from.members.some(runs) &&
         acrossSim(a, b) >= MERGE_SIMILARITY * ((withinSim(a) + withinSim(b)) / 2)
       ) {
