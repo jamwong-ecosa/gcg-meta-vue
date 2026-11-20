@@ -10,21 +10,24 @@
 //    run three LRs a colour at three or four copies each). One LR per colour
 //    when the deck runs a LR in both, else the top two LRs of one colour. A
 //    slot no LR fills takes a R unit the same way (another colour's first, then
-//    the named colour's)
+//    the named colour's). Never two units of one name (2026-11 Blue+Green: ν
+//    Gundam LR ×4, ν Gundam R ×2 and Re-GZ ×4 pair as ν Gundam / Re-GZ)
 // 3. Pairs group in the rule's order (assignCombo): one LR per colour, then two
 //    LRs of one colour, then pairs taking a R. At each step, decks with such a
 //    pair form a group per pair of at least minDecks; then every deck still out
 //    joins the group it's most alike on average, if at least ATTACH_SIMILARITY
-//    alike, and only one whose two name units it runs (at any copies), before
-//    the next step's pairs group
+//    alike, and only one whose two name units it runs (a LR at MIN_LR_COPIES,
+//    a R at any copies), before the next step's pairs group
 // 4. A deck more alike a bigger group whose name units it runs than the rest of
 //    its own moves there
 // 5. Two groups sharing one name unit, as alike across as within
 //    (MERGE_SIMILARITY), merge under the other name unit of either that
-//    MERGE_SHARE of their decks run; decks not running it stay where they were
+//    MERGE_SHARE of their decks run, unless that drops a unit scoring higher
+//    than the one kept; decks not running it stay where they were
 // 6. A group left under minDecks breaks up, its decks joining the most alike
 //    group whose name units they run.
-//    Every deck in a group runs both of its name units. A deck no step places
+//    Every deck in a group runs both of its name units, its LRs at
+//    MIN_LR_COPIES or more. A deck no step places
 //    stays out of the ranked archetypes
 //
 // Two decks are compared by weighted Jaccard over their cards with copies,
@@ -37,8 +40,10 @@
 // Lv7, in half the decks at three or four, over Zeong Lv6 in nearly all)
 const COPY_WEIGHT = 10
 const LEVEL_WEIGHT = 20
-// A LR unit names a deck's group only with at least this many copies in it;
-// fewer is a tech pick
+// A LR unit names a deck's group, or lets a deck join a group it names, only
+// with at least this many copies in the deck; fewer is a tech pick (2026-10
+// Green+Purple: Zeong ×4 with Gusion Rebake ×2 stays out of Zeong / Gusion
+// Rebake)
 const MIN_LR_COPIES = 3
 // A leftover deck joins a group at least this alike on average
 const ATTACH_SIMILARITY = 0.3
@@ -108,15 +113,17 @@ function rankedUnits(deck, lookup, rarity, scores) {
 
 // The deck's two name units (step 2), or null with fewer than two LR and R
 // units. LR units fill the slots first, R units the rest; within each, a
-// colour not yet named is taken before a second unit of a named one
+// colour not yet named is taken before a second unit of a named one, and a
+// unit named like one taken is skipped
 function deckPair(deck, lookup, scores) {
   const pair = []
   for (const rarity of ['LR', 'R']) {
     const units = rankedUnits(deck, lookup, rarity, scores)
     while (pair.length < 2) {
       const named = new Set(pair.map(id => lookup(id).color))
-      const next =
-        units.find(id => !named.has(lookup(id).color)) ?? units.find(id => !pair.includes(id))
+      const names = new Set(pair.map(id => lookup(id).name))
+      const free = units.filter(id => !names.has(lookup(id).name))
+      const next = free.find(id => !named.has(lookup(id).color)) ?? free[0]
       if (!next) {
         break
       }
@@ -162,7 +169,17 @@ function pairRank(pair, colors, lookup) {
 // empty for the decks left out of every group
 function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
   const scores = comboScores(decks, lookup)
-  const baseIds = decks.map(deck => new Set(deck.map(card => baseId(card.cardId))))
+  const copies = decks.map(deck => {
+    const n = new Map()
+    for (const card of deck) {
+      const id = baseId(card.cardId)
+      n.set(id, (n.get(id) ?? 0) + card.quantity)
+    }
+    return n
+  })
+  // Whether a deck runs a name unit: a LR at MIN_LR_COPIES or more, a R at all
+  const runsUnit = (i, id) =>
+    (copies[i].get(id) ?? 0) >= (rarityOf(lookup(id)) === 'LR' ? MIN_LR_COPIES : 1)
   const pairs = decks.map(deck => deckPair(deck, lookup, scores))
   const ranks = pairs.map(pair => (pair ? pairRank(pair, colors, lookup) : Infinity))
   // A pair's key, whatever order its units are in
@@ -172,12 +189,12 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
     members.reduce((sum, j) => (j === i ? sum : sum + similarity(vectors[i], vectors[j])), 0) /
     (members.length - (members.includes(i) ? 1 : 0))
   // The index of the group in `among` the deck is most alike, of those whose
-  // name units it runs (at any copies) and at least `floor` alike; -1 for none
+  // name units it runs (runsUnit) and at least `floor` alike; -1 for none
   const mostAlike = (i, among, floor, skip = () => false) => {
     let best = -1
     let bestSim = floor
     among.forEach((group, g) => {
-      if (skip(group) || !group.ids.every(id => baseIds[i].has(id))) {
+      if (skip(group) || !group.ids.every(id => runsUnit(i, id))) {
         return
       }
       const sim = avgSim(i, group.members)
@@ -208,9 +225,7 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
     }
     // …then every deck still out joins the most alike group whose name units
     // it runs, against the groups as they stood before any leftover joined,
-    // before a pair further from the rule groups it (2026-11 Blue+Green:
-    // ν Gundam ×4 with Gundam ×2 joins Gundam / ν Gundam rather than grouping
-    // as ν Gundam / Re-GZ)
+    // before a pair further from the rule groups it
     const grouped = new Set(groups.flatMap(g => g.members))
     const joins = groups.map(() => [])
     for (const i of pool.filter(i => !grouped.has(i))) {
@@ -223,8 +238,6 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
 
   // A deck more alike a bigger group whose name units it runs than the rest of
   // its own moves there, against the groups as they stood before any deck moved
-  // (2026-11 Green+Purple: Qubeley / Gusion Rebake decks running Sazabi ×2 in
-  // place of ×3 join Qubeley / Sazabi)
   const moves = groups.map(() => [])
   for (const group of groups) {
     const size = group.members.length
@@ -239,9 +252,9 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
 
   // Two groups sharing one name unit, their decks about as alike across as
   // within, merge under the shared unit and the one most of their decks run
-  // (2026-11 Red+White: ΖΖ / Justice and ΖΖ / Altron are one shell of ΖΖ,
-  // Altron and Aerial, Justice ×3–4 or not, merging as ΖΖ / Altron). Decks not
-  // running the new name units stay in their own group
+  // (2026-09 Green+Red: the Gundam Exia decks, all running Gundam Schwarzette at
+  // three or more, join the Schwarzette group). Decks not running the new name
+  // units stay in their own group
   const within = new WeakMap()
   const withinSim = group => {
     if (!within.has(group)) {
@@ -253,20 +266,18 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
   const acrossSim = (a, b) =>
     a.members.reduce((sum, i) => sum + avgSim(i, b.members), 0) / a.members.length
   // The merged name: the shared unit, and of the two groups' other name units
-  // the one at least MERGE_SHARE of their decks run (at any copies) and no
-  // further from the rule's first choice than the better of the two names
-  // (2026-10 Green+Purple: Zeong / Barbatos can't become Zeong / Zaku II), in the
+  // the one at least MERGE_SHARE of their decks run (runsUnit) and no further
+  // from the rule's first choice than the better of the two names, in the
   // rule's order, then by combo score as a deck's pair is chosen. Only their own
   // name units, and not the most run, so a staple every deck of the combo runs
-  // can't take over (2026-10 Green+Purple: Zeong / Barbatos stays so named
-  // merging with Zaku II / Barbatos)
+  // can't take over
   const rank = group => pairRank(group.ids, colors, lookup)
   const mergeName = ([a, b]) => {
     const shared = a.ids.find(id => b.ids.includes(id))
     const members = [...a.members, ...b.members]
     const [best] = [a, b]
       .map(g => g.ids.find(id => id !== shared))
-      .map(id => [id, members.filter(i => baseIds[i].has(id)).length])
+      .map(id => [id, members.filter(i => runsUnit(i, id)).length])
       .filter(([, n]) => n >= MERGE_SHARE * members.length)
       .filter(([id]) => pairRank([shared, id], colors, lookup) <= Math.min(rank(a), rank(b)))
       .sort(
@@ -291,10 +302,16 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
       if (!name) {
         continue
       }
-      // The group already so named takes the other's decks running its units
+      // The group already so named takes the other's decks running its units,
+      // unless the other's own unit outscores the one named (2026-11
+      // Green+Purple: Zeong / Barbatos, Zeong Lv6 in most but not MERGE_SHARE of
+      // the decks, stays apart from Zaku II (Char) / Barbatos)
       const [into, from] = pairKey(a.ids) === pairKey(name) ? [a, b] : [b, a]
-      const runs = i => into.ids.every(id => baseIds[i].has(id))
+      const lost = from.ids.find(id => !into.ids.includes(id))
+      const kept = into.ids.find(id => !from.ids.includes(id))
+      const runs = i => into.ids.every(id => runsUnit(i, id))
       if (
+        scores.get(lost) <= scores.get(kept) &&
         from.members.some(runs) &&
         acrossSim(a, b) >= MERGE_SIMILARITY * ((withinSim(a) + withinSim(b)) / 2)
       ) {
