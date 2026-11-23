@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen font-display standalone:pb-[calc(2rem+env(safe-area-inset-bottom))] dark:bg-nalika-bg dark:text-nalika-text-muted">
+  <div
+    class="min-h-screen font-display dark:bg-nalika-bg dark:text-nalika-text-muted standalone:pb-[calc(2rem+env(safe-area-inset-bottom))]"
+  >
     <!-- Fixed, not sticky: the series row folding away must not change the page's
          layout, or the content jumps, the browser corrects the scroll and that
          reads as a scroll-up that brings the row back. The spacer holds the full

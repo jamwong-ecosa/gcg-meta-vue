@@ -14,13 +14,13 @@
         {{ $t('ui.update.available') }}
       </span>
       <button
-        class="shrink-0 rounded-lg bg-ruri px-3 py-1.5 text-sm font-bold text-white dark:bg-sora dark:text-nalika-bg"
+        class="shrink-0 cursor-pointer rounded-lg bg-ruri px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-ruri/85 active:bg-ruri/70 dark:bg-sora dark:text-nalika-bg dark:hover:bg-sora/85 dark:active:bg-sora/70"
         @click="updateServiceWorker(true)"
       >
         {{ $t('ui.update.reload') }}
       </button>
       <button
-        class="flex size-8 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10"
+        class="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 active:bg-gray-200 dark:text-gray-400 dark:hover:bg-white/10 dark:active:bg-white/15"
         :aria-label="$t('ui.close')"
         @click="needRefresh = false"
       >

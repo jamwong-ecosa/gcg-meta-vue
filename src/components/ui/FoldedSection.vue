@@ -6,7 +6,7 @@
     class="scroll-mt-14 overflow-hidden rounded border border-gray-500/15 bg-gray-50 dark:border-nalika-border dark:bg-white/[0.02]"
   >
     <button
-      class="flex w-full cursor-pointer items-baseline gap-x-2.5 px-3 py-1.5 text-left sm:py-2 transition-colors hover:bg-gray-500/[0.06] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ruri sm:px-4 dark:hover:bg-white/[0.04] dark:focus-visible:outline-sora"
+      class="flex w-full cursor-pointer items-baseline gap-x-2.5 px-3 py-1.5 text-left transition-colors hover:bg-gray-500/[0.06] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ruri sm:px-4 sm:py-2 dark:hover:bg-white/[0.04] dark:focus-visible:outline-sora"
       :class="show && 'border-b border-gray-500/15 dark:border-nalika-border'"
       :aria-expanded="show"
       @click="emit('toggle')"

@@ -99,7 +99,7 @@ source ~/.nvm/nvm.sh && nvm use
 1. `scrape:products` — fetches product data from GCG website (→ `data/products.json`)
 2. `scrape:cards` — fetches all card data (name, color, type) from GCG website (→ `data/cards.json`)
 3. `scrape:tournament` — fetches tournament events, players, and deck lists (uses local cache, skips already-fetched events) (→ `data/tournaments-all.json`)
-4. `build:tiers` — groups decks by color-combo archetype, computes scores and tier thresholds (ckmeans clustering) (→ `data-processed/tiers.json`)
+4. `build:tiers` — groups decks of each colour combo into archetypes by their two LR units (run at 3+ copies) scoring highest across the combo (copies per deck ×10 + level ×20), one per colour where possible, R units filling a slot no LR does; leftover decks join the most alike group whose two units they run, LRs at 3+ (`scripts/archetype-clusters.mjs`; `GROUPING=legacy` runs the old name-per-deck grouping for comparison), computes scores and tier thresholds (ckmeans clustering) (→ `data-processed/tiers.json`)
 
 You must run `npm run data` (or at minimum `npm run build:tiers`) after cloning to generate `data-processed/tiers.json`. The app will not work without this file.
 

@@ -3,6 +3,7 @@ import * as ss from 'simple-statistics'
 import { WINNER, COLOR_HEX, TYPE_ORDER, TYPE_PICK_ORDER } from './constants.mjs'
 import { playStyle } from './play-style.mjs'
 import { subBuilds } from './sub-builds.mjs'
+import { createClusterResolver } from './archetype-clusters.mjs'
 
 // Winner rule: 優勝 always counts as a win. For events with ≥16 players,
 // 準優勝 (2nd place) also counts as a winner.
@@ -246,20 +247,23 @@ function groupByCombo(players, keyOf, { init, accumulate }) {
 const MERGE_SIMILARITY = 0.8
 // Two LR units both played by almost every deck (Qubeley and Zeong) name the
 // deck after whichever has more copies, so a 4/3 list and a 3/4 list land under
-// different keys. When each archetype's signature cards are in at least
-// SHARED_SIG_SHARE of the other's decks, the names differ only by copy counts,
-// and a looser SHARED_SIG_SIMILARITY is enough to fold them together.
-// SHARED_SIG_SHARE is 70%, not 80%, because one archetype can hold a second
-// build that doesn't run the other's signature (2026-10 Zeong / Sazabi: 82 of
-// its 115 decks run Qubeley, the other 33 are a Char build)
+// different keys. When the larger archetype's signature cards are in at least
+// SHARED_SIG_SHARE of the smaller one's decks, the smaller one is the same deck
+// named after a card it runs more copies of, and a looser SHARED_SIG_SIMILARITY
+// is enough to fold them together. Only that way round: the larger one can hold
+// builds that don't run the smaller one's signature (2026-08 Strike Freedom /
+// Justice decks all run Aile Strike, most Strike Freedom / Aile Strike decks run
+// Freedom in Justice's place). SHARED_SIG_SHARE is 70%, not 80%, because the
+// smaller one can hold a second build too (2026-10 Zeong / Sazabi: 82 of its
+// 115 decks run Qubeley, the other 33 are a Char build)
 const SHARED_SIG_SIMILARITY = 0.7
 const SHARED_SIG_SHARE = 0.7
 const baseId = cardId => cardId.replace(/_p\d+$/, '')
-// Each archetype's signature cards are in most of the other's decks
-function sharesSignatures(a, b) {
-  const plays = (group, sigIds) =>
-    sigIds.every(id => (group.decksWith[baseId(id)] ?? 0) / group.decks >= SHARED_SIG_SHARE)
-  return plays(a, b.sigCardIds) && plays(b, a.sigCardIds)
+// The larger archetype's signature cards are in most of the smaller one's decks
+function runsSignaturesOf(smaller, larger) {
+  return larger.sigCardIds.every(
+    id => (smaller.decksWith[baseId(id)] ?? 0) / smaller.decks >= SHARED_SIG_SHARE,
+  )
 }
 
 // Weighted Jaccard over average copies per deck: 1 = identical lists, 0 = no shared cards
@@ -323,12 +327,13 @@ function compareUnits(a, b) {
 // a few units that vary from list to list, so its unit is the one in the most
 // decks, in at least OTHER_COLOUR_MIN_SHARE of them
 const OTHER_COLOUR_MIN_SHARE = 0.25
-function otherColourUnit(units, color) {
+function otherColourUnits(units, color) {
   return units
     .filter(u => u.info.type === 'UNIT' && u.info.color === color)
     .filter(u => u.share >= OTHER_COLOUR_MIN_SHARE)
-    .sort((a, b) => b.share - a.share || compareUnits(a, b))[0]
+    .sort((a, b) => b.share - a.share || compareUnits(a, b))
 }
+const otherColourUnit = (units, color) => otherColourUnits(units, color)[0]
 
 // An archetype's units with their deck share, by base card id
 function groupUnits(group) {
@@ -362,14 +367,17 @@ function createComboKeyResolver(players) {
       group = {
         key,
         sigCardIds,
+        lrSigCardIds: sigCardIds,
         colors: getDeckColors(player.deck).join('+'),
         decks: 0,
         copies: {},
         decksWith: {},
+        members: [],
       }
       groups.set(key, group)
     }
     group.decks++
+    group.members.push(player.deck)
     for (const card of player.deck) {
       group.copies[card.cardId] = (group.copies[card.cardId] ?? 0) + card.quantity
     }
@@ -397,7 +405,7 @@ function createComboKeyResolver(players) {
       const similarity = listSimilarity(group.avgCopies, other.avgCopies)
       const enough =
         similarity >= MERGE_SIMILARITY ||
-        (similarity >= SHARED_SIG_SIMILARITY && sharesSignatures(group, other))
+        (similarity >= SHARED_SIG_SIMILARITY && runsSignaturesOf(group, other))
       if (enough && similarity > bestSimilarity) {
         best = other
         bestSimilarity = similarity
@@ -415,7 +423,14 @@ function createComboKeyResolver(players) {
 
   // A two-colour archetype whose two signature cards share a colour (Blue+Red named
   // after two Blue LRs) swaps its second one for the other colour's unit (otherColourUnit),
-  // so the name shows both colours. Renamed after merging, so merges don't change
+  // so the name shows both colours. Renamed after merging, so merges don't change.
+  // A name another archetype already has is skipped for the next unit, or the
+  // name is kept, since two archetypes under one name are counted as one
+  // (2026-11 Strike Freedom / Infinite Justice, both Blue, would become the
+  // existing Strike Freedom / Justice)
+  const takenKeys = new Set(kept.map(group => group.key))
+  const keyFor = (group, sigIds) =>
+    `${group.colors} (${sigIds.map(id => lookup(baseId(id)).name).join(' / ')})`
   for (const group of kept) {
     const colors = group.colors.split('+')
     const sigColors = group.sigCardIds.map(id => lookup(baseId(id)).color)
@@ -423,13 +438,16 @@ function createComboKeyResolver(players) {
     if (group.sigCardIds.length !== 2 || sigColors[0] !== sigColors[1] || missing.length !== 1) {
       continue
     }
-    const unit = otherColourUnit(groupUnits(group), missing[0])
+    const unit = otherColourUnits(groupUnits(group), missing[0]).find(
+      u => !takenKeys.has(keyFor(group, [group.sigCardIds[0], u.cardId])),
+    )
     if (!unit) {
       continue
     }
     const sigIds = [group.sigCardIds[0], unit.cardId]
     const oldKey = group.key
-    group.key = `${group.colors} (${sigIds.map(id => lookup(baseId(id)).name).join(' / ')})`
+    group.key = keyFor(group, sigIds)
+    takenKeys.add(group.key)
     group.sigCardIds = sigIds
     mergedInto.set(oldKey, group)
     console.log(`  renamed ${oldKey} → ${group.key}`)
@@ -447,14 +465,131 @@ function createComboKeyResolver(players) {
     }
   }
 
+  const homeOf = rawKey => mergedInto.get(rawKey) ?? groups.get(rawKey)
+  const bestGroup = reassignDecks(groups, homeOf)
+
   return deck => {
     const raw = buildComboKey(deck)
     if (raw.sigCardIds.length === 0) {
       return named.get(raw.key) ?? raw
     }
-    const target = mergedInto.get(raw.key)
-    return target ? { key: target.key, sigCardIds: target.sigCardIds } : raw
+    const target = bestGroup(deck, homeOf(raw.key))
+    return { key: target.key, sigCardIds: target.sigCardIds }
   }
+}
+
+// A deck running two LR units at close copy counts is named after whichever has
+// more, so near-identical decks can land in two archetypes that don't merge as a
+// whole, because one of them also holds a different build (2026-11 Strike
+// Freedom: Aile Strike + Justice decks split between the Aile Strike and Justice
+// archetypes, the latter also holding an Orb build). Each deck then moves to a
+// larger rival archetype (isRival) whose average list it's at least
+// REASSIGN_MARGIN more alike than its own, repeated until no deck moves. Decks
+// only move to larger archetypes, so a small tight one doesn't pull a build out
+// of a broad one that holds several
+const REASSIGN_MAX_ROUNDS = 20
+const REASSIGN_MARGIN = 0.05
+// Same colours, one LR signature card in common (from before renaming), and the
+// deck runs the other one at a signature score (as in getSignatureCard) within
+// REASSIGN_SCORE_GAP of the card it was named after, so the name was a near tie
+const REASSIGN_SCORE_GAP = 20
+const sigScore = (copies, id) => (copies[id] ?? 0) * 10 + (parseInt(lookup(id).level) || 0) * 7
+function isRival(home, group, copies) {
+  if (group.colors !== home.colors || group.lrSigCardIds.length !== 2) {
+    return false
+  }
+  const homeIds = home.lrSigCardIds.map(baseId)
+  const ids = group.lrSigCardIds.map(baseId)
+  const rest = ids.filter(id => !homeIds.includes(id))
+  const own = homeIds.filter(id => !ids.includes(id))
+  if (homeIds.length !== 2 || rest.length !== 1 || own.length !== 1 || (copies[rest[0]] ?? 0) < 2) {
+    return false
+  }
+  return sigScore(copies, own[0]) - sigScore(copies, rest[0]) <= REASSIGN_SCORE_GAP
+}
+function reassignDecks(groups, homeOf) {
+  const assigned = new Map()
+  const homeSizes = new Map()
+  for (const [rawKey, group] of groups) {
+    const home = homeOf(rawKey)
+    for (const deck of group.members) {
+      assigned.set(deck, { home, group: home })
+    }
+    homeSizes.set(home, (homeSizes.get(home) ?? 0) + group.members.length)
+  }
+  const targets = [...homeSizes.keys()]
+  const deckCopies = new WeakMap()
+  const copiesOf = deck => {
+    let copies = deckCopies.get(deck)
+    if (!copies) {
+      copies = {}
+      for (const card of deck) {
+        const id = baseId(card.cardId)
+        copies[id] = (copies[id] ?? 0) + card.quantity
+      }
+      deckCopies.set(deck, copies)
+    }
+    return copies
+  }
+  const averages = new Map()
+  const bestGroup = (deck, home) => {
+    const copies = copiesOf(deck)
+    let best = home
+    let bestSimilarity = averages.has(home) ? listSimilarity(copies, averages.get(home)) : -1
+    for (const group of targets) {
+      if (homeSizes.get(group) <= homeSizes.get(home) || !isRival(home, group, copies)) {
+        continue
+      }
+      const similarity = listSimilarity(copies, averages.get(group)) - REASSIGN_MARGIN
+      if (similarity > bestSimilarity) {
+        best = group
+        bestSimilarity = similarity
+      }
+    }
+    return best
+  }
+
+  for (let round = 0; round < REASSIGN_MAX_ROUNDS; round++) {
+    averages.clear()
+    const totals = new Map()
+    for (const [deck, { group }] of assigned) {
+      const total = totals.get(group) ?? { decks: 0, copies: {} }
+      total.decks++
+      for (const [id, qty] of Object.entries(copiesOf(deck))) {
+        total.copies[id] = (total.copies[id] ?? 0) + qty
+      }
+      totals.set(group, total)
+    }
+    for (const [group, { decks, copies }] of totals) {
+      averages.set(
+        group,
+        Object.fromEntries(Object.entries(copies).map(([id, qty]) => [id, qty / decks])),
+      )
+    }
+    let moved = 0
+    for (const [deck, entry] of assigned) {
+      const next = bestGroup(deck, entry.home)
+      if (next !== entry.group) {
+        entry.group = next
+        moved++
+      }
+    }
+    if (moved === 0) {
+      break
+    }
+  }
+
+  const moves = new Map()
+  for (const { home, group } of assigned.values()) {
+    if (home !== group) {
+      const label = `${home.key} → ${group.key}`
+      moves.set(label, (moves.get(label) ?? 0) + 1)
+    }
+  }
+  for (const [label, count] of moves) {
+    console.log(`  reassigned ${count} decks ${label}`)
+  }
+  return bestGroup
 }
 
 function buildArchetypeMaps(allPlayers, winners, keyOf) {
@@ -1031,7 +1166,15 @@ function processSeries(series) {
   const { allPlayers, winners } = getSeriesMetadata(series)
   const { eventMinDate, eventMaxDate } = getSeriesEventDateRange(series)
 
-  const keyOf = createComboKeyResolver(allPlayers)
+  const keyOf =
+    process.env.GROUPING === 'legacy'
+      ? createComboKeyResolver(allPlayers)
+      : createClusterResolver(allPlayers, {
+          lookup,
+          colorsOf: getDeckColors,
+          cardKey: buildCardKey,
+          minDecks: 3,
+        })
   const { comboArchetypes, winnersByCombo } = buildArchetypeMaps(allPlayers, winners, keyOf)
 
   const archetypeDetails = buildArchetypeDetails(comboArchetypes, winnersByCombo, allPlayers.length)

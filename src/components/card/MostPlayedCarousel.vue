@@ -25,7 +25,10 @@
         :key="slot.card.cardId"
         type="button"
         class="absolute bottom-0 left-1/2 w-24 origin-bottom cursor-pointer transition-[transform,opacity] ease-out sm:w-36 lg:w-32 xl:w-40"
-        :class="[slot.hidden && tw`pointer-events-none`, isSwiping ? tw`duration-300` : tw`duration-700`]"
+        :class="[
+          slot.hidden && tw`pointer-events-none`,
+          isSwiping ? tw`duration-300` : tw`duration-700`,
+        ]"
         :style="slot.style"
         :tabindex="slot.offset === 0 || slot.hidden ? -1 : 0"
         :aria-hidden="slot.offset !== 0"
@@ -206,8 +209,7 @@ const { pause, resume, isActive } = useIntervalFn(
   { immediate: false },
 )
 watchEffect(() => {
-  const run =
-    !hovered.value && !focused.value && !isSwiping.value && visibility.value === 'visible'
+  const run = !hovered.value && !focused.value && !isSwiping.value && visibility.value === 'visible'
   if (run && !isActive.value) {
     resume()
   } else if (!run && isActive.value) {
