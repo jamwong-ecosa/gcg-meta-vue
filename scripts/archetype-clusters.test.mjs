@@ -109,6 +109,23 @@ test('a family is named after a core card of its decks', { skip }, () => {
   assert.equal(zeongAlone.length, 0)
 })
 
+// 2026-11 Green+Purple: Zeong with Barbatos and with Exia Repair, neither in
+// 85% of the decks, is named after Zaku II (Char), run ×3+ in every deck, not
+// Zeong alone, and takes in the Zaku II (Char) / Zeong group, but not Zaku II
+// (Char) / Barbatos, most of whose decks run no Zeong
+test('2026-11 the Zeong family is named after the LR all its decks run', { skip }, () => {
+  const grouping = month('2026-11')
+  const zaku = 'ザクⅡ（シャア・アズナブル機）'
+  const family = named(grouping, 'Green+Purple', zaku, 'ジオング')
+  assert.equal(family.length, 1)
+  const noZeong = family[0].members.filter(deck => copies(deck, 'GD04-017') === 0)
+  assert.equal(noZeong.length, 0, `${noZeong.length} decks without Zeong`)
+  const barbatos = 'ガンダム・バルバトス（第1形態）'
+  assert.equal(named(grouping, 'Green+Purple', zaku, barbatos).length, 1)
+  const zeongAlone = grouping.groups.filter(g => g.key === 'Green+Purple (ジオング)')
+  assert.equal(zeongAlone.length, 0)
+})
+
 // 2026-09 Blue+White: the V Gundam decks are two builds of their own, not part
 // of Strike Freedom / Aile Strike or a Strike Freedom family: with Aile Strike
 // (11 wins) and without

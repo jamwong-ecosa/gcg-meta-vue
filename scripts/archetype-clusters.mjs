@@ -31,9 +31,11 @@
 // 7. Two groups sharing one name unit, as alike across as within
 //    (FAMILY_SIMILARITY), are one deck family and merge whole, named after the
 //    shared unit and one of their name units FAMILY_NAME_SHARE of the family's
-//    decks play at any copies (the bigger group's first), else the shared unit
-//    alone; unless the family's decks are less alike than FAMILY_COHESION or it
-//    drops a unit outscoring the shared one from a group of KEEP_DECKS or more
+//    decks play at any copies (the bigger group's first), else a LR unit
+//    FAMILY_NAME_SHARE of them run at MIN_LR_COPIES (taking in the group
+//    already so named), else the shared unit alone; unless the family's decks
+//    are less alike than FAMILY_COHESION or it drops a unit outscoring the
+//    shared one from a group of KEEP_DECKS or more
 // 8. A group left under minDecks breaks up, its decks joining the most alike
 //    group whose name units they run.
 //    Every deck in a group runs its one or two name units, its LRs at
@@ -486,8 +488,9 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
     if (members.some(i => !runsUnit(i, shared))) {
       return null
     }
-    const played = id =>
-      members.filter(i => copies[i].has(id)).length >= FAMILY_NAME_SHARE * members.length
+    const share = (id, runs) =>
+      members.filter(i => runs(i, id)).length >= FAMILY_NAME_SHARE * members.length
+    const played = id => share(id, (i, unit) => copies[i].has(unit))
     const [bigger] = [a, b].sort((x, y) => y.members.length - x.members.length)
     const partner = bigger.ids.find(id => id !== shared)
     // Another colour's unit first, as a deck's pair is chosen, then by score
@@ -501,14 +504,29 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
             .sort(
               (x, y) => rank(x) - rank(y) || scores.get(y) - scores.get(x) || x.localeCompare(y),
             )
-    const ids = nameOrder(second ? [shared, second] : [shared], members, decks, colors, lookup)
-    const taken = groups.some(g => g !== a && g !== b && pairKey(g.ids) === pairKey(ids))
+    // None of them: a LR unit FAMILY_NAME_SHARE of its decks run at
+    // MIN_LR_COPIES, so a family whose name units are its builds' tech picks is
+    // named after the LR every build runs, not its core alone (2026-11
+    // Green+Purple: Zeong with Barbatos and with Exia Repair, Zaku II (Char) ×4
+    // in every deck, is Zaku II (Char) / Zeong)
+    const [fallback] = second
+      ? []
+      : [...new Set(members.flatMap(i => [...copies[i].keys()]))]
+          .filter(id => rarityOf(lookup(id)) === 'LR')
+          .filter(id => lookup(id).name !== lookup(shared).name)
+          .filter(id => share(id, runsUnit))
+          .sort((x, y) => rank(x) - rank(y) || scores.get(y) - scores.get(x) || x.localeCompare(y))
+    const named = second ?? fallback
+    const ids = nameOrder(named ? [shared, named] : [shared], members, decks, colors, lookup)
+    // A group already so named is one deck with the family when the name is
+    // the fallback, a LR all of them run, and joins it; else the name is taken
+    const owner = groups.find(g => g !== a && g !== b && pairKey(g.ids) === pairKey(ids))
     const dropsStronger = [a, b].some(
       g =>
         g.members.length >= KEEP_DECKS &&
         g.ids.some(id => !ids.includes(id) && scores.get(id) > scores.get(shared)),
     )
-    return taken || dropsStronger ? null : ids
+    return (owner && !fallback) || dropsStronger ? null : { ids, absorb: owner, fallback }
   }
   const familyCohesion = (a, b) => {
     // Every two decks' similarity summed within each group and across the two
@@ -521,9 +539,14 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
     const sized = groups.filter(g => g.members.length >= minDecks)
     let next = null
     for (const [a, b] of sized.flatMap((a, k) => sized.slice(k + 1).map(b => [a, b]))) {
-      const shared = a.ids.filter(id => b.ids.includes(id))
-      const ids = shared.length === 1 ? familyName(a, b, shared[0]) : null
-      if (!ids) {
+      // A family's fallback unit names it but isn't its core, so it doesn't
+      // draw in other groups of that unit (2026-11 Green+Purple: Zaku II
+      // (Char) / Barbatos, 9 of 15 decks without Zeong, stays apart from Zaku
+      // II (Char) / Zeong)
+      const core = id => id !== a.fallback && id !== b.fallback
+      const shared = a.ids.filter(id => b.ids.includes(id) && core(id))
+      const name = shared.length === 1 ? familyName(a, b, shared[0]) : null
+      if (!name) {
         continue
       }
       const ratio = acrossSim(a, b) / ((withinSim(a) + withinSim(b)) / 2)
@@ -532,18 +555,20 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
         ratio > (next?.ratio ?? 0) &&
         familyCohesion(a, b) >= FAMILY_COHESION
       ) {
-        next = { a, b, ids, ratio }
+        next = { a, b, ...name, ratio }
       }
     }
     if (!next) {
       break
     }
+    const parts = [next.a, next.b, ...(next.absorb ? [next.absorb] : [])]
     const family = {
       ids: next.ids,
-      members: [...next.a.members, ...next.b.members],
-      units: [...new Set([...unitsOf(next.a), ...unitsOf(next.b)])],
+      members: parts.flatMap(g => g.members),
+      units: [...new Set(parts.flatMap(unitsOf))],
+      fallback: next.fallback,
     }
-    groups = [...groups.filter(g => g !== next.a && g !== next.b), family]
+    groups = [...groups.filter(g => !parts.includes(g)), family]
   }
 
   // A group left under minDecks breaks up, its decks joining the most alike
