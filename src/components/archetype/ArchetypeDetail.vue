@@ -4,7 +4,7 @@
          (subBuilds); picking one re-works every number below over its decks.
          One panel: a bar split by each build's share of decks, then a column per
          build. Picking a build again, or "all decks", goes back to every deck.
-         Mobile: folded to the share bar until asked for; desktop always open -->
+         Folded to the share bar until asked for -->
     <section v-if="builds.length" class="mb-5">
       <div class="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
         <h4 class="flex flex-wrap items-baseline gap-x-2">
@@ -13,16 +13,30 @@
           >
             {{ $t('archetype.builds.title') }}
           </span>
-          <span
-            class="text-xs text-gray-500 dark:text-gray-400"
-            :class="!buildsOpen && tw`max-sm:hidden`"
-          >
+          <span class="text-xs text-gray-500 dark:text-gray-400" :class="!buildsOpen && tw`hidden`">
             {{ $t('archetype.builds.blurb') }}
           </span>
         </h4>
-        <span class="flex items-center gap-3">
+        <span class="ml-auto flex items-center gap-3">
+          <!-- Folded with every deck shown, there's nothing to go back to -->
           <button
-            class="flex cursor-pointer items-center gap-1 text-xs font-medium text-ruri sm:hidden dark:text-sora"
+            class="flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 transition-colors focus-visible:outline-2 focus-visible:outline-ruri dark:focus-visible:outline-sora"
+            :class="[
+              build === null
+                ? 'bg-ruri/[0.08] text-ruri ring-ruri/30 dark:bg-sora/[0.12] dark:text-sora dark:ring-sora/40'
+                : 'bg-white text-gray-600 ring-gray-500/20 hover:bg-gray-50 dark:bg-nalika-surface dark:text-nalika-text dark:ring-nalika-border dark:hover:bg-white/[0.06]',
+              !buildsOpen && build === null && tw`hidden`,
+            ]"
+            :aria-pressed="build === null"
+            @click="build = null"
+          >
+            {{ build === null ? $t('archetype.builds.all') : $t('archetype.builds.showAll') }}
+            <span class="font-mono font-normal tabular-nums opacity-70">
+              {{ archetype.deckCount }}
+            </span>
+          </button>
+          <button
+            class="flex cursor-pointer items-center gap-1 text-xs font-medium text-ruri dark:text-sora"
             :aria-expanded="buildsOpen"
             :aria-controls="buildsPanelId"
             @click="buildsOpen = !buildsOpen"
@@ -41,23 +55,6 @@
                 clip-rule="evenodd"
               />
             </svg>
-          </button>
-          <!-- Folded on mobile with every deck shown, there's nothing to go back to -->
-          <button
-            class="flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 transition-colors focus-visible:outline-2 focus-visible:outline-ruri dark:focus-visible:outline-sora"
-            :class="[
-              build === null
-                ? 'bg-ruri/[0.08] text-ruri ring-ruri/30 dark:bg-sora/[0.12] dark:text-sora dark:ring-sora/40'
-                : 'bg-white text-gray-600 ring-gray-500/20 hover:bg-gray-50 dark:bg-nalika-surface dark:text-nalika-text dark:ring-nalika-border dark:hover:bg-white/[0.06]',
-              !buildsOpen && build === null && tw`max-sm:hidden`,
-            ]"
-            :aria-pressed="build === null"
-            @click="build = null"
-          >
-            {{ build === null ? $t('archetype.builds.all') : $t('archetype.builds.showAll') }}
-            <span class="font-mono font-normal tabular-nums opacity-70">
-              {{ archetype.deckCount }}
-            </span>
           </button>
         </span>
       </div>
@@ -82,7 +79,7 @@
         <div
           :id="buildsPanelId"
           class="grid divide-gray-500/15 max-sm:divide-y sm:grid-cols-2 sm:divide-x dark:divide-nalika-border"
-          :class="!buildsOpen && tw`max-sm:hidden`"
+          :class="!buildsOpen && tw`hidden`"
         >
           <button
             v-for="b in builds"
@@ -452,7 +449,7 @@ const buildView = computed(() => archetypeBuild(props.archetype, build.value))
 // LR mix: worked out over the picked build; picking an LR narrows the page
 // further to the decks running it at 3–4. A new build starts from all its decks
 const lrRows = computed(() => lrMix(buildView.value))
-// Builds panel: folded on mobile until asked for (desktop ignores it)
+// Builds panel: folded until asked for
 const buildsOpen = ref(false)
 const buildsPanelId = useId()
 const lrPick = ref(null)

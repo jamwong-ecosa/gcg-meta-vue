@@ -2,8 +2,7 @@
   <!-- LR mix: each LR unit's decks split by copies (3–4 / 1–2 / none), so an LR
        some decks run as core shows up even when the name and its average copies
        don't carry it. Picking a row narrows the page to the decks running it at 3–4.
-       Mobile: folded until asked for, with the non-signature LRs peeking; desktop
-       always shows it -->
+       Folded until asked for, with the non-signature LRs peeking -->
   <section class="mb-5">
     <div class="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
       <h4 class="flex flex-wrap items-baseline gap-x-2">
@@ -12,55 +11,57 @@
         >
           {{ $t('archetype.lrMix.title') }}
         </span>
-        <span class="text-xs text-gray-500 dark:text-gray-400" :class="!open && tw`max-sm:hidden`">
+        <span class="text-xs text-gray-500 dark:text-gray-400" :class="!open && tw`hidden`">
           {{ $t('archetype.lrMix.blurb') }}
         </span>
       </h4>
-      <button
-        class="flex cursor-pointer items-center gap-1 text-xs font-medium text-ruri sm:hidden dark:text-sora"
-        :aria-expanded="open"
-        :aria-controls="panelId"
-        @click="open = !open"
-      >
-        {{ open ? $t('archetype.detail.keyHide') : $t('archetype.detail.keyShow') }}
-        <svg
-          class="size-3.5 transition-transform"
-          :class="open && 'rotate-180'"
-          viewBox="0 0 20 20"
-          fill="currentColor"
+      <span class="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <span
+          class="flex items-center gap-3 text-xs text-gray-500 dark:text-nalika-text-muted"
+          :class="!open && tw`hidden`"
           aria-hidden="true"
         >
-          <path
-            fill-rule="evenodd"
-            d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </button>
-      <span
-        class="flex items-center gap-3 text-xs text-gray-500 dark:text-nalika-text-muted"
-        :class="!open && tw`max-sm:hidden`"
-        aria-hidden="true"
-      >
-        <span class="flex items-center gap-1.5">
-          <span class="size-2.5 rounded-sm bg-ruri dark:bg-sora" />
-          {{ $t('archetype.lrMix.heavy') }}
+          <span class="flex items-center gap-1.5">
+            <span class="size-2.5 rounded-sm bg-ruri dark:bg-sora" />
+            {{ $t('archetype.lrMix.heavy') }}
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="size-2.5 rounded-sm bg-ruri/30 dark:bg-sora/35" />
+            {{ $t('archetype.lrMix.light') }}
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="size-2.5 rounded-sm bg-gray-500/15 dark:bg-white/[0.08]" />
+            {{ $t('archetype.lrMix.none') }}
+          </span>
         </span>
-        <span class="flex items-center gap-1.5">
-          <span class="size-2.5 rounded-sm bg-ruri/30 dark:bg-sora/35" />
-          {{ $t('archetype.lrMix.light') }}
-        </span>
-        <span class="flex items-center gap-1.5">
-          <span class="size-2.5 rounded-sm bg-gray-500/15 dark:bg-white/[0.08]" />
-          {{ $t('archetype.lrMix.none') }}
-        </span>
+        <button
+          class="flex cursor-pointer items-center gap-1 text-xs font-medium text-ruri dark:text-sora"
+          :aria-expanded="open"
+          :aria-controls="panelId"
+          @click="open = !open"
+        >
+          {{ open ? $t('archetype.detail.keyHide') : $t('archetype.detail.keyShow') }}
+          <svg
+            class="size-3.5 transition-transform"
+            :class="open && 'rotate-180'"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
       </span>
     </div>
 
-    <!-- Mobile, folded: the LRs beyond the signature cards with their 3–4 share -->
+    <!-- Folded: the LRs beyond the signature cards with their 3–4 share -->
     <button
       v-if="!open"
-      class="flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-gray-500/15 bg-gray-50 px-3 py-2 text-left sm:hidden dark:border-nalika-border dark:bg-white/[0.02]"
+      class="flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-gray-500/15 bg-gray-50 px-3 py-2 text-left dark:border-nalika-border dark:bg-white/[0.02]"
       :aria-controls="panelId"
       :aria-expanded="false"
       @click="open = true"
@@ -83,7 +84,7 @@
 
     <div
       :id="panelId"
-      :class="!open && tw`max-sm:hidden`"
+      :class="!open && tw`hidden`"
       class="divide-y divide-gray-500/15 overflow-hidden rounded-lg border border-gray-500/15 bg-gray-50 dark:divide-nalika-border dark:border-nalika-border dark:bg-white/[0.02]"
     >
       <button
@@ -225,7 +226,7 @@ const view = computed(() =>
   }),
 )
 
-// Folded on mobile until asked for (desktop ignores it)
+// Folded until asked for
 const open = ref(false)
 const panelId = useId()
 // What the folded strip shows: the non-signature LRs, most 3–4 decks first
