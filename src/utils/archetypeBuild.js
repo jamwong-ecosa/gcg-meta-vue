@@ -1,14 +1,15 @@
 // One sub-build of an archetype (subBuilds, see scripts/sub-builds.mjs) as an
 // archetype of its own: only that build's decks, with every card's use rate,
 // copies and wins worked out over them, so the archetype page shows what the
-// build plays rather than the blend of both
+// build plays rather than the blend of both. `keep` (deck as "ID:qty|…" →
+// boolean) narrows the decks further, e.g. to those running 3–4 of an LR
 
 // Same cut as build-tiers' FEATURED_MIN_INCLUSION
 const FEATURED_MIN = 0.15
 const TYPES = ['UNIT', 'PILOT', 'COMMAND', 'BASE']
 
 // "ID:qty|ID:qty" → Map(id → copies)
-const parseDeck = s =>
+export const parseDeck = s =>
   new Map(
     s
       .split('|')
@@ -19,13 +20,16 @@ const parseDeck = s =>
       }),
   )
 
-export function archetypeBuild(archetype, buildIdx) {
+export function archetypeBuild(archetype, buildIdx, keep = null) {
   const sb = archetype.subBuilds
-  if (!sb || buildIdx == null || !sb.builds[buildIdx]) {
+  const inBuild = sb && buildIdx != null && sb.builds[buildIdx]
+  if (!inBuild && !keep) {
     return archetype
   }
-  const idx = sb.deckBuild.flatMap((b, i) => (b === buildIdx ? [i] : []))
-  const n = idx.length
+  const idx = (archetype.deckCardIds ?? []).flatMap((deck, i) =>
+    (!inBuild || sb.deckBuild[i] === buildIdx) && (!keep || keep(deck)) ? [i] : [],
+  )
+  const n = idx.length || 1
   const decks = idx.map(i => parseDeck(archetype.deckCardIds[i]))
   const won = idx.map(i => archetype.deckWinnerFlags?.[i] ?? false)
 
@@ -93,7 +97,7 @@ export function archetypeBuild(archetype, buildIdx) {
   const pick = arr => (arr ? idx.map(i => arr[i]) : arr)
   return {
     ...archetype,
-    deckCount: n,
+    deckCount: idx.length,
     winnerDeckCount: won.filter(Boolean).length,
     cards: cards.filter(c => c.inclusionRate > FEATURED_MIN),
     filteredCards: cards.filter(c => c.inclusionRate <= FEATURED_MIN),

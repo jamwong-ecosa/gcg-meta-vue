@@ -121,6 +121,14 @@
       </div>
     </section>
 
+    <ArchetypeLrMix
+      v-if="lrRows.length"
+      :rows="lrRows"
+      :picked="lrPick"
+      :deck-count="buildView.deckCount"
+      @pick="lrPick = $event"
+    />
+
     <!-- Average deck and the key to the card badges, as two labelled rows sharing one
          label column -->
     <dl
@@ -409,7 +417,19 @@ const props = defineProps({
 // The build picked in the Builds row (index into subBuilds.builds), or null for
 // every deck; the whole page below it follows the pick
 const build = ref(null)
-const view = computed(() => archetypeBuild(props.archetype, build.value))
+const buildView = computed(() => archetypeBuild(props.archetype, build.value))
+// LR mix: worked out over the picked build; picking an LR narrows the page
+// further to the decks running it at 3–4. A new build starts from all its decks
+const lrRows = computed(() => lrMix(buildView.value))
+const lrPick = ref(null)
+watch(build, () => {
+  lrPick.value = null
+})
+const view = computed(() =>
+  lrPick.value
+    ? archetypeBuild(props.archetype, build.value, deck => runsHeavy(deck, lrPick.value))
+    : buildView.value,
+)
 
 const isNewCard = cardId => props.prevCardIds?.size > 0 && !props.prevCardIds.has(cardId)
 
