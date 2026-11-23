@@ -43,6 +43,8 @@ source ~/.nvm/nvm.sh && nvm use
 | `npm run scrape:cards`      | Scrape card database from `gundam-gcg.com` (→ `data/cards.json`)                 |
 | `npm run scrape:tournament` | Scrape tournament results (→ `data/tournaments-all.json`)                        |
 | `npm run build:tiers`       | Rebuild tier data from existing scraped data → `data-processed/tiers.json`       |
+| `npm run report:grouping`   | Archetype grouping quality per month (`--month`, `--save`, `--compare`)          |
+| `npm test`                  | Archetype grouping checks against the scraped data (`node --test`)               |
 
 ## Project structure
 
@@ -99,7 +101,9 @@ source ~/.nvm/nvm.sh && nvm use
 1. `scrape:products` — fetches product data from GCG website (→ `data/products.json`)
 2. `scrape:cards` — fetches all card data (name, color, type) from GCG website (→ `data/cards.json`)
 3. `scrape:tournament` — fetches tournament events, players, and deck lists (uses local cache, skips already-fetched events) (→ `data/tournaments-all.json`)
-4. `build:tiers` — groups decks of each colour combo into archetypes by their two LR units (run at 3+ copies) scoring highest across the combo (copies per deck ×10 + level ×20), one per colour where possible, R units filling a slot no LR does; leftover decks join the most alike group whose two units they run, LRs at 3+ (`scripts/archetype-clusters.mjs`; `GROUPING=legacy` runs the old name-per-deck grouping for comparison), computes scores and tier thresholds (ckmeans clustering) (→ `data-processed/tiers.json`)
+4. `build:tiers` — groups decks of each colour combo into archetypes by their two LR units (run at 3+ copies) scoring highest across the combo (copies per deck ×10 + level ×20), one per colour where possible, R units filling a slot no LR does; leftover decks join the most alike group whose two units they run, LRs at 3+; the decks of a group running another LR unit split off as their own build when they are a clearly different deck (V Gundam inside Strike Freedom / Aile Strike); groups sharing a unit whose decks are as alike across as within merge as one deck family, named after the shared unit and one of their name units 85% of the family plays at any copies (a core card on its page) (the bigger group's first), else the shared unit alone (`scripts/archetype-clusters.mjs`; `GROUPING=legacy` runs the old name-per-deck grouping for comparison), computes scores and tier thresholds (ckmeans clustering) (→ `data-processed/tiers.json`)
+
+Before and after changing the grouping, run `npm run report:grouping -- --save before.json` and then `-- --compare before.json` to see what moved, and `npm test`. A rule written for a specific case gets a test in `scripts/archetype-clusters.test.mjs`. `scripts/series-data.mjs` loads the cards and monthly series for `build-tiers.mjs`, the report and the tests alike.
 
 You must run `npm run data` (or at minimum `npm run build:tiers`) after cloning to generate `data-processed/tiers.json`. The app will not work without this file.
 

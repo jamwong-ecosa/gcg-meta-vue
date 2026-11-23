@@ -25,10 +25,20 @@
 //    MERGE_SHARE of their decks run, unless that drops a unit scoring higher
 //    than the one kept from a group of KEEP_DECKS or more; decks not running it
 //    stay where they were
-// 6. A group left under minDecks breaks up, its decks joining the most alike
+// 6. A group splits when the decks running one of its LR units are another
+//    deck, as alike the rest SPLIT_SIMILARITY or less of how alike each part is
+//    within; they take that unit and one of the group's name units as their name
+// 7. Two groups sharing one name unit, as alike across as within
+//    (FAMILY_SIMILARITY), are one deck family and merge whole, named after the
+//    shared unit and one of their name units FAMILY_NAME_SHARE of the family's
+//    decks play at any copies (the bigger group's first), else the shared unit
+//    alone; unless the family's decks are less alike than FAMILY_COHESION or it
+//    drops a unit outscoring the shared one from a group of KEEP_DECKS or more
+// 8. A group left under minDecks breaks up, its decks joining the most alike
 //    group whose name units they run.
-//    Every deck in a group runs both of its name units, its LRs at
-//    MIN_LR_COPIES or more. A deck no step places
+//    Every deck in a group runs its one or two name units, its LRs at
+//    MIN_LR_COPIES or more, but for a family's second unit, which
+//    FAMILY_NAME_SHARE of its decks play at any copies. A deck no step places
 //    stays out of the ranked archetypes
 //
 // Two decks are compared by weighted Jaccard over their cards with copies,
@@ -56,14 +66,41 @@ const MERGE_SHARE = 0.9
 // A merge never drops a name unit scoring higher than the one kept from a
 // group of at least this many decks
 const KEEP_DECKS = 5
+// The decks running a LR unit are a build of their own when they're, on
+// average, at most this share as alike the rest of their group as each part is
+// within; well under FAMILY_SIMILARITY, so a family merge doesn't undo it
+const SPLIT_SIMILARITY = 0.7
+// Two groups sharing a name unit are one deck family when their decks are, on
+// average, at least this share as alike across the two as within each (2026-11
+// Blue+White: the Akatsuki (Oowashi) decks with Murasame and with Strike Rouge)…
+const FAMILY_SIMILARITY = 0.9
+// …and the family's decks are at least this alike on average; less is a mixed
+// bag sharing a unit (2026-11 Green+Purple: Zeong with Exia Repair and with
+// Zaku II (Char), 0.42 together)
+const FAMILY_COHESION = 0.5
+// A deck family is named after a second unit at least this share of its decks
+// play, at any copies: a core card on the archetype page (STAPLE_MIN in
+// ArchetypeDetail.vue), so the name matches what the page shows (2026-06
+// Blue+White: Unicorn (Awakened) / Gundam, Gundam in 86% of the decks)
+const FAMILY_NAME_SHARE = 0.85
 
 const baseId = cardId => cardId.replace(/_p\d+$/, '')
 // A unit's rarity ('LR', 'R', …), null for other cards; LR+ and LR++ are alt-art LRs
 const rarityOf = info => (info.type === 'UNIT' ? (info.rarity?.replace(/\+*$/, '') ?? null) : null)
 const level = info => parseInt(info.level) || 0
 
+// A deck as sorted [card key, copies] pairs, for similarity
+export function deckVector(deck, cardKey) {
+  const copies = new Map()
+  for (const card of deck) {
+    const key = cardKey(card.cardId)
+    copies.set(key, (copies.get(key) ?? 0) + card.quantity)
+  }
+  return [...copies].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+}
+
 // Weighted Jaccard over two decks as sorted [id, copies] arrays
-function similarity(a, b) {
+export function similarity(a, b) {
   let i = 0
   let j = 0
   let shared = 0
@@ -184,13 +221,22 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
   // Whether a deck runs a name unit: a LR at MIN_LR_COPIES or more, a R at all
   const runsUnit = (i, id) =>
     (copies[i].get(id) ?? 0) >= (rarityOf(lookup(id)) === 'LR' ? MIN_LR_COPIES : 1)
+  // Two decks' similarity, worked out once per two decks (it's symmetric)
+  const sims = new Float64Array(decks.length * decks.length).fill(-1)
+  const sim = (i, j) => {
+    const k = i < j ? i * decks.length + j : j * decks.length + i
+    if (sims[k] < 0) {
+      sims[k] = similarity(vectors[i], vectors[j])
+    }
+    return sims[k]
+  }
   const pairs = decks.map(deck => deckPair(deck, lookup, scores))
   const ranks = pairs.map(pair => (pair ? pairRank(pair, colors, lookup) : Infinity))
   // A pair's key, whatever order its units are in
   const pairKey = ids => [...ids].sort((a, b) => a.localeCompare(b)).join()
   // A deck's average similarity to a group's other decks
   const avgSim = (i, members) =>
-    members.reduce((sum, j) => (j === i ? sum : sum + similarity(vectors[i], vectors[j])), 0) /
+    members.reduce((sum, j) => (j === i ? sum : sum + sim(i, j)), 0) /
     (members.length - (members.includes(i) ? 1 : 0))
   // The index of the group in `among` the deck is most alike, of those whose
   // name units it runs (runsUnit) and at least `floor` alike; -1 for none
@@ -267,8 +313,19 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
     }
     return within.get(group)
   }
-  const acrossSim = (a, b) =>
-    a.members.reduce((sum, i) => sum + avgSim(i, b.members), 0) / a.members.length
+  // Kept per pair of groups, as withinSim per group: a merge makes new groups
+  // rather than changing the old ones
+  const across = new WeakMap()
+  const acrossSim = (a, b) => {
+    if (!across.has(a)) {
+      across.set(a, new WeakMap())
+    }
+    const known = across.get(a)
+    if (!known.has(b)) {
+      known.set(b, a.members.reduce((sum, i) => sum + avgSim(i, b.members), 0) / a.members.length)
+    }
+    return known.get(b)
+  }
   // The merged name: the shared unit, and of the two groups' other name units
   // the one at least MERGE_SHARE of their decks run (runsUnit) and no further
   // from the rule's first choice than the better of the two names, in the
@@ -340,6 +397,155 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
       .filter(g => g.members.length > 0)
   }
 
+  // Builds: a group splits when the decks running one of its LR units (at
+  // MIN_LR_COPIES), not one it's named after, are another deck: as alike the
+  // rest of the group as SPLIT_SIMILARITY or less of how alike each part is
+  // within. The pair rule takes one LR per colour, highest level first, so a
+  // build's own unit can hide behind the colour's bigger one (2026-09
+  // Blue+White: the V Gundam decks, Lv4, under Strike Freedom / Aile Strike).
+  // Its decks are named after it and the group's name unit they all run, of
+  // another colour first as a deck's pair is chosen, then the highest-scoring
+  // (2026-09 Blue+White: V Gundam / Aile Strike, 11 wins, apart from V Gundam /
+  // Strike Freedom, the V Gundam decks without Aile Strike), and join the group
+  // already so named only when as alike it as a family (FAMILY_SIMILARITY), or
+  // don't split; the rest keep the name.
+  // Both parts need KEEP_DECKS or more. Only LR units, so a support unit nearly
+  // every deck runs can't rename the group (2026-10 Green+Purple: Barbatos
+  // Adapt, R, in 259 of the 265 Qubeley / Sazabi decks). The most distinct
+  // split first, until none is left
+  for (let round = 0; round < 100; round++) {
+    let next = null
+    for (const group of groups.filter(g => g.members.length >= 2 * KEEP_DECKS)) {
+      const names = new Set(group.ids.map(id => lookup(id).name))
+      const units = new Set(group.members.flatMap(i => [...copies[i].keys()]))
+      for (const unit of units) {
+        if (rarityOf(lookup(unit)) !== 'LR' || names.has(lookup(unit).name)) {
+          continue
+        }
+        const build = { ids: [], members: group.members.filter(i => runsUnit(i, unit)) }
+        const rest = { ids: group.ids, members: group.members.filter(i => !runsUnit(i, unit)) }
+        if (build.members.length < KEEP_DECKS || rest.members.length < KEEP_DECKS) {
+          continue
+        }
+        const ratio = acrossSim(build, rest) / ((withinSim(build) + withinSim(rest)) / 2)
+        if (ratio > SPLIT_SIMILARITY || ratio >= (next?.ratio ?? Infinity)) {
+          continue
+        }
+        const sameColour = id => (lookup(id).color === lookup(unit).color ? 1 : 0)
+        const [kept] = group.ids
+          .filter(id => build.members.every(i => runsUnit(i, id)))
+          .sort(
+            (x, y) =>
+              sameColour(x) - sameColour(y) || scores.get(y) - scores.get(x) || x.localeCompare(y),
+          )
+        const ids = nameOrder([kept, unit], build.members, decks, colors, lookup)
+        const home = groups.find(g => g !== group && pairKey(g.ids) === pairKey(ids))
+        const homeRatio = home
+          ? acrossSim(build, home) / ((withinSim(build) + withinSim(home)) / 2)
+          : Infinity
+        if (homeRatio >= FAMILY_SIMILARITY) {
+          next = { group, build, rest, ids, home, ratio }
+        }
+      }
+    }
+    if (!next) {
+      break
+    }
+    const { group, build, rest, ids, home } = next
+    groups = [
+      ...groups.filter(g => g !== group && g !== home),
+      rest,
+      { ids, members: [...(home?.members ?? []), ...build.members] },
+    ]
+  }
+
+  // Deck families: two groups sharing one name unit, their decks as alike across
+  // as within, are one deck with a different second unit, and merge whole. The
+  // most alike pair first, until none is left. The family is named after the
+  // shared unit, its core, and a second unit if FAMILY_NAME_SHARE of its decks play one
+  // of its groups' name units, at any copies as the archetype page's core cards
+  // count them: the bigger group's own, so a splinter joining a bigger group
+  // doesn't rename it (2026-11 Green+Purple: Qubeley / Gusion Rebake, 12 decks,
+  // joins Qubeley / Sazabi), else another colour's first, then by score
+  // (2026-11 Red+White: ΖΖ with Justice, Altron and Aerial is ΖΖ / Altron, in
+  // 95% of its decks though at 3+ copies in 77%, over Aerial, ΖΖ's colour), a
+  // unit of the core's colour when it's the only one (2026-09 Green+Purple:
+  // Zeong / Zaku II (Char)). Only its groups' name units, so a staple of the colours
+  // can't name it (Silver Bullet, in 94% of Red+White decks). Not when the
+  // family's decks are less alike than FAMILY_COHESION, when another group
+  // already has the name, or when it drops a unit outscoring the core from a
+  // group of KEEP_DECKS or more, a different deck sharing a support unit
+  // (2026-11 Green+Purple: Zeong / Barbatos stays apart from Zaku II (Char) /
+  // Barbatos)
+  //
+  // A group's name units; a family's are those of every group it grew from
+  const unitsOf = g => g.units ?? g.ids
+  const familyName = (a, b, shared) => {
+    const members = [...a.members, ...b.members]
+    // The core is run by every deck, a LR at MIN_LR_COPIES
+    if (members.some(i => !runsUnit(i, shared))) {
+      return null
+    }
+    const played = id =>
+      members.filter(i => copies[i].has(id)).length >= FAMILY_NAME_SHARE * members.length
+    const [bigger] = [a, b].sort((x, y) => y.members.length - x.members.length)
+    const partner = bigger.ids.find(id => id !== shared)
+    // Another colour's unit first, as a deck's pair is chosen, then by score
+    const rank = id => pairRank([shared, id], colors, lookup)
+    const [second] =
+      partner && played(partner)
+        ? [partner]
+        : [...new Set([...unitsOf(a), ...unitsOf(b)])]
+            .filter(id => lookup(id).name !== lookup(shared).name)
+            .filter(played)
+            .sort(
+              (x, y) => rank(x) - rank(y) || scores.get(y) - scores.get(x) || x.localeCompare(y),
+            )
+    const ids = nameOrder(second ? [shared, second] : [shared], members, decks, colors, lookup)
+    const taken = groups.some(g => g !== a && g !== b && pairKey(g.ids) === pairKey(ids))
+    const dropsStronger = [a, b].some(
+      g =>
+        g.members.length >= KEEP_DECKS &&
+        g.ids.some(id => !ids.includes(id) && scores.get(id) > scores.get(shared)),
+    )
+    return taken || dropsStronger ? null : ids
+  }
+  const familyCohesion = (a, b) => {
+    // Every two decks' similarity summed within each group and across the two
+    const sumWithin = g => withinSim(g) * g.members.length * (g.members.length - 1)
+    const sumAcross = 2 * acrossSim(a, b) * a.members.length * b.members.length
+    const n = a.members.length + b.members.length
+    return (sumWithin(a) + sumWithin(b) + sumAcross) / (n * (n - 1))
+  }
+  for (;;) {
+    const sized = groups.filter(g => g.members.length >= minDecks)
+    let next = null
+    for (const [a, b] of sized.flatMap((a, k) => sized.slice(k + 1).map(b => [a, b]))) {
+      const shared = a.ids.filter(id => b.ids.includes(id))
+      const ids = shared.length === 1 ? familyName(a, b, shared[0]) : null
+      if (!ids) {
+        continue
+      }
+      const ratio = acrossSim(a, b) / ((withinSim(a) + withinSim(b)) / 2)
+      if (
+        ratio >= FAMILY_SIMILARITY &&
+        ratio > (next?.ratio ?? 0) &&
+        familyCohesion(a, b) >= FAMILY_COHESION
+      ) {
+        next = { a, b, ids, ratio }
+      }
+    }
+    if (!next) {
+      break
+    }
+    const family = {
+      ids: next.ids,
+      members: [...next.a.members, ...next.b.members],
+      units: [...new Set([...unitsOf(next.a), ...unitsOf(next.b)])],
+    }
+    groups = [...groups.filter(g => g !== next.a && g !== next.b), family]
+  }
+
   // A group left under minDecks breaks up, its decks joining the most alike
   // group whose name units they run
   const broken = groups.filter(g => g.members.length < minDecks).flatMap(g => g.members)
@@ -373,14 +579,7 @@ export function createClusterResolver(players, { lookup, colorsOf, cardKey, minD
 
   const assigned = new Map()
   for (const [combo, { colors, decks }] of byCombo) {
-    const vectors = decks.map(deck => {
-      const copies = new Map()
-      for (const card of deck) {
-        const key = cardKey(card.cardId)
-        copies.set(key, (copies.get(key) ?? 0) + card.quantity)
-      }
-      return [...copies].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
-    })
+    const vectors = decks.map(deck => deckVector(deck, cardKey))
     const groups = assignCombo({ decks, colors, vectors, minDecks, lookup })
     // Two cards can share a name (GD02-038 / GD03-034 GQuuuuuuX（オメガ・サイコミュ
     // 起動時）); pairs that would read the same name their differing card by number

@@ -1,9 +1,16 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs'
+import { writeFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 import * as ss from 'simple-statistics'
 import { WINNER, COLOR_HEX, TYPE_ORDER, TYPE_PICK_ORDER } from './constants.mjs'
 import { playStyle } from './play-style.mjs'
 import { subBuilds } from './sub-builds.mjs'
 import { createClusterResolver } from './archetype-clusters.mjs'
+import {
+  loadJSON,
+  createCardLookups,
+  getSeriesEventDateRange,
+  loadMonthlySeries,
+  seriesPlayers,
+} from './series-data.mjs'
 
 // Winner rule: 優勝 always counts as a win. For events with ≥16 players,
 // 準優勝 (2nd place) also counts as a winner.
@@ -32,10 +39,6 @@ function deckMeta(player) {
   }
 }
 
-function loadJSON(path) {
-  return JSON.parse(readFileSync(path, 'utf8'))
-}
-
 function addDays(dateStr, days) {
   if (!dateStr) {
     return dateStr
@@ -47,67 +50,10 @@ function addDays(dateStr, days) {
 
 // ── Card lookups ─────────────────────────────────────────────────────────────
 
-// Builds cardId→info map, name→color lookup, and vanilla grouping key.
-// Vanilla cards (no effect) are grouped by stats alone (level|cost|ap|hp)
-// so functionally identical cards across different colors/names are detected.
-function createCardLookups(cardsRaw) {
-  const cardMap = {}
-  const vanillaGroup = {}
-
-  for (const card of cardsRaw) {
-    const key = card.id
-    cardMap[key] ??= {
-      name: card.name,
-      color: card.color,
-      type: card.type,
-      cost: card.cost,
-      level: card.level,
-      ap: card.ap,
-      hp: card.hp,
-      features: card.features,
-      rarity: card.rarity,
-      effect: card.effect,
-      link: card.link,
-    }
-    vanillaGroup[key] = card.effect === '-'
-  }
-
-  const lookup = cardId =>
-    cardMap[cardId] ?? {
-      name: '?',
-      color: '?',
-      type: '?',
-      cost: '?',
-      level: '?',
-      ap: '?',
-      hp: '?',
-      features: '?',
-      rarity: '?',
-      effect: '?',
-    }
-
-  // Cards that play the same: same type, colour, level, cost, AP, HP, effect and
-  // pilot link (GD01-008 ガンタンク / GD05-015 M1アストレイ); cards with no effect
-  // only need the same type, level, cost, AP, HP and link (a different link pairs
-  // with different pilots: GD05-009 vs GD05-010). Name and traits don't count.
-  // Cards keep their own stats; the key groups them in the UI and keeps a
-  // version of a common effect from looking like a rare tech pick.
-  const functionKey = cardId => {
-    const c = cardMap[cardId]
-    if (!c) {
-      return cardId
-    }
-    return c.effect === '-'
-      ? ['vanilla', c.type, c.level, c.cost, c.ap, c.hp, c.link].join('|')
-      : [c.type, c.color, c.level, c.cost, c.ap, c.hp, c.effect, c.link].join('|')
-  }
-
-  return { lookup, vanillaGroup, functionKey }
-}
-
 const cardsRaw = loadJSON('data/cards.json')
 const baseCards = cardsRaw.filter(c => !c.id.includes('_p'))
-const { lookup, vanillaGroup, functionKey } = createCardLookups(baseCards)
+const { lookup, vanillaGroup, functionKey, getDeckColors, buildCardKey } =
+  createCardLookups(baseCards)
 
 // Write lean card metadata for the meta page
 function writeCardMeta() {
@@ -131,14 +77,6 @@ function writeCardMeta() {
 writeCardMeta()
 
 // ── Deck analysis ────────────────────────────────────────────────────────────
-
-// Sorted unique colors in a deck, used for combo key prefix. Plain code-unit
-// order (not localeCompare) so existing archetype keys stay the same.
-function getDeckColors(deck) {
-  return [...new Set(deck.map(card => lookup(card.cardId).color))].sort((a, b) =>
-    a < b ? -1 : a > b ? 1 : 0,
-  )
-}
 
 // Identifies 1–2 signature LR UNIT cards per archetype.
 // Scored by qty×10 + level×7. Only cards appearing in qty≥2 qualify.
@@ -637,30 +575,9 @@ function buildArchetypeMaps(allPlayers, winners, keyOf) {
 
 // Filters out empty decks, splits players into all/winners buckets
 function getSeriesMetadata(series) {
-  const allPlayers = series.events.flatMap(e =>
-    e.players
-      .filter(p => p.deck.length > 0)
-      .map(p => ({
-        ...p,
-        eventPlayerCount: e.players.length,
-        eventUrl: e.url,
-        eventDate: e.date,
-        eventShop: e.shop,
-      })),
-  )
+  const allPlayers = seriesPlayers(series)
   const winners = allPlayers.filter(isWinner)
   return { allPlayers, winners }
-}
-
-function getSeriesEventDateRange(series) {
-  const dates = series.events
-    .map(event => event.date)
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b))
-  return {
-    eventMinDate: dates[0] ?? null,
-    eventMaxDate: dates.at(-1) ?? null,
-  }
 }
 
 // ── Scoring / tiers ──────────────────────────────────────────────────────────
@@ -953,15 +870,6 @@ function computeFeatureBadges(topCards) {
     }
   }
   return Object.entries(featureCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-}
-
-// Card identity for telling sub-builds apart: reprints with the same effect
-// are one card, but vanilla units stay apart, since functionKey would merge
-// every vanilla unit with the same stats (リック・ディアス with ST01-010) and
-// blur the packages that set the builds apart
-function buildCardKey(cardId) {
-  const id = cardId.replace(/_p\d+$/, '')
-  return vanillaGroup[id] ? id : functionKey(id)
 }
 
 // Full card analysis per archetype: aggregates card stats, computes tech scores,
@@ -1504,73 +1412,9 @@ function processSeries(series) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 // Load scraped data, process each series, write outputs
-// Merge official (tournaments-all.json) + Bandai+ (tournaments-bandai-all.json) series
-const tournaments = [...loadJSON('data/tournaments-all.json')]
-
-if (existsSync('data/tournaments-bandai-all.json')) {
-  tournaments.push(...loadJSON('data/tournaments-bandai-all.json'))
-}
+const mergedSeries = loadMonthlySeries()
 
 mkdirSync('data-processed/archetypes', { recursive: true })
-
-// Group series that were scraped in separate formats by their calendar month
-// (YYYY-MM), merging all member series into a single monthly entry.
-function getSeriesMonth(series) {
-  const { eventMinDate } = getSeriesEventDateRange(series)
-  return eventMinDate ? eventMinDate.slice(0, 7) : null
-}
-
-// Short display name for a series used in merged month labels.
-const SERIES_SHORT_NAMES = [
-  [/ニュータイプチャレンジ/, 'NTC'],
-  [/シリアルカードチャレンジ/, 'Serial'],
-]
-function getSeriesShortName(series) {
-  for (const [re, short] of SERIES_SHORT_NAMES) {
-    if (re.test(series.label)) {
-      // Keep the mission number, e.g. "MISSION5" → "NTC M5"
-      const mission = series.label.match(/MISSION\s*(\d+)/i)?.[1]
-      return mission ? `${short} M${mission}` : short
-    }
-  }
-  const cleaned = series.label
-    .replace(/（\d+月開催）/, '')
-    .replace(/[\s【】（）()]/g, '')
-    .trim()
-  return cleaned ? cleaned.slice(0, 10) : series.value.slice(0, 10)
-}
-
-const byMonth = new Map()
-const monthlessSeries = []
-for (const series of tournaments) {
-  const month = getSeriesMonth(series)
-  if (month === null) {
-    monthlessSeries.push(series)
-    continue
-  }
-  if (!byMonth.has(month)) {
-    byMonth.set(month, [])
-  }
-  byMonth.get(month).push(series)
-}
-
-// Every monthly entry gets a short label, e.g. "2026-11 (NTC M5)" or
-// "2026-09 (NTC M4 + Serial)". Single-series months keep their original value so
-// existing ?series= links still work.
-const mergedSeries = [...monthlessSeries]
-for (const [month, seriesList] of byMonth) {
-  const label = `${month} (${seriesList.map(getSeriesShortName).join(' + ')})`
-  if (seriesList.length === 1) {
-    mergedSeries.push({ ...seriesList[0], label })
-    continue
-  }
-  mergedSeries.push({
-    value: month,
-    label,
-    url: '',
-    events: seriesList.flatMap(s => s.events),
-  })
-}
 
 // Remove stale archetype folders from previous runs that no longer match any
 // series value in this build (e.g. pre-merge per-format folders).
