@@ -62,9 +62,21 @@
       <div
         class="overflow-hidden rounded-lg border border-gray-500/15 bg-gray-50 dark:border-nalika-border dark:bg-white/[0.02]"
       >
-        <!-- Share of decks: one segment per build, as wide as its share -->
-        <div class="flex h-6" aria-hidden="true">
-          <div
+        <!-- Share of decks: one segment per build, as wide as its share. Folded,
+             it's what shows, so a click on it opens the panel -->
+        <component
+          :is="buildsOpen ? 'div' : 'button'"
+          class="flex h-6 w-full"
+          :class="
+            !buildsOpen &&
+            tw`cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ruri dark:focus-visible:outline-sora`
+          "
+          :aria-hidden="buildsOpen || undefined"
+          :aria-expanded="buildsOpen ? undefined : false"
+          :aria-controls="buildsOpen ? undefined : buildsPanelId"
+          @click="buildsOpen = true"
+        >
+          <span
             v-for="b in builds"
             :key="b.value"
             class="flex min-w-12 items-center gap-1.5 px-2.5 font-mono text-xs font-bold text-white tabular-nums transition-opacity"
@@ -73,8 +85,8 @@
           >
             {{ b.letter }}
             <span class="font-normal opacity-90">{{ b.share }}%</span>
-          </div>
-        </div>
+          </span>
+        </component>
 
         <div
           :id="buildsPanelId"
