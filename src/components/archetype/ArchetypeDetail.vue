@@ -81,7 +81,7 @@
             :key="b.value"
             class="flex min-w-12 items-center gap-1.5 px-2.5 font-mono text-xs font-bold text-white tabular-nums transition-opacity"
             :class="[b.tone.bar, build !== null && build !== b.value && tw`opacity-30`]"
-            :style="{ flexBasis: `${b.share}%` }"
+            :style="{ flex: `${b.share} 1 0%` }"
           >
             {{ b.letter }}
             <span class="font-normal opacity-90">{{ b.share }}%</span>
