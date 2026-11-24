@@ -30,18 +30,17 @@
 //    within; they take that unit and one of the group's name units as their name
 // 7. Two groups sharing one name unit, as alike across as within
 //    (FAMILY_SIMILARITY), are one deck family and merge whole, named after the
-//    shared unit and one of their name units FAMILY_NAME_SHARE of the family's
-//    decks play at any copies (the bigger group's first), else a LR unit
-//    FAMILY_NAME_SHARE of them run at MIN_LR_COPIES (taking in the group
-//    already so named), else the shared unit alone; unless the family's decks
-//    are less alike than FAMILY_COHESION or it drops a unit outscoring the
-//    shared one from a group of KEEP_DECKS or more
+//    shared unit and the bigger group's other name unit when every deck of
+//    the family runs it; when not, only the smaller group's decks running it
+//    join, the rest staying, else (none do) into the group already named
+//    after a LR every deck runs; unless the family's decks are less alike
+//    than FAMILY_COHESION or it drops a unit outscoring the shared one from a
+//    group of KEEP_DECKS or more
 // 8. A group left under minDecks breaks up, its decks joining the most alike
 //    group whose name units they run.
 //    Every deck in a group runs its one or two name units, its LRs at
-//    MIN_LR_COPIES or more, but for a family's second unit, which
-//    FAMILY_NAME_SHARE of its decks play at any copies. A deck no step places
-//    stays out of the ranked archetypes
+//    MIN_LR_COPIES or more (a R at any copies). A deck no step places stays out
+//    of the ranked archetypes
 //
 // Two decks are compared by weighted Jaccard over their cards with copies,
 // reprints with the same effect as one card (cardKey): shared copies over total
@@ -80,11 +79,6 @@ const FAMILY_SIMILARITY = 0.9
 // bag sharing a unit (2026-11 Green+Purple: Zeong with Exia Repair and with
 // Zaku II (Char), 0.42 together)
 const FAMILY_COHESION = 0.5
-// A deck family is named after a second unit at least this share of its decks
-// play, at any copies: a core card on the archetype page (STAPLE_MIN in
-// ArchetypeDetail.vue), so the name matches what the page shows (2026-06
-// Blue+White: Unicorn (Awakened) / Gundam, Gundam in 86% of the decks)
-const FAMILY_NAME_SHARE = 0.85
 
 const baseId = cardId => cardId.replace(/_p\d+$/, '')
 // A unit's rarity ('LR', 'R', …), null for other cards; LR+ and LR++ are alt-art LRs
@@ -464,16 +458,14 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
   // Deck families: two groups sharing one name unit, their decks as alike across
   // as within, are one deck with a different second unit, and merge whole. The
   // most alike pair first, until none is left. The family is named after the
-  // shared unit, its core, and a second unit if FAMILY_NAME_SHARE of its decks play one
-  // of its groups' name units, at any copies as the archetype page's core cards
-  // count them: the bigger group's own, so a splinter joining a bigger group
-  // doesn't rename it (2026-11 Green+Purple: Qubeley / Gusion Rebake, 12 decks,
-  // joins Qubeley / Sazabi), else another colour's first, then by score
-  // (2026-11 Red+White: ΖΖ with Justice, Altron and Aerial is ΖΖ / Altron, in
-  // 95% of its decks though at 3+ copies in 77%, over Aerial, ΖΖ's colour), a
-  // unit of the core's colour when it's the only one (2026-09 Green+Purple:
-  // Zeong / Zaku II (Char)). Only its groups' name units, so a staple of the colours
-  // can't name it (Silver Bullet, in 94% of Red+White decks). Not when the
+  // shared unit, its core, and the bigger group's other name unit when every
+  // deck runs it (runsUnit: a LR at MIN_LR_COPIES), so a splinter joining a
+  // bigger group doesn't rename it. When not every deck does, only the smaller
+  // group's decks running it join and the rest stay, so the bigger group keeps
+  // its name and no deck sits under a name card it doesn't run ×3+ (2026-11
+  // Red+White: ΖΖ / Altron's decks with Justice ×3+ join ΖΖ / Justice, Justice
+  // ×3+ in 70% of the two). Only the bigger group's own unit, so a staple of
+  // the colours can't name it (Silver Bullet, in 94% of Red+White decks). Not when the
   // family's decks are less alike than FAMILY_COHESION, when another group
   // already has the name, or when it drops a unit outscoring the core from a
   // group of KEEP_DECKS or more, a different deck sharing a support unit
@@ -488,35 +480,37 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
     if (members.some(i => !runsUnit(i, shared))) {
       return null
     }
-    const share = (id, runs) =>
-      members.filter(i => runs(i, id)).length >= FAMILY_NAME_SHARE * members.length
-    const played = id => share(id, (i, unit) => copies[i].has(unit))
+    const runByAll = id => members.every(i => runsUnit(i, id))
     const [bigger] = [a, b].sort((x, y) => y.members.length - x.members.length)
     const partner = bigger.ids.find(id => id !== shared)
     // Another colour's unit first, as a deck's pair is chosen, then by score
     const rank = id => pairRank([shared, id], colors, lookup)
-    const [second] =
-      partner && played(partner)
-        ? [partner]
-        : [...new Set([...unitsOf(a), ...unitsOf(b)])]
-            .filter(id => lookup(id).name !== lookup(shared).name)
-            .filter(played)
-            .sort(
-              (x, y) => rank(x) - rank(y) || scores.get(y) - scores.get(x) || x.localeCompare(y),
-            )
-    // None of them: a LR unit FAMILY_NAME_SHARE of its decks run at
-    // MIN_LR_COPIES, so a family whose name units are its builds' tech picks is
-    // named after the LR every build runs, not its core alone (2026-11
-    // Green+Purple: Zeong with Barbatos and with Exia Repair, Zaku II (Char) ×4
-    // in every deck, is Zaku II (Char) / Zeong)
+    const second = partner && runByAll(partner) ? partner : undefined
+    // Not every deck: the smaller group's decks running the bigger one's unit
+    // join it, the rest stay, so the bigger group keeps its name (2026-11
+    // Red+White: ΖΖ / Justice takes the ΖΖ / Altron decks with Justice ×3+, and
+    // ΖΖ / Altron keeps the rest)
+    const smaller = bigger === a ? b : a
+    const joining = partner && !second ? smaller.members.filter(i => runsUnit(i, partner)) : []
+    if (joining.length > 0) {
+      return { into: bigger, from: smaller, joining }
+    }
+    // None of them: a LR unit every deck runs at MIN_LR_COPIES, so a family
+    // whose name units are its builds' tech picks is named after the LR every
+    // build runs, not its core alone (2026-11 Green+Purple: Zeong with Barbatos
+    // and with Exia Repair, Zaku II (Char) ×4 in every deck, is Zaku II (Char) /
+    // Zeong)
     const [fallback] = second
       ? []
       : [...new Set(members.flatMap(i => [...copies[i].keys()]))]
           .filter(id => rarityOf(lookup(id)) === 'LR')
           .filter(id => lookup(id).name !== lookup(shared).name)
-          .filter(id => share(id, runsUnit))
+          .filter(runByAll)
           .sort((x, y) => rank(x) - rank(y) || scores.get(y) - scores.get(x) || x.localeCompare(y))
     const named = second ?? fallback
+    if (!named) {
+      return null
+    }
     const ids = nameOrder(named ? [shared, named] : [shared], members, decks, colors, lookup)
     // A group already so named is one deck with the family when the name is
     // the fallback, a LR all of them run, and joins it; else the name is taken
@@ -526,7 +520,14 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
         g.members.length >= KEEP_DECKS &&
         g.ids.some(id => !ids.includes(id) && scores.get(id) > scores.get(shared)),
     )
-    return (owner && !fallback) || dropsStronger ? null : { ids, absorb: owner, fallback }
+    // A fallback renames the bigger group only into a group already so named,
+    // never a new name from a staple (2026-10 Green+Purple: Qubeley / Sazabi,
+    // Zaku II (Char) ×3+ in every deck but Sazabi in 69%, stays apart from
+    // Qubeley / Gusion Rebake rather than become Zaku II (Char) / Qubeley)
+    const renames = fallback && partner && !owner
+    return (owner && !fallback) || dropsStronger || renames
+      ? null
+      : { ids, absorb: owner, fallback }
   }
   const familyCohesion = (a, b) => {
     // Every two decks' similarity summed within each group and across the two
@@ -560,6 +561,16 @@ function assignCombo({ decks, colors, vectors, minDecks, lookup }) {
     }
     if (!next) {
       break
+    }
+    if (next.joining) {
+      const { into, from, joining } = next
+      const rest = from.members.filter(i => !joining.includes(i))
+      groups = [
+        ...groups.filter(g => g !== into && g !== from),
+        { ...into, members: [...into.members, ...joining] },
+        ...(rest.length > 0 ? [{ ...from, members: rest }] : []),
+      ]
+      continue
     }
     const parts = [next.a, next.b, ...(next.absorb ? [next.absorb] : [])]
     const family = {

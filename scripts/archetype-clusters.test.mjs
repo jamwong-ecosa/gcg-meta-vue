@@ -9,8 +9,6 @@ import { loadData, groupSeries } from './grouping-report.mjs'
 const hasData = existsSync('data/cards.json') && existsSync('data/tournaments-all.json')
 const skip = !hasData && 'no scraped data in data/'
 const MIN_LR_COPIES = 3
-// A deck family's second unit is a core card of its archetype page
-const FAMILY_NAME_SHARE = 0.85
 
 const data = hasData ? loadData() : null
 const groupings = new Map()
@@ -38,20 +36,14 @@ const named = (grouping, combo, ...names) =>
   )
 const groupOf = (grouping, deck) => grouping.groups.find(g => g.members.includes(deck))
 
-// Every deck runs every name unit (LRs at 3+ copies), but a deck family's second
-// unit, which 85% of its decks play at any copies
+// Every deck runs every name unit, LRs at 3+ copies, deck families too
 test('every deck runs its group’s name units, LRs at 3+ copies', { skip }, () => {
   for (const m of allMonths()) {
     for (const g of month(m).groups) {
-      const short = g.sigCardIds.filter(id => {
+      for (const id of g.sigCardIds) {
         const min = rarity(id) === 'LR' ? MIN_LR_COPIES : 1
-        return g.members.some(deck => copies(deck, id) < min)
-      })
-      assert.ok(short.length <= 1, `${m} ${g.key}: ${short.join(', ')} short`)
-      for (const id of short) {
-        const playing = g.members.filter(deck => copies(deck, id) > 0).length
-        const label = `${m} ${g.key}: ${id} in ${playing}`
-        assert.ok(playing >= FAMILY_NAME_SHARE * g.members.length, label)
+        const short = g.members.filter(deck => copies(deck, id) < min).length
+        assert.equal(short, 0, `${m} ${g.key}: ${id} short in ${short}`)
       }
     }
   }
@@ -66,35 +58,35 @@ test('a group is named after one or two units of different names', { skip }, () 
   }
 })
 
-// 2026-11: splinters differing only in their second unit join the bigger group
-// they're as alike as its own decks, keeping its name
-test('2026-11 splinters join their bigger group under its name', { skip }, () => {
+// 2026-11: splinters differing only in their second unit don't rename the
+// bigger group; they join it only when they run its name units ×3+
+test('2026-11 splinters keep their bigger group’s name', { skip }, () => {
   const grouping = month('2026-11')
-  const gusion = 'ガンダム・グシオンリベイク'
-  assert.equal(named(grouping, 'Green+Purple', 'キュベレイ', gusion).length, 0)
   assert.equal(named(grouping, 'Green+Purple', 'キュベレイ', 'サザビー').length, 1)
-  assert.equal(named(grouping, 'Blue+Green', 'νガンダム', 'リ・ガズィ').length, 0)
   assert.equal(named(grouping, 'Blue+Green', 'ガンダム', 'νガンダム').length, 1)
 })
 
-// 2026-11 Red+White: ΖΖ with Justice, Altron and Aerial is one deck family,
-// named after Altron, in 95% of its decks though at 3+ copies in 77%: the
-// bigger group's Justice is in too few, and Aerial is ΖΖ's colour
-test('2026-11 the ΖΖ family is one group, ΖΖ / Altron', { skip }, () => {
+// 2026-11 Red+White: ΖΖ / Justice and ΖΖ / Altron are as alike as one deck
+// family, but not every deck runs Justice ×3+: the ΖΖ / Altron decks that do
+// join ΖΖ / Justice, and the rest stay ΖΖ / Altron
+test('2026-11 the ΖΖ decks split by Justice', { skip }, () => {
   const grouping = month('2026-11')
-  const family = named(grouping, 'Red+White', 'ΖΖガンダム', 'アルトロンガンダム（EW版）')
-  assert.equal(family.length, 1)
-  assert.ok(family[0].members.length >= 100, `${family[0].members.length} decks`)
-  assert.equal(named(grouping, 'Red+White', 'ΖΖガンダム', 'ジャスティスガンダム').length, 0)
+  const [justice] = named(grouping, 'Red+White', 'ΖΖガンダム', 'ジャスティスガンダム')
+  const [altron] = named(grouping, 'Red+White', 'ΖΖガンダム', 'アルトロンガンダム（EW版）')
+  assert.ok(justice?.members.length >= 100, `${justice?.members.length} ΖΖ / Justice decks`)
+  assert.ok(altron, 'no ΖΖ / Altron group')
+  assert.ok(altron.members.every(deck => copies(deck, 'GD01-066') < MIN_LR_COPIES))
 })
 
-// 2026-10 Green+Purple: Qubeley / Gusion Rebake joins Qubeley / Sazabi, which
-// keeps Sazabi: in every deck of the family, though some at one or two copies
-test('2026-10 the Qubeley family keeps Sazabi', { skip }, () => {
+// 2026-10 Green+Purple: Qubeley / Sazabi and Qubeley / Gusion Rebake are as
+// alike as one deck family, but Sazabi ×3+ is in 69% of their decks: they stay
+// apart, Qubeley / Sazabi keeping its name rather than taking Zaku II (Char),
+// ×3+ in every deck but a staple of the colours
+test('2026-10 Qubeley / Sazabi keeps its name', { skip }, () => {
   const grouping = month('2026-10')
-  const gusion = 'ガンダム・グシオンリベイク'
+  const zaku = 'ザクⅡ（シャア・アズナブル機）'
   assert.equal(named(grouping, 'Green+Purple', 'キュベレイ', 'サザビー').length, 1)
-  assert.equal(named(grouping, 'Green+Purple', 'キュベレイ', gusion).length, 0)
+  assert.equal(named(grouping, 'Green+Purple', zaku, 'キュベレイ').length, 0)
 })
 
 // A family's second name is a core card of its page when one of its groups' name
