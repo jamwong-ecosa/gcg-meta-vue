@@ -1,9 +1,9 @@
 <template>
   <!-- Share of all decks, then share of winning decks: green or red only when
        the gap is beyond chance. Series with few wins show a count instead -->
-  <div
+  <UiHint
     class="mt-2 flex flex-col gap-0.5 font-mono text-xs leading-tight whitespace-nowrap tabular-nums"
-    :title="title"
+    :content="hint"
   >
     <span class="font-bold text-gray-600 dark:text-gray-400">
       {{ $t('card.metaStats.decksPct', { pct: sharePct(deckShare) }) }}
@@ -15,7 +15,7 @@
       {{ $t('card.metaStats.archetypes', spread) }}
     </span>
     <span v-else :class="winClass">{{ winText }}</span>
-  </div>
+  </UiHint>
 </template>
 
 <script setup>
@@ -73,24 +73,36 @@ const winClass = computed(() => {
     : tw`font-semibold text-red-600 dark:text-red-500/90`
 })
 
-const title = computed(() => {
-  const c = props.card
-  const lines = [
-    c.name,
-    t('card.metaStats.inDecks', {
-      count: c.totalDecksIncluded,
-      total: props.totalDecks,
-      pct: (deckShare.value * 100).toFixed(1),
-    }),
-    t('card.metaStats.inWinDecks', {
-      count: c.totalWinnerDecks,
-      total: props.totalWins,
-      pct: (winShare.value * 100).toFixed(1),
-    }) + (significant.value ? '' : t('card.metaStats.withinChance')),
-  ]
-  if (c.effectiveArchetypes) {
-    lines.push(t('card.metaStats.spread', { count: c.archetypeCount, eff: c.effectiveArchetypes }))
+const verdict = computed(() => {
+  if (!significant.value) {
+    return 'chance'
   }
-  return lines.join('\n')
+  return winShare.value > deckShare.value ? 'above' : 'below'
+})
+
+// Popover: deck and winning-deck counts, what the colour means for this card
+const hint = computed(() => {
+  const c = props.card
+  const expected = Math.round(deckShare.value * props.totalWins)
+  return {
+    title: c.name,
+    subtitle: c.effectiveArchetypes
+      ? t('card.metaStats.spread', { count: c.archetypeCount, eff: c.effectiveArchetypes })
+      : '',
+    rows: [
+      {
+        label: t('card.stat.decks'),
+        value: `${c.totalDecksIncluded ?? 0}/${props.totalDecks}`,
+        note: `${(deckShare.value * 100).toFixed(1)}%`,
+      },
+      {
+        label: t('card.stat.wins'),
+        value: `${c.totalWinnerDecks ?? 0}/${props.totalWins}`,
+        note: `${(winShare.value * 100).toFixed(1)}% · ${t('card.metaStats.expected', { n: expected })}`,
+        class: winClass.value,
+      },
+    ],
+    footnote: t(`card.metaStats.verdict.${verdict.value}`),
+  }
 })
 </script>

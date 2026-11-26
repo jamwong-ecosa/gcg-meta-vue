@@ -34,6 +34,7 @@
     <CardTopCardsSection />
 
     <CardNewcomersSection />
+    <CardMetaStatsLegend class="-mt-3 mb-6 px-2" />
 
     <ChartCardQuadrantsSection />
 
