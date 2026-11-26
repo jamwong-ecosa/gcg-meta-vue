@@ -7,12 +7,11 @@
           ? 'max-w-full gap-1 rounded-full py-0.5 pr-1.5 pl-2.5 text-xs font-medium'
           : 'w-full gap-2 rounded-lg px-3 py-1.5 text-sm'
       "
-      :title="selectedLabel"
       aria-haspopup="listbox"
       :aria-expanded="open"
       @click="open = !open"
     >
-      <span class="min-w-0 truncate text-left">{{ selectedLabel }}</span>
+      <UiHint class="min-w-0 truncate text-left" :text="selectedLabel">{{ selectedLabel }}</UiHint>
       <svg
         class="shrink-0 transition-transform"
         :class="[compact ? 'size-3.5' : 'size-4', open && 'rotate-180']"

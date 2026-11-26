@@ -148,32 +148,36 @@
       </header>
 
       <!-- A status line, not a CTA: the whole row opens the in-progress series' tiers -->
-      <RouterLink
+      <UiHint
         v-if="inProgress"
-        :to="{ name: 'tier', query: { series: inProgress.value } }"
-        :title="$t('home.preliminaryTitle', { label: inProgress.label })"
-        class="group relative mt-4 flex items-center gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/25 dark:text-amber-200/80 dark:hover:bg-amber-900/40"
+        class="mt-4 block"
+        :text="$t('home.preliminaryTitle', { label: inProgress.label })"
       >
-        <span class="relative flex h-2 w-2 shrink-0" aria-hidden="true">
-          <span class="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-60" />
-          <span class="relative h-2 w-2 rounded-full bg-amber-500" />
-        </span>
-        <span class="min-w-0 flex-1">
-          <i18n-t keypath="home.inProgress" scope="global">
-            <template #label>
-              <b>{{ inProgress.label }}</b>
-            </template>
-            <template #n>{{ inProgress.events }}</template>
-          </i18n-t>
-          <span class="max-sm:hidden">{{ $t('home.inProgressNote') }}</span>
-        </span>
-        <span
-          class="shrink-0 text-amber-600/70 transition-transform group-hover:translate-x-0.5 dark:text-amber-300/60"
-          aria-hidden="true"
+        <RouterLink
+          :to="{ name: 'tier', query: { series: inProgress.value } }"
+          class="group relative flex items-center gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-900/25 dark:text-amber-200/80 dark:hover:bg-amber-900/40"
         >
-          →
-        </span>
-      </RouterLink>
+          <span class="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+            <span class="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-60" />
+            <span class="relative h-2 w-2 rounded-full bg-amber-500" />
+          </span>
+          <span class="min-w-0 flex-1">
+            <i18n-t keypath="home.inProgress" scope="global">
+              <template #label>
+                <b>{{ inProgress.label }}</b>
+              </template>
+              <template #n>{{ inProgress.events }}</template>
+            </i18n-t>
+            <span class="max-sm:hidden">{{ $t('home.inProgressNote') }}</span>
+          </span>
+          <span
+            class="shrink-0 text-amber-600/70 transition-transform group-hover:translate-x-0.5 dark:text-amber-300/60"
+            aria-hidden="true"
+          >
+            →
+          </span>
+        </RouterLink>
+      </UiHint>
 
       <!-- One grid: #1 tall on the left, #2 and #3 large beside it, #4 and #5
            under them at the size of the rest, which then fill rows of three -->

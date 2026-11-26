@@ -115,19 +115,19 @@
           />
           <span class="flex min-w-0 flex-col">
             <span class="flex min-w-0 items-baseline gap-1.5 text-sm">
-              <span
+              <UiHint
                 v-if="r.sig"
                 class="shrink-0 text-xs text-yellow-500"
-                :title="$t('archetype.detail.sigHint')"
+                :text="$t('archetype.detail.sigHint')"
               >
                 ★
-              </span>
-              <span
+              </UiHint>
+              <UiHint
                 class="truncate font-semibold text-gray-800 dark:text-nalika-text"
-                :title="r.name"
+                :text="r.name"
               >
                 {{ r.name }}
-              </span>
+              </UiHint>
               <span class="shrink-0 font-mono text-xs text-gray-400 dark:text-gray-500">
                 Lv{{ r.level }}
               </span>

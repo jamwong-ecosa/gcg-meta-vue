@@ -1,12 +1,13 @@
 <template>
-  <button
-    class="z-50 flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full bg-white px-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-100 max-sm:h-8 max-sm:min-w-8 dark:bg-nalika-surface dark:text-nalika-text-muted dark:hover:bg-nalika-bg"
-    :title="$t('common.nav.switchTo', { lang: next.label })"
-    :aria-label="$t('common.nav.switchTo', { lang: next.label })"
-    @click="toggleLocale()"
-  >
-    {{ next.label }}
-  </button>
+  <UiHint :text="$t('common.nav.switchTo', { lang: next.label })">
+    <button
+      class="z-50 flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full bg-white px-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-100 max-sm:h-8 max-sm:min-w-8 dark:bg-nalika-surface dark:text-nalika-text-muted dark:hover:bg-nalika-bg"
+      :aria-label="$t('common.nav.switchTo', { lang: next.label })"
+      @click="toggleLocale()"
+    >
+      {{ next.label }}
+    </button>
+  </UiHint>
 </template>
 
 <script setup>

@@ -109,10 +109,10 @@
       <!-- A tier change reads "B → A": last series' tier as a faded mini pill, an arrow
            green for a promotion / red for a drop, then this series' pill -->
       <div class="flex items-center justify-end gap-1 whitespace-nowrap">
-        <span
+        <UiHint
           v-if="shift"
           class="flex shrink-0 items-center gap-0.5"
-          :title="
+          :text="
             $t(shift === 'up' ? 'tier.shiftTitleUp' : 'tier.shiftTitleDown', {
               tier: row.move.prevTier,
             })
@@ -135,7 +135,7 @@
           >
             →
           </span>
-        </span>
+        </UiHint>
         <span
           class="w-6 shrink-0 rounded py-0.5 text-center text-xs font-bold"
           :class="tierPillClass(row.tier)"

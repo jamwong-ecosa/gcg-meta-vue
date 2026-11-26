@@ -97,10 +97,10 @@
                 {{ d.placeLabel }}
               </span>
               <!-- Mixed lists (unassigned decks) show each deck's colours -->
-              <span
+              <UiHint
                 v-if="d.colors?.length"
                 class="flex w-6 shrink-0 items-center gap-0.5"
-                :title="comboName(d.colors.join('+'))"
+                :text="comboName(d.colors.join('+'))"
               >
                 <span
                   v-for="c in d.colors"
@@ -108,7 +108,7 @@
                   class="size-2.5 rounded-full"
                   :style="{ background: COLOR_HEX[c] }"
                 />
-              </span>
+              </UiHint>
               <!-- Month-day on phones; the year is the series' anyway -->
               <span
                 class="shrink-0 font-mono text-gray-500 tabular-nums sm:w-20 dark:text-gray-400"
@@ -125,16 +125,16 @@
                    decks are hit isn't a wall of red: the hit decks (reasons in the
                    tooltip; the popover tags the cards), or else the decks still legal.
                    Every deck one way: no chips, the note above says it -->
-              <span
+              <UiHint
                 v-if="flagged === 'illegal' && d.banHits.length"
                 class="shrink-0 rounded-full border border-red-300 bg-red-50 px-1.5 text-xxs whitespace-nowrap text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300"
-                :title="d.banReasons"
+                :text="d.banReasons"
                 :aria-label="$t('archetype.decks.notLegal')"
               >
                 <!-- Phones keep the room for the event name; the popover tags say why -->
                 <span class="sm:hidden" aria-hidden="true">✕</span>
                 <span class="max-sm:hidden">{{ $t('archetype.decks.notLegal') }}</span>
-              </span>
+              </UiHint>
               <span
                 v-else-if="flagged === 'legal' && !d.banHits.length"
                 class="shrink-0 rounded-full border border-green-300 bg-green-50 px-1.5 text-xxs whitespace-nowrap text-green-700 dark:border-green-500/40 dark:bg-green-500/10 dark:text-green-300"

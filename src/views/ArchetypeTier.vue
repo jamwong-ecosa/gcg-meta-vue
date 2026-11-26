@@ -84,22 +84,25 @@
         </option>
       </select>
       <div class="flex basis-full items-center gap-1.5 sm:basis-auto">
-        <button
+        <UiHint
           v-for="(hex, color) in COLOR_HEX"
           :key="color"
-          class="flex h-7 cursor-pointer items-center gap-1 rounded-full border px-2 text-xs transition-colors"
-          :class="
-            colors.includes(color)
-              ? 'border-sora bg-sora/10 text-sumi dark:text-nalika-text'
-              : 'border-gray-200 text-gray-500 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'
-          "
-          :aria-pressed="colors.includes(color)"
-          :title="$t('tier.onlyColor', { color: colorName(color) })"
-          @click="toggleColor(color)"
+          :text="$t('tier.onlyColor', { color: colorName(color) })"
         >
-          <span class="h-2.5 w-2.5 rounded-full" :style="{ background: hex }" />
-          <span class="max-sm:hidden">{{ colorName(color) }}</span>
-        </button>
+          <button
+            class="flex h-7 cursor-pointer items-center gap-1 rounded-full border px-2 text-xs transition-colors"
+            :class="
+              colors.includes(color)
+                ? 'border-sora bg-sora/10 text-sumi dark:text-nalika-text'
+                : 'border-gray-200 text-gray-500 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'
+            "
+            :aria-pressed="colors.includes(color)"
+            @click="toggleColor(color)"
+          >
+            <span class="h-2.5 w-2.5 rounded-full" :style="{ background: hex }" />
+            <span class="max-sm:hidden">{{ colorName(color) }}</span>
+          </button>
+        </UiHint>
         <button
           class="ml-auto flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors sm:ml-1"
           :class="

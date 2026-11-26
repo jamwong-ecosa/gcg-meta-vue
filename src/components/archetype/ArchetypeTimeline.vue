@@ -36,9 +36,8 @@
                 v-for="m in metrics"
                 :key="m.key"
                 class="pb-2 pl-2 text-right font-semibold text-gray-500 last:pr-2 sm:pl-3 dark:text-gray-400"
-                :title="m.help"
               >
-                {{ m.label }}
+                <UiHint :text="m.help">{{ m.label }}</UiHint>
               </th>
               <th v-if="!isPhone" class="pb-2" />
             </tr>

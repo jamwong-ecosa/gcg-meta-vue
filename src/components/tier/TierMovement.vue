@@ -1,12 +1,12 @@
 <template>
-  <span
+  <UiHint
     v-if="move && !(compact && !move.isNew && !move.delta)"
     class="inline-block text-right font-mono tabular-nums"
     :class="[compact ? 'text-xs' : 'min-w-8 text-xs', moveClass]"
-    :title="moveTitle"
+    :text="moveTitle"
   >
     {{ moveText }}
-  </span>
+  </UiHint>
 </template>
 
 <script setup>

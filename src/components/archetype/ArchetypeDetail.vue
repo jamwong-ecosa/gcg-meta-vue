@@ -408,17 +408,17 @@
         </span>
       </h4>
       <div class="flex flex-wrap gap-1.5">
-        <span
+        <UiHint
           v-for="t in traits"
           :key="t.name"
           class="flex items-baseline gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-          :title="t.title"
+          :text="t.title"
         >
           {{ t.name }}
           <b class="font-mono text-gray-900 tabular-nums dark:text-nalika-text">
             {{ t.names.length }}
           </b>
-        </span>
+        </UiHint>
       </div>
     </div>
 

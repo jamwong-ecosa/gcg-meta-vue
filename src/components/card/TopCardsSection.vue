@@ -19,9 +19,9 @@
       </template>
       <!-- Share of decks whose archetype is defined by the card -->
       <template #footer="{ card }">
-        <div
+        <UiHint
           class="mt-2 flex flex-col gap-0.5 font-mono text-xs leading-tight whitespace-nowrap tabular-nums"
-          :title="`${card.name}\n${$t('card.top.sigTooltip', { count: card.archetypeCount, decks: card.deckCount ?? '?' })}`"
+          :text="`${card.name}\n${$t('card.top.sigTooltip', { count: card.archetypeCount, decks: card.deckCount ?? '?' })}`"
         >
           <span class="font-bold text-gray-600 dark:text-gray-400">
             {{
@@ -33,7 +33,7 @@
           <span class="truncate text-sky-700 dark:text-sky-400">
             {{ $t('card.metaStats.archetypes', card.archetypeCount) }}
           </span>
-        </div>
+        </UiHint>
       </template>
     </CardMetaCardSection>
 
