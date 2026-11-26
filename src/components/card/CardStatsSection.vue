@@ -125,47 +125,40 @@
           class="mt-1.5 gap-x-8 sm:block sm:columns-2 xl:columns-3"
           :class="!isOpen(group.prefix) && 'hidden'"
         >
-          <li v-for="item in group.items" :key="item.name" class="mb-1 break-inside-avoid">
-            <UiHint
-              class="grid grid-cols-[2.25rem_minmax(0,1fr)_3rem_4rem] items-baseline gap-2 pr-6 text-xs sm:grid-cols-[2.25rem_minmax(0,1fr)_3rem_3.5rem] sm:pr-0"
-              :text="
-                $t('card.stats.usedOfTotal', {
-                  count: item.count,
-                  total: item.total,
-                  pct: item.pct,
-                })
-              "
+          <li
+            v-for="item in group.items"
+            :key="item.name"
+            class="mb-1 grid break-inside-avoid grid-cols-[2.25rem_minmax(0,1fr)_3rem_4rem] items-baseline gap-2 pr-6 text-xs sm:grid-cols-[2.25rem_minmax(0,1fr)_3rem_3.5rem] sm:pr-0"
+          >
+            <span class="font-mono text-xxs text-gray-400 dark:text-gray-500">
+              {{ item.code }}
+            </span>
+            <span class="flex min-w-0 items-center gap-1.5">
+              <span class="truncate text-gray-600 dark:text-gray-300">
+                {{ item.title }}
+              </span>
+              <span
+                v-if="item.isNew"
+                class="shrink-0 rounded bg-green-100 px-1 text-xxs font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300"
+              >
+                {{ $t('card.stats.new') }}
+              </span>
+            </span>
+            <span
+              class="h-1.5 self-center overflow-hidden rounded-full bg-gray-200/70 dark:bg-gray-700"
             >
-              <span class="font-mono text-xxs text-gray-400 dark:text-gray-500">
-                {{ item.code }}
-              </span>
-              <span class="flex min-w-0 items-center gap-1.5">
-                <span class="truncate text-gray-600 dark:text-gray-300">
-                  {{ item.title }}
-                </span>
-                <span
-                  v-if="item.isNew"
-                  class="shrink-0 rounded bg-green-100 px-1 text-xxs font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                >
-                  {{ $t('card.stats.new') }}
-                </span>
-              </span>
               <span
-                class="h-1.5 self-center overflow-hidden rounded-full bg-gray-200/70 dark:bg-gray-700"
-              >
-                <span
-                  class="block h-full rounded-full"
-                  :class="item.isNew ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-500'"
-                  :style="{ width: `${item.pct}%` }"
-                />
-              </span>
-              <span
-                class="text-right font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text"
-              >
-                <span>{{ item.count }}</span>
-                <span class="font-normal text-gray-400 dark:text-gray-500">/{{ item.total }}</span>
-              </span>
-            </UiHint>
+                class="block h-full rounded-full"
+                :class="item.isNew ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-500'"
+                :style="{ width: `${item.pct}%` }"
+              />
+            </span>
+            <span
+              class="text-right font-mono font-bold text-gray-700 tabular-nums dark:text-nalika-text"
+            >
+              <span>{{ item.count }}</span>
+              <span class="font-normal text-gray-400 dark:text-gray-500">/{{ item.total }}</span>
+            </span>
           </li>
         </ul>
       </section>
