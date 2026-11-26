@@ -226,8 +226,8 @@ const view = computed(() =>
   }),
 )
 
-// Folded until asked for
-const open = ref(false)
+// Folded until asked for, and stays as left across archetypes and series
+const { showLrMix: open } = useCollapseState()
 const panelId = useId()
 // What the folded strip shows: the non-signature LRs, most 3–4 decks first
 const peek = computed(() => view.value.filter(r => !r.sig).slice(0, 4))

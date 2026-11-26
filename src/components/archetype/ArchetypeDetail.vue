@@ -461,8 +461,8 @@ const buildView = computed(() => archetypeBuild(props.archetype, build.value))
 // LR mix: worked out over the picked build; picking an LR narrows the page
 // further to the decks running it at 3–4. A new build starts from all its decks
 const lrRows = computed(() => lrMix(buildView.value))
-// Builds panel: folded until asked for
-const buildsOpen = ref(false)
+// Builds panel: folded until asked for, and stays as left (useCollapseState)
+const { showBuilds: buildsOpen } = useCollapseState()
 const buildsPanelId = useId()
 const lrPick = ref(null)
 watch(build, () => {
