@@ -11,7 +11,7 @@
       :aria-expanded="open"
       @click="open = !open"
     >
-      <UiHint class="min-w-0 truncate text-left" :text="selectedLabel">{{ selectedLabel }}</UiHint>
+      <span class="min-w-0 truncate text-left">{{ selectedLabel }}</span>
       <svg
         class="shrink-0 transition-transform"
         :class="[compact ? 'size-3.5' : 'size-4', open && 'rotate-180']"
